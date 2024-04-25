@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 export async function POST(request: NextRequest) {
   const info = await request.json();
   try {
-    const user = await prisma.user.update({
+    const teacher = await prisma.teacher.update({
       where: { name: info.name, pass: info.oldpass },
       data: { pass: info.newpass }
     });
