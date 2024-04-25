@@ -5,11 +5,10 @@ const prisma = new PrismaClient();
 
 interface UserInfo {
   name: string,
-  pass: string,
 }
 
 export async function POST(request: NextRequest) {
-  const info: UserInfo = await request.json();
+  const info = await request.json();
   try {
     const user = await prisma.user.delete({ where: { name: info.name } });
     return NextResponse.json({ message: "ok"});
