@@ -23,7 +23,7 @@ export default function Solve() {
 
     return (
         <main>
-            <Stack className="katex_output" spacing={2}>
+            <Stack spacing={2}>
 
                 <Box
                     display="flex"
