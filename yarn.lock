@@ -105,7 +105,7 @@
 
 "@emotion/react@^11.11.4":
   version "11.11.4"
-  resolved "https://registry.npmjs.org/@emotion/react/-/react-11.11.4.tgz"
+  resolved "https://registry.yarnpkg.com/@emotion/react/-/react-11.11.4.tgz#3a829cac25c1f00e126408fab7f891f00ecc3c1d"
   integrity sha512-t8AjMlF0gHpvvxk5mAtCqR4vmxiGHCeJBaQO6gncUSdklELOgtwjerNY2yuJNfwnc6vi16U/+uMF+afIawJ9iw==
   dependencies:
     "@babel/runtime" "^7.18.3"
@@ -135,7 +135,7 @@
 
 "@emotion/styled@^11.11.5":
   version "11.11.5"
-  resolved "https://registry.npmjs.org/@emotion/styled/-/styled-11.11.5.tgz"
+  resolved "https://registry.yarnpkg.com/@emotion/styled/-/styled-11.11.5.tgz#0c5c8febef9d86e8a926e663b2e5488705545dfb"
   integrity sha512-/ZjjnaNKvuMPxcIiUkf/9SHoG4Q196DRl1w82hQ3WCsjo1IUR8uaGWrC6a87CrYAW0Kb/pK7hk8BnLgLRi9KoQ==
   dependencies:
     "@babel/runtime" "^7.18.3"
@@ -273,6 +273,13 @@
   resolved "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-5.15.15.tgz"
   integrity sha512-aXnw29OWQ6I5A47iuWEI6qSSUfH6G/aCsW9KmW3LiFqr7uXZBK4Ks+z8G+qeIub8k0T5CMqlT2q0L+ZJTMrqpg==
 
+"@mui/icons-material@^5.15.15":
+  version "5.15.15"
+  resolved "https://registry.yarnpkg.com/@mui/icons-material/-/icons-material-5.15.15.tgz#84ce08225a531d9f5dc5132009d91164b456a0ae"
+  integrity sha512-kkeU/pe+hABcYDH6Uqy8RmIsr2S/y5bP2rp+Gat4CcRjCcVne6KudS1NrZQhUCRysrTDCAhcbcf9gt+/+pGO2g==
+  dependencies:
+    "@babel/runtime" "^7.23.9"
+
 "@mui/material-nextjs@^5.15.11":
   version "5.15.11"
   resolved "https://registry.npmjs.org/@mui/material-nextjs/-/material-nextjs-5.15.11.tgz"
@@ -282,7 +289,7 @@
 
 "@mui/material@^5.15.15":
   version "5.15.15"
-  resolved "https://registry.npmjs.org/@mui/material/-/material-5.15.15.tgz"
+  resolved "https://registry.yarnpkg.com/@mui/material/-/material-5.15.15.tgz#e3ba35f50b510aa677cec3261abddc2db7b20b59"
   integrity sha512-3zvWayJ+E1kzoIsvwyEvkTUKVKt1AjchFFns+JtluHCuvxgKcLSRJTADw37k0doaRtVAsyh8bz9Afqzv+KYrIA==
   dependencies:
     "@babel/runtime" "^7.23.9"
