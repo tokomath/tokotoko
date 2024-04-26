@@ -7,7 +7,7 @@ import Stack from '@mui/material/Stack';
 
 export default function Solve() {
 
-    let [answer, setAnswer] = useState<string>();
+    let [answer, setAnswer] = useState<string>("");
 
     function AnswerBox() {
         if (answer) {
@@ -24,7 +24,6 @@ export default function Solve() {
     return (
         <main>
             <Stack spacing={2}>
-
                 <Box
                     display="flex"
                 >
@@ -50,6 +49,12 @@ export default function Solve() {
                         onChange={(e) => { setAnswer(e.target.value) }}
                     />
                 </Box >
+                <Button variant="outlined" onClick={() => setAnswer(answer + "\\int")}>
+                    <InlineMath math="\int"></InlineMath>
+                </Button>
+                <Button variant="outlined" onClick={() => setAnswer(answer + "\\begin{pmatrix}\n  a & b \\\\\n  c & d\n\\end{pmatrix}")}>
+                    <InlineMath math="\begin{pmatrix}a & b \\\\ c & d \end{pmatrix}"></InlineMath>
+                </Button>
                 <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener">
                     KaTeXチートシート
                 </Link>
