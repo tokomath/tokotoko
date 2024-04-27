@@ -23,7 +23,9 @@ export default function Solve({ params }: { params: { id: string } }) {
 
   return (
     <main>
-      <Stack spacing={1} maxWidth="md">
+      <Stack
+        spacing={2} maxWidth="md" paddingTop={2} margin="auto"
+      >
         <Paper variant="outlined">
           <Box padding={2}>
             <Typography fontFamily="monospace">問題ID:{params.id}</Typography>
