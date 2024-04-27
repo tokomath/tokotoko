@@ -25,6 +25,10 @@ export interface SubSubSectionFrame {
     questions: Question[],
 }
 
+export interface DeleteTestProps {
+    id: number,
+}
+
 export const createTest = async (props: TestFrame) => {
     const url = 'http://localhost:3000/api/createTest'
 
@@ -33,14 +37,18 @@ export const createTest = async (props: TestFrame) => {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(props),
+        body: JSON.stringify(props)
     };
 
     await fetch(url, params);
 }
 
-export const removeTest = async (props: Test) => {
-    const url = '/api/removeTest'
+export const removeTest = async (props: DeleteTestProps) => {
+    const url = 'http://localhost:3000/api/removeTest'
+    console.log(props)
+    const test = {
+        id: props.id
+    }
 
     const params = {
         method: 'POST',
@@ -50,5 +58,14 @@ export const removeTest = async (props: Test) => {
         body: JSON.stringify(props),
     };
 
-    await fetch(url, params);
+    try {
+        console.log(params)
+        const f = await fetch(url, params);
+        if (!f.ok) {
+        } else {
+            console.log('Test removed');
+        }
+    } catch (e) {
+        console.error(e);
+    }
 }

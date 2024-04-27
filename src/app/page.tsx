@@ -3,12 +3,12 @@ import {Button} from '@mui/material';
 import {Stack} from "@mui/system";
 import {useState} from "react";
 import {Unstable_NumberInput as NumberInput} from "@mui/base/Unstable_NumberInput";
-import {removeTest, createTest} from "@/app/_api/testAPIs";
+import {removeTest, createTest, DeleteTestProps} from "@/app/_api/testAPIs";
 import {Question, Test} from "@prisma/client";
 import {TestFrame, SectionFrame, SubSubSectionFrame, SubSectionFrame} from "@/app/_api/testAPIs";
 
 export default function Home() {
-    const [num, setNum] = useState<number | null>();
+    const [num, setNum] = useState(0);
     const send = async () => {
         const test: TestFrame = {
             test: {
@@ -72,12 +72,12 @@ export default function Home() {
     }
 
     const remove = async () => {
-        const test: Test = {
-            id: num!,
-            summary: 'test',
+        const testId: DeleteTestProps = {
+            id: num,
         }
-        await removeTest(test);
+        await removeTest(testId);
     }
+
     return (
         <Stack>
             <Button
@@ -94,7 +94,9 @@ export default function Home() {
                 aria-label="remove"
                 placeholder="Type a number…"
                 value={num}
-                onChange={(_, val) => setNum(val)}
+                onChange={(e, n) => {
+                    setNum(n ?? 0)
+                }}
             />
         </Stack>
     );

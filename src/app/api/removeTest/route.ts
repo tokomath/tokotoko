@@ -1,17 +1,14 @@
 "use server"
-import {PrismaClient} from '@prisma/client'
+import {PrismaClient, Test} from '@prisma/client'
 import {NextRequest} from "next/server";
-
-interface RcvId {
-    id: number
-}
+import {DeleteTestProps} from "@/app/_api/testAPIs";
 
 export async function POST(req: NextRequest) {
-    const rcvId: RcvId = await req.json()
+    const rcvId: DeleteTestProps = await req.json()
 
     const prisma = new PrismaClient()
-    const deleteTest = await prisma.test.delete({
+    console.log(rcvId)
+    const deleteTest = await prisma.test.deleteMany({
         where: {id: rcvId.id}
     })
-    void deleteTest;
 }

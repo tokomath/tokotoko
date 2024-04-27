@@ -20,7 +20,7 @@ model Test {
 model Section {
   id          Int          @id @default(autoincrement())
   summary     String
-  test        Test         @relation(fields: [testId], references: [id])
+  test        Test         @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   testId      Int
   subSections SubSection[]
   questions   Question[]
@@ -29,7 +29,7 @@ model Section {
 model SubSection {
   id             Int             @id @default(autoincrement())
   summary        String
-  section        Section         @relation(fields: [sectionId], references: [id])
+  section        Section         @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   sectionId      Int
   subSubSections SubSubSection[]
   questions      Question[]
@@ -38,7 +38,7 @@ model SubSection {
 model SubSubSection {
   id           Int        @id @default(autoincrement())
   summary      String
-  subSection   SubSection @relation(fields: [subSectionId], references: [id])
+  subSection   SubSection @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   subSectionId Int
   questions    Question[]
 }
@@ -47,12 +47,12 @@ model Question {
   id              Int            @id @default(autoincrement())
   question        String
   answer          String
-  SubSection      SubSection?    @relation(fields: [subSectionId], references: [id])
+  SubSection      SubSection?    @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   subSectionId    Int?
-  subSubSection   SubSubSection? @relation(fields: [subSubSectionId], references: [id])
+  subSubSection   SubSubSection? @relation(fields: [subSubSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   subSubSectionId Int?
-  section         Section?       @relation(fields: [sectionId], references: [id])
+  section         Section?       @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   sectionId       Int?
-  Test            Test?          @relation(fields: [testId], references: [id])
+  Test            Test?          @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   testId          Int?
 }
