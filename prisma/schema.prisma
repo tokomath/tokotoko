@@ -11,27 +11,28 @@ datasource db {
 }
 
 model Test {
-  id      Int       @id @default(autoincrement())
-  summary String
-  Section Section[]
+  id        Int        @id @default(autoincrement())
+  summary   String
+  sections  Section[]
+  questions Question[]
 }
 
 model Section {
-  id         Int          @id @default(autoincrement())
-  summary    String
-  test       Test         @relation(fields: [testId], references: [id])
-  testId     Int
-  SubSection SubSection[]
-  question   Question[]
+  id          Int          @id @default(autoincrement())
+  summary     String
+  test        Test         @relation(fields: [testId], references: [id])
+  testId      Int
+  subSections SubSection[]
+  questions   Question[]
 }
 
 model SubSection {
-  id            Int             @id @default(autoincrement())
-  summary       String
-  section       Section         @relation(fields: [sectionId], references: [id])
-  sectionId     Int
-  SubSubSection SubSubSection[]
-  question      Question[]
+  id             Int             @id @default(autoincrement())
+  summary        String
+  section        Section         @relation(fields: [sectionId], references: [id])
+  sectionId      Int
+  subSubSections SubSubSection[]
+  questions      Question[]
 }
 
 model SubSubSection {
@@ -39,7 +40,7 @@ model SubSubSection {
   summary      String
   subSection   SubSection @relation(fields: [subSectionId], references: [id])
   subSectionId Int
-  question     Question[]
+  questions    Question[]
 }
 
 model Question {
@@ -48,8 +49,10 @@ model Question {
   answer          String
   SubSection      SubSection?    @relation(fields: [subSectionId], references: [id])
   subSectionId    Int?
-  SubSubSection   SubSubSection? @relation(fields: [subSubSectionId], references: [id])
+  subSubSection   SubSubSection? @relation(fields: [subSubSectionId], references: [id])
   subSubSectionId Int?
-  Section         Section?       @relation(fields: [sectionId], references: [id])
+  section         Section?       @relation(fields: [sectionId], references: [id])
   sectionId       Int?
+  Test            Test?          @relation(fields: [testId], references: [id])
+  testId          Int?
 }
