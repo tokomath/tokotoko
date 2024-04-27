@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Box, Button, Card, CardActions, CardContent, Link, TextField, Typography } from "@mui/material";
+import { Box, Button, Link, Paper, TextField, Typography } from "@mui/material";
 import { InlineMath, BlockMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
@@ -23,16 +23,16 @@ export default function Solve({ params }: { params: { id: string } }) {
 
   return (
     <main>
-      <Stack spacing={2} maxWidth="md">
-        <Card variant="outlined">
-          <CardContent>
+      <Stack spacing={1} maxWidth="md">
+        <Paper variant="outlined">
+          <Box padding={2}>
             <Typography fontFamily="monospace">問題ID:{params.id}</Typography>
             <Typography variant="h1" fontSize={30}>課題1</Typography>
             <Typography>積分の問題です</Typography>
-          </CardContent>
-        </Card>
-        <Card variant="outlined">
-          <CardContent>
+          </Box>
+        </Paper>
+        <Paper variant="outlined">
+          <Box padding={2}>
             <Stack spacing={1}>
               <Typography variant="h2" fontSize={20}>問題 1</Typography>
               <Box display="flex">
@@ -68,8 +68,8 @@ export default function Solve({ params }: { params: { id: string } }) {
                 KaTeXチートシート
               </Link>
             </Stack>
-          </CardContent>
-        </Card>
+          </Box>
+        </Paper>
       </Stack>
     </main >
   )
