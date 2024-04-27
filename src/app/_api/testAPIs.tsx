@@ -26,7 +26,7 @@ export interface SubSubSectionFrame {
 }
 
 export const createTest = async (props: TestFrame) => {
-    const url = '/api/createTest'
+    const url = 'http://localhost:3000/api/createTest'
 
     const params = {
         method: 'POST',
