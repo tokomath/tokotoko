@@ -5,7 +5,7 @@ import { InlineMath, BlockMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
 
-export default function Solve() {
+export default function Solve({ params }: { params: { id: string } }) {
 
     let [answer, setAnswer] = useState<string>("");
 
@@ -23,15 +23,17 @@ export default function Solve() {
 
     return (
         <main>
+
             <Box
                 maxWidth="md"
             >
                 <Card variant="outlined">
                     <CardContent>
                         <Stack spacing={1}>
-                            <Box
-                                display="flex"
-                            >
+
+
+                            <Typography fontFamily="monospace">問題ID: {params.id}</Typography>
+                            <Box display="flex">
                                 <BlockMath> \int_0^\infty x^2 dx</BlockMath>
                             </Box>
                             <Box
