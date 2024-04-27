@@ -67,5 +67,4 @@ export async function POST(req: NextRequest) {
 
     const createTest = await prisma.test.create({data: test,})
     console.log(rcvTest)
-
 }

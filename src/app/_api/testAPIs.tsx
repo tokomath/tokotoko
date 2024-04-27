@@ -46,9 +46,6 @@ export const createTest = async (props: TestFrame) => {
 export const removeTest = async (props: DeleteTestProps) => {
     const url = 'http://localhost:3000/api/removeTest'
     console.log(props)
-    const test = {
-        id: props.id
-    }
 
     const params = {
         method: 'POST',

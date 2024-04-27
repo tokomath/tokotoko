@@ -4,7 +4,7 @@ import {Stack} from "@mui/system";
 import {useState} from "react";
 import {Unstable_NumberInput as NumberInput} from "@mui/base/Unstable_NumberInput";
 import {removeTest, createTest, DeleteTestProps} from "@/app/_api/testAPIs";
-import {Question, Test} from "@prisma/client";
+import {Question} from "@prisma/client";
 import {TestFrame, SectionFrame, SubSubSectionFrame, SubSectionFrame} from "@/app/_api/testAPIs";
 
 export default function Home() {
