@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Box, Button, Link, Paper, TextField, Typography } from "@mui/material";
+import { Box, Button, Link, Paper, TextField, Typography, styled } from "@mui/material";
 import { InlineMath, BlockMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
@@ -24,16 +24,16 @@ export default function Solve({ params }: { params: { id: string } }) {
   return (
     <main>
       <Stack
-        spacing={2} maxWidth="md" paddingTop={2} margin="auto"
+        spacing={2} maxWidth={640} paddingTop={2} margin="auto"
       >
-        <Paper variant="outlined">
+        <Paper variant="outlined" sx={{ borderRadius: 2 }}>
           <Box padding={2}>
             <Typography fontFamily="monospace">問題ID:{params.id}</Typography>
             <Typography variant="h1" fontSize={30}>課題1</Typography>
             <Typography>積分の問題です</Typography>
           </Box>
         </Paper>
-        <Paper variant="outlined">
+        <Paper variant="outlined" sx={{ borderRadius: 2 }}>
           <Box padding={2}>
             <Stack spacing={1}>
               <Typography variant="h2" fontSize={20}>問題 1</Typography>
