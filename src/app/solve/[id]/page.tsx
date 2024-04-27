@@ -34,6 +34,7 @@ export default function Solve({ params }: { params: { id: string } }) {
         <Card variant="outlined">
           <CardContent>
             <Stack spacing={1}>
+              <Typography variant="h2" fontSize={20}>問題 1</Typography>
               <Box display="flex">
                 <BlockMath> \int_0^\infty x^2 dx</BlockMath>
               </Box>
