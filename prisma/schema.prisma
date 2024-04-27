@@ -11,27 +11,45 @@ datasource db {
 }
 
 model Test {
-  id      Int             @id @default(autoincrement())
+  id      Int       @id @default(autoincrement())
   summary String
-  body    TestFormLevel[]
+  Section Section[]
 }
 
-model TestFormLevel {
-  id            Int  @id @default(autoincrement())
-  belongsToTest Test @relation(fields: [testId], references: [id])
-  testId        Int  @unique
+model Section {
+  id         Int          @id @default(autoincrement())
+  summary    String
+  test       Test         @relation(fields: [testId], references: [id])
+  testId     Int
+  SubSection SubSection[]
+  question   Question[]
+}
 
-  lowTestForm    TestFormLevel[] @relation("TestLevel")
-  highTestForm   TestFormLevel   @relation("TestLevel", fields: [highTestFormId], references: [id])
-  highTestFormId Int             @unique
+model SubSection {
+  id            Int             @id @default(autoincrement())
+  summary       String
+  section       Section         @relation(fields: [sectionId], references: [id])
+  sectionId     Int
+  SubSubSection SubSubSection[]
+  question      Question[]
+}
 
-  statement String
-  questions Question[]
+model SubSubSection {
+  id           Int        @id @default(autoincrement())
+  summary      String
+  subSection   SubSection @relation(fields: [subSectionId], references: [id])
+  subSectionId Int
+  question     Question[]
 }
 
 model Question {
-  id                     Int           @id @default(autoincrement())
-  belongsToTestFormLevel TestFormLevel @relation(fields: [testFormLevelId], references: [id])
-  testFormLevelId        Int           @unique
-  question               String
+  id              Int            @id @default(autoincrement())
+  question        String
+  answer          String
+  SubSection      SubSection?    @relation(fields: [subSectionId], references: [id])
+  subSectionId    Int?
+  SubSubSection   SubSubSection? @relation(fields: [subSubSectionId], references: [id])
+  subSubSectionId Int?
+  Section         Section?       @relation(fields: [sectionId], references: [id])
+  sectionId       Int?
 }
