@@ -8,104 +8,104 @@ import {Question} from "@prisma/client";
 import {TestFrame, SectionFrame, SubSubSectionFrame, SubSectionFrame} from "@/app/api/testAPIs";
 
 export default function Home() {
-    const [num, setNum] = useState(0);
-    const send = async () => {
-        const test: TestFrame = {
-            test: {
+  const [num, setNum] = useState(0);
+  const send = async () => {
+    const test: TestFrame = {
+      test: {
+        id: 1,
+        summary: 'test',
+      },
+      questions: [
+        {
+          id: 1,
+          question: 'question',
+          answer: 'answer',
+        } as Question
+      ],
+      sections: [
+        {
+          section: {
+            id: 1,
+            summary: 'section',
+          },
+          subSections: [
+            {
+              subSection: {
                 id: 1,
-                summary: 'test',
-            },
-            questions: [
+                summary: 'subSection',
+              },
+              subSubSections: [
                 {
+                  subSubSection: {
                     id: 1,
-                    question: 'question',
-                    answer: 'answer',
-                } as Question
-            ],
-            sections: [
+                    summary: 'subSubSection',
+                  },
+                  questions: [
+                    {
+                      id: 1,
+                      question: 'question',
+                      answer: 'answer',
+                    } as Question
+                  ]
+                } as SubSubSectionFrame
+              ],
+              questions: [
                 {
-                    section: {
-                        id: 1,
-                        summary: 'section',
-                    },
-                    subSections: [
-                        {
-                            subSection: {
-                                id: 1,
-                                summary: 'subSection',
-                            },
-                            subSubSections: [
-                                {
-                                    subSubSection: {
-                                        id: 1,
-                                        summary: 'subSubSection',
-                                    },
-                                    questions: [
-                                        {
-                                            id: 1,
-                                            question: 'question',
-                                            answer: 'answer',
-                                        } as Question
-                                    ]
-                                } as SubSubSectionFrame
-                            ],
-                            questions: [
-                                {
-                                    id: 1,
-                                    question: 'question',
-                                    answer: 'answer',
-                                } as Question
-                            ]
-                        } as SubSectionFrame
-                    ],
-                    questions: [
-                        {
-                            id: 1,
-                            question: 'question',
-                            answer: 'answer',
-                        } as Question
-                    ]
-                } as SectionFrame
-            ],
-        }
-        await createTest(test);
+                  id: 1,
+                  question: 'question',
+                  answer: 'answer',
+                } as Question
+              ]
+            } as SubSectionFrame
+          ],
+          questions: [
+            {
+              id: 1,
+              question: 'question',
+              answer: 'answer',
+            } as Question
+          ]
+        } as SectionFrame
+      ],
     }
+    await createTest(test);
+  }
 
-    const remove = async () => {
-        const testId: DeleteTestProps = {
-            id: num,
-        }
-        await removeTest(testId);
+  const remove = async () => {
+    const testId: DeleteTestProps = {
+      id: num,
     }
-    const get = useCallback(async () => {
-        await getTest();
-    }, []);
+    await removeTest(testId);
+  }
+  const get = useCallback(async () => {
+    await getTest();
+  }, []);
 
-    return (
-        <Stack>
-            <Button
-                onClick={send}
-            >
-                send
-            </Button>
-            <Button
-                onClick={remove}
-            >
-                remove
-            </Button>
-            <Button
-                onClick={get}
-            >
-                get
-            </Button>
-            <NumberInput
-                aria-label="remove"
-                placeholder="Type a number…"
-                value={num}
-                onChange={(_, n) => {
-                    setNum(n ?? 0)
-                }}
-            />
-        </Stack>
-    );
+  return (
+    <Stack>
+      <Button
+        onClick={send}
+      >
+        send
+      </Button>
+      <Button
+        onClick={remove}
+      >
+        remove
+      </Button>
+      <Button
+        onClick={get}
+      >
+        get
+      </Button>
+      <NumberInput
+        aria-label="remove"
+        placeholder="Type a number…"
+        value={num}
+        onChange={(_, n) => {
+          setNum(n ?? 0)
+        }}
+      />
+    </Stack>
+  );
 }
