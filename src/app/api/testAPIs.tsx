@@ -87,19 +87,75 @@ export const createTest = async (props: TestFrame) => {
             })
         }
     }
-    const createTest = await prisma.test.create({data: test,})
+    await prisma.test.create({data: test})
 }
 
 export const removeTest = async (props: DeleteTestProps) => {
-    console.log(props)
-    await prisma.test.deleteMany({
-        where: {id: props.id}
-    });
+    await prisma.section.findMany({
+        where: {
+            testId: props.id,
+        },
+        select: {
+            id: true,
+        }
+    }).then(
+        section => {
+            section.map(s => {
+                return (
+                    prisma.subSection.findMany({
+                        where: {
+                            sectionId: s.id
+                        },
+                        select: {
+                            id: true
+                        }
+                    })
+                )
+            }).map(value => {
+                value.then(async subsection => {
+                    await prisma.subSubSection.deleteMany({
+                        where: {
+                            subSectionId: {
+                                in: subsection.map(s => {
+                                    return s.id
+                                })
+                            }
+                        }
+                    }).then(
+                        async () => {
+                            await prisma.subSection.deleteMany({
+                                where: {
+                                    sectionId: {
+                                        in: section.map(i => {
+                                            return i.id
+                                        })
+                                    }
+                                }
+                            }).then(
+                                async _ => {
+                                    await prisma.section.deleteMany({
+                                        where: {
+                                            testId: props.id
+                                        }
+                                    }).then(
+                                        async _ => {
+                                            await prisma.test.deleteMany({
+                                                where: {id: props.id}
+                                            });
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                    )
+                })
+            })
+        }
+    )
 }
 
 export const getTest = async () => {
-    console.log('getTest')
-    const test = await prisma.test.findMany({});
+    const test: Test[] = await prisma.test.findMany({});
     console.log(test)
     return test;
 }
