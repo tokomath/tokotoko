@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Link, Paper, Typography } from "@mui/material";
 import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
@@ -9,13 +9,25 @@ export default function Solve({ params }: { params: { id: string } }) {
 
   // Do not use setAnswers!
   // Please use changeAnswer!
-  const [answers, setAnswers] = useState<string[]>(['', '', '']);
+  const [answers, setAnswers] = useState<string[]>([]);
 
   const changeAnswer = (index: number, answer: string) => {
     const newAnswers = [...answers];
     newAnswers[index] = answer;
     setAnswers(newAnswers);
   }
+
+  const addAnswers = (number: number) => {
+    const newAnswers = [...answers];
+    for (let i = 0; i < number; i++) {
+      newAnswers.push('');
+    }
+    setAnswers(newAnswers);
+  }
+
+  useEffect(() => {
+    addAnswers(3);
+  }, []);
 
   return (
     <main>
