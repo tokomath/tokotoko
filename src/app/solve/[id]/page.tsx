@@ -7,7 +7,7 @@ import Stack from '@mui/material/Stack';
 
 export default function Solve({ params }: { params: { id: string } }) {
 
-  let [answer, setAnswer] = useState<string>("");
+  const [answer, setAnswer] = useState<string>("");
 
   function AnswerBox() {
     if (answer) {
