@@ -1,7 +1,7 @@
 "use server"
 
 import {Question, Test, Section, SubSection, SubSubSection, Prisma} from "@prisma/client";
-import {PrismaClient} from '@prisma/client'
+import {prisma} from "@/app/api/prsima_client"
 
 export interface TestFrame {
     test: Test,
@@ -31,7 +31,6 @@ export interface DeleteTestProps {
 }
 
 export const createTest = async (props: TestFrame) => {
-    const prisma = new PrismaClient()
     let test: Prisma.TestCreateInput = {
         summary: props.test.summary,
         questions: {
@@ -92,7 +91,6 @@ export const createTest = async (props: TestFrame) => {
 }
 
 export const removeTest = async (props: DeleteTestProps) => {
-    const prisma = new PrismaClient()
     console.log(props)
     await prisma.test.deleteMany({
         where: {id: props.id}
@@ -101,7 +99,6 @@ export const removeTest = async (props: DeleteTestProps) => {
 
 export const getTest = async () => {
     console.log('getTest')
-    const prisma = new PrismaClient()
     const test = await prisma.test.findMany({});
     console.log(test)
     return test;
