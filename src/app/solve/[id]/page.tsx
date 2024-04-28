@@ -1,9 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Box, Link, Paper, Typography } from "@mui/material";
+import { Box, Button, Link, Paper, Typography } from "@mui/material";
 import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
 import Question from "@/compornents/Question";
+import SendIcon from '@mui/icons-material/Send';
+
+interface Question {
+  id: string,
+  number: string,
+  question: string,
+}
+
 
 export default function Solve({ params }: { params: { id: string } }) {
 
@@ -25,6 +33,24 @@ export default function Solve({ params }: { params: { id: string } }) {
     setAnswers(newAnswers);
   }
 
+  let questions = [
+    {
+      id: "0",
+      number: "Q1",
+      question: "$ \\int x^3 dx $ を解け",
+    },
+    {
+      id: "1",
+      number: "Q2",
+      question: "$ \\int x^3 dx $ を解け",
+    },
+    {
+      id: "2",
+      number: "Q3",
+      question: "$ \\int x^3 dx $ を解け",
+    },
+  ];
+
   useEffect(() => {
     addAnswers(3);
   }, []);
@@ -44,9 +70,27 @@ export default function Solve({ params }: { params: { id: string } }) {
             </Link>
           </Box>
         </Paper>
-        <Question answer={answers[0]} changeAnswer={(answer) => changeAnswer(0, answer)} question="$ \int x^3 dx $ を解け" id="1" number="Q1" />
-        <Question answer={answers[1]} changeAnswer={(answer) => changeAnswer(1, answer)} question="$ \int e^x dx $ を解け" id="2" number="Q2" />
-        <Question answer={answers[2]} changeAnswer={(answer) => changeAnswer(2, answer)} question="$ \int_0^\infty e^{-st} f(x) dx $ を解け" id="3" number="Q3" />
+        {questions.map((question, index) => {
+          return (
+            <Question
+              key={question.id}
+              id={question.id}
+              number={question.number}
+              question={question.question}
+              answer={answers[index]}
+              changeAnswer={(answer) => changeAnswer(index, answer)}
+            />
+          )
+        })}
+        <Box display="flex">
+          <Button
+            variant="contained"
+            endIcon={<SendIcon />}
+            onClick={() => confirm("Do you want to send answers?\n" + answers)}
+          >
+            Send
+          </Button>
+        </Box>
       </Stack>
     </main >
   )
