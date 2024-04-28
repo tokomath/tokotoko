@@ -113,41 +113,120 @@ export const removeTest = async (props: DeleteTestProps) => {
         )
       }).map(value => {
         value.then(async subsection => {
-          await prisma.subSubSection.deleteMany({
-            where: {
-              subSectionId: {
-                in: subsection.map(s => {
-                  return s.id
-                })
-              }
-            }
-          }).then(
-            async () => {
-              await prisma.subSection.deleteMany({
+          subsection.map(async i => {
+            return (
+              await prisma.subSubSection.findMany({
                 where: {
-                  sectionId: {
-                    in: section.map(i => {
-                      return i.id
-                    })
+                  subSectionId: i.id,
+                },
+                select: {
+                  id: true
+                }
+              })
+            )
+          }).map(async subsubsection => {
+            subsubsection.then(i => {
+              return i.map(async _ => {
+                await prisma.question.deleteMany({
+                  where: {
+                    subSubSectionId: {
+                      in: i.map(idx => {
+                        return idx.id
+                      })
+                    }
                   }
-                }
-              }).then(
-                async _ => {
-                  await prisma.section.deleteMany({
-                    where: {
-                      testId: props.id
-                    }
-                  }).then(
-                    async _ => {
-                      await prisma.test.deleteMany({
-                        where: {id: props.id}
-                      });
-                    }
-                  )
-                }
-              )
-            }
-          )
+                }).then(
+                  async _ => {
+                    await prisma.subSubSection.deleteMany({
+                      where: {
+                        subSectionId: {
+                          in: subsection.map(s => {
+                            return s.id
+                          })
+                        }
+                      }
+                    }).then(
+                      async _ => {
+                        await prisma.question.deleteMany({
+                          where: {
+                            subSectionId: {
+                              in: subsection.map(i => {
+                                return i.id
+                              })
+                            }
+                          }
+                        }).then(
+                          async () => {
+                            await prisma.subSection.deleteMany({
+                              where: {
+                                sectionId: {
+                                  in: section.map(i => {
+                                    return i.id
+                                  })
+                                }
+                              }
+                            }).then(
+                              async _ => {
+                                await prisma.question.deleteMany({
+                                  where: {
+                                    sectionId: {
+                                      in: section.map(i => {
+                                        return i.id
+                                      })
+                                    }
+                                  }
+                                }).then(
+                                  async _ => {
+                                    await prisma.section.deleteMany({
+                                      where: {
+                                        testId: props.id
+                                      }
+                                    }).then(
+                                      async _ => {
+                                        await prisma.question.deleteMany({
+                                          where: {
+                                            testId: props.id
+                                          }
+                                        }).then(
+                                          async _ => {
+                                            await prisma.test.deleteMany({
+                                              where: {id: props.id}
+                                            }).then(
+                                              async _ => {
+                                                await prisma.question.deleteMany({
+                                                  where: {
+                                                    testId: props.id,
+                                                    sectionId: {
+                                                      in: section.map(i => {
+                                                        return i.id
+                                                      })
+                                                    },
+                                                    subSectionId: {
+                                                      in: subsection.map(i => {
+                                                        return i.id
+                                                      })
+                                                    },
+                                                  }
+                                                })
+                                              }
+                                            )
+                                          }
+                                        )
+                                      }
+                                    )
+                                  }
+                                )
+                              }
+                            )
+                          }
+                        )
+                      }
+                    )
+                  }
+                )
+              })
+            })
+          })
         })
       })
     }
