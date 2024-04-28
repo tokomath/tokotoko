@@ -1,11 +1,11 @@
 "use client"
 import {Button} from '@mui/material';
 import {Stack} from "@mui/system";
-import {useState} from "react";
+import {useCallback, useState} from "react";
 import {Unstable_NumberInput as NumberInput} from "@mui/base/Unstable_NumberInput";
-import {removeTest, createTest, DeleteTestProps} from "@/app/_api/testAPIs";
+import {removeTest, createTest, DeleteTestProps, getTest} from "@/app/api/testAPIs";
 import {Question} from "@prisma/client";
-import {TestFrame, SectionFrame, SubSubSectionFrame, SubSectionFrame} from "@/app/_api/testAPIs";
+import {TestFrame, SectionFrame, SubSubSectionFrame, SubSectionFrame} from "@/app/api/testAPIs";
 
 export default function Home() {
     const [num, setNum] = useState(0);
@@ -77,6 +77,9 @@ export default function Home() {
         }
         await removeTest(testId);
     }
+    const get = useCallback(async () => {
+        await getTest();
+    }, []);
 
     return (
         <Stack>
@@ -90,11 +93,16 @@ export default function Home() {
             >
                 remove
             </Button>
+            <Button
+                onClick={get}
+            >
+                get
+            </Button>
             <NumberInput
                 aria-label="remove"
                 placeholder="Type a number…"
                 value={num}
-                onChange={(e, n) => {
+                onChange={(_, n) => {
                     setNum(n ?? 0)
                 }}
             />

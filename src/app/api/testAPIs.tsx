@@ -1,17 +1,41 @@
 "use server"
-import {Prisma, PrismaClient} from '@prisma/client'
-import {NextRequest} from "next/server";
 
-import {TestFrame} from "@/app/_api/testAPIs";
+import {Question, Test, Section, SubSection, SubSubSection, Prisma} from "@prisma/client";
+import {PrismaClient} from '@prisma/client'
 
-export async function POST(req: NextRequest) {
-    const rcvTest: TestFrame = await req.json()
+export interface TestFrame {
+    test: Test,
+    questions: Question[],
+    sections: SectionFrame[],
+}
 
+export interface SectionFrame {
+    section: Section,
+    subSections: SubSectionFrame[],
+    questions: Question[],
+}
+
+export interface SubSectionFrame {
+    subSection: SubSection,
+    subSubSections: SubSubSectionFrame[],
+    questions: Question[],
+}
+
+export interface SubSubSectionFrame {
+    subSubSection: SubSubSection,
+    questions: Question[],
+}
+
+export interface DeleteTestProps {
+    id: number,
+}
+
+export const createTest = async (props: TestFrame) => {
     const prisma = new PrismaClient()
     let test: Prisma.TestCreateInput = {
-        summary: rcvTest.test.summary,
+        summary: props.test.summary,
         questions: {
-            create: rcvTest.questions.map(question => {
+            create: props.questions.map(question => {
                 return {
                     question: question.question,
                     answer: question.answer,
@@ -19,7 +43,7 @@ export async function POST(req: NextRequest) {
             })
         },
         sections: {
-            create: rcvTest.sections.map(section => {
+            create: props.sections.map(section => {
                 return {
                     summary: section.section.summary,
                     questions: {
@@ -64,7 +88,21 @@ export async function POST(req: NextRequest) {
             })
         }
     }
-
     const createTest = await prisma.test.create({data: test,})
-    console.log(rcvTest)
+}
+
+export const removeTest = async (props: DeleteTestProps) => {
+    const prisma = new PrismaClient()
+    console.log(props)
+    await prisma.test.deleteMany({
+        where: {id: props.id}
+    });
+}
+
+export const getTest = async () => {
+    console.log('getTest')
+    const prisma = new PrismaClient()
+    const test = await prisma.test.findMany({});
+    console.log(test)
+    return test;
 }
