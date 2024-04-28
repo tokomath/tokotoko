@@ -44,9 +44,9 @@ export default function Solve({ params }: { params: { id: string } }) {
             </Link>
           </Box>
         </Paper>
-        <Question answer={answers[0]} changeAnswer={(answer) => changeAnswer(0, answer)} question="\int x^3 dx" id="1" number="Q1" />
-        <Question answer={answers[1]} changeAnswer={(answer) => changeAnswer(1, answer)} question="\int e^x dx" id="2" number="Q2" />
-        <Question answer={answers[2]} changeAnswer={(answer) => changeAnswer(2, answer)} question="\int_0^\infty e^{-st} f(x) dx" id="3" number="Q3" />
+        <Question answer={answers[0]} changeAnswer={(answer) => changeAnswer(0, answer)} question="$ \int x^3 dx $ を解け" id="1" number="Q1" />
+        <Question answer={answers[1]} changeAnswer={(answer) => changeAnswer(1, answer)} question="$ \int e^x dx $ を解け" id="2" number="Q2" />
+        <Question answer={answers[2]} changeAnswer={(answer) => changeAnswer(2, answer)} question="$ \int_0^\infty e^{-st} f(x) dx $ を解け" id="3" number="Q3" />
       </Stack>
     </main >
   )
