@@ -4,6 +4,7 @@ import { InlineMath, BlockMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
 import Latex from "react-latex-next";
+import React, { use, useEffect } from "react";
 
 interface QuestionProps {
   id: string;
@@ -14,6 +15,49 @@ interface QuestionProps {
 }
 
 export default function Question({ id, number, question, answer, changeAnswer }: QuestionProps) {
+  const inputRef = React.useRef<HTMLInputElement>();
+
+  const [selectionStart1, setSelectionStart1] = React.useState(0);
+  const [selectionEnd1, setSelectionEnd1] = React.useState(0);
+
+  const [selectionStart2, setSelectionStart2] = React.useState(0);
+  const [selectionEnd2, setSelectionEnd2] = React.useState(0);
+
+  const [isFirstRender, setIsFirstRender] = React.useState(true);
+
+  useEffect(() => {
+
+  }, [selectionStart1, selectionEnd1]);
+
+  useEffect(() => {
+    if (isFirstRender) {
+      setIsFirstRender(false);
+    } else if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(selectionStart2, selectionEnd2);
+      updateSelection();
+    }
+  }, [selectionStart2, selectionEnd2]);
+
+  function insertCommand(
+    command: string,
+    start: number = command.length,
+    end: number = command.length) {
+
+    const before = answer.slice(0, selectionStart1);
+    const after = answer.slice(selectionEnd1);
+    changeAnswer(before + command + after);
+    setSelectionStart2(before.length + start);
+    setSelectionEnd2(before.length + end);
+  }
+
+  function updateSelection() {
+    if (inputRef.current) {
+      console.log(inputRef.current.selectionStart, "→", inputRef.current.selectionEnd);
+      setSelectionStart1(inputRef.current.selectionStart as number);
+      setSelectionEnd1(inputRef.current.selectionEnd as number);
+    }
+  }
 
   function AnswerBox() {
     if (answer) {
@@ -50,32 +94,35 @@ export default function Question({ id, number, question, answer, changeAnswer }:
             size="small"
             variant="filled"
             multiline
+            spellCheck="false"
             value={answer}
             inputProps={{ style: { fontFamily: "monospace", fontSize: 17 } }}
+            inputRef={inputRef}
+            onSelect={updateSelection}
             onChange={(e) => { changeAnswer(e.target.value) }}
           />
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" onClick={() => { changeAnswer(answer + "\\") }}>
+            <Button variant="outlined" onClick={() => { insertCommand("\\") }}>
               \
             </Button>
-            <Button variant="outlined" onClick={() => changeAnswer(answer + "\\frac{a}{b}")}>
+            <Button variant="outlined" onClick={() => insertCommand("\\frac{a}{b}", 6, 7)}>
               <InlineMath math="\frac{a}{b}"></InlineMath>
             </Button>
-            <Button variant="outlined" onClick={() => changeAnswer(answer + "\\int")}>
+            <Button variant="outlined" onClick={() => insertCommand("\\int")}>
               <InlineMath math="\int"></InlineMath>
             </Button>
-            <Button variant="outlined" onClick={() => changeAnswer(answer + "\\int_{a}^{b}")}>
+            <Button variant="outlined" onClick={() => insertCommand("\\int_{a}^{b}", 6, 7)}>
               <InlineMath math="\int_{a}^{b}"></InlineMath>
             </Button>
           </Stack>
           <Stack direction="row" spacing={1} display="flex">
-            <Button variant="outlined" onClick={() => changeAnswer(answer + "\\begin{vmatrix}\n  a & b \\\\\n  c & d\n\\end{vmatrix}")}>
+            <Button variant="outlined" onClick={() => insertCommand("\\begin{vmatrix}\n  a & b \\\\\n  c & d\n\\end{vmatrix}", 18, 19)}>
               <InlineMath math="\begin{vmatrix}a & b \\\\ c & d \end{vmatrix}"></InlineMath>
             </Button>
-            <Button variant="outlined" onClick={() => changeAnswer(answer + "\\begin{pmatrix}\n  a & b \\\\\n  c & d\n\\end{pmatrix}")}>
+            <Button variant="outlined" onClick={() => insertCommand("\\begin{pmatrix}\n  a & b \\\\\n  c & d\n\\end{pmatrix}", 18, 19)}>
               <InlineMath math="\begin{pmatrix}a & b \\\\ c & d \end{pmatrix}"></InlineMath>
             </Button>
-            <Button variant="outlined" onClick={() => changeAnswer(answer + "\\sum_{i=1}^{n}")}>
+            <Button variant="outlined" onClick={() => insertCommand("\\sum_{i=1}^{n}")}>
               <InlineMath math="\sum_{i=1}^{n}"></InlineMath>
             </Button>
           </Stack>
