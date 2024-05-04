@@ -60,15 +60,13 @@ export default function Solve({ params }: { params: { id: string } }) {
       <Stack
         spacing={2} maxWidth={640} paddingTop={2} paddingBottom={2} margin="auto"
       >
-        <Paper variant="outlined" sx={{ borderRadius: 2 }}>
-          <Box padding={2}>
-            <Typography fontFamily="monospace">問題ID:{params.id}</Typography>
-            <Typography variant="h1" fontSize={30}>課題1</Typography>
-            <Typography>積分の問題です</Typography>
-            <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener">
-              KaTeXチートシート
-            </Link>
-          </Box>
+        <Paper sx={{ borderRadius: 2, padding: 2 }}>
+          <Typography fontFamily="monospace">問題ID:{params.id}</Typography>
+          <Typography variant="h1" fontSize={30}>課題1</Typography>
+          <Typography>積分の問題です</Typography>
+          <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener">
+            KaTeXチートシート
+          </Link>
         </Paper>
         {questions.map((question, index) => {
           return (
