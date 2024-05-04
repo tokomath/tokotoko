@@ -60,7 +60,7 @@ export default function Solve({ params }: { params: { id: string } }) {
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
         <Box paddingTop={1} paddingRight={3} display="flex" alignItems="center" justifyContent="flex-end">
           <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener">
-            KaTeX Cheat Sheet
+            KaTeX Help
           </Link>
           <Typography fontFamily="monospace" marginLeft={2}>
             FormID:{params.id}
@@ -69,7 +69,7 @@ export default function Solve({ params }: { params: { id: string } }) {
         <Box maxWidth={640} margin="auto">
           <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
             <Typography variant="h1" fontSize={30}>課題1 積分の問題</Typography>
-            <Typography>KaTeXの書式で答えてください。書式がわからない場合は、上にある KaTeX Cheat Sheet をみてください。</Typography>
+            <Typography>KaTeXの書式で答えてください。書式がわからない場合は、上にある KaTeX Help をみてください。</Typography>
           </Stack>
         </Box>
       </Paper>
