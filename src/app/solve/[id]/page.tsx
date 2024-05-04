@@ -58,11 +58,11 @@ export default function Solve({ params }: { params: { id: string } }) {
   return (
     <main>
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
-        <Box paddingTop={1} paddingRight={3} display="flex" alignItems="center" justifyContent="flex-end">
-          <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener">
+        <Box paddingTop={1} paddingRight={1} display="flex" flexWrap="wrap" alignItems="center" justifyContent="flex-end">
+          <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener" marginX={1}>
             KaTeX Help
           </Link>
-          <Typography fontFamily="monospace" marginLeft={2}>
+          <Typography fontFamily="monospace" marginX={1}>
             FormID:{params.id}
           </Typography>
         </Box>
