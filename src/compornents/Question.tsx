@@ -1,10 +1,10 @@
 "use client";
 import { Box, Button, Paper, TextField, Typography } from "@mui/material";
 import { InlineMath, BlockMath } from "react-katex";
-import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
 import Latex from "react-latex-next";
-import React, { use, useEffect } from "react";
+import React, { useEffect } from "react";
+import 'katex/dist/katex.min.css';
 
 interface QuestionProps {
   id: string;
@@ -38,10 +38,10 @@ export default function Question({ id, number, question, answer, changeAnswer }:
     }
   }, [cur]);
 
-  function insertCommand(
+  const insertCommand = (
     command: string,
     start: number = command.length,
-    end: number = command.length) {
+    end: number = command.length) => {
 
     const before = answer.slice(0, selectionStart1);
     const after = answer.slice(selectionEnd1);
@@ -51,7 +51,7 @@ export default function Question({ id, number, question, answer, changeAnswer }:
     setCur(!cur);
   }
 
-  function updateSelection() {
+  const updateSelection = () => {
     if (inputRef.current) {
       console.log(inputRef.current.selectionStart, "→", inputRef.current.selectionEnd);
       setSelectionStart1(inputRef.current.selectionStart as number);
@@ -63,7 +63,7 @@ export default function Question({ id, number, question, answer, changeAnswer }:
     }
   }
 
-  function AnswerBox() {
+  const AnswerBox = () => {
     if (answer) {
       return (
         <BlockMath>{answer}</BlockMath>
