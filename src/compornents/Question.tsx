@@ -23,21 +23,20 @@ export default function Question({ id, number, question, answer, changeAnswer }:
   const [selectionStart2, setSelectionStart2] = React.useState(0);
   const [selectionEnd2, setSelectionEnd2] = React.useState(0);
 
+  const [cur, setCur] = React.useState(true);
   const [isFirstRender, setIsFirstRender] = React.useState(true);
 
-  useEffect(() => {
-
-  }, [selectionStart1, selectionEnd1]);
 
   useEffect(() => {
     if (isFirstRender) {
       setIsFirstRender(false);
-    } else if (inputRef.current) {
+    }
+    else if (inputRef.current) {
       inputRef.current.focus();
       inputRef.current.setSelectionRange(selectionStart2, selectionEnd2);
       updateSelection();
     }
-  }, [selectionStart2, selectionEnd2]);
+  }, [cur]);
 
   function insertCommand(
     command: string,
@@ -47,8 +46,9 @@ export default function Question({ id, number, question, answer, changeAnswer }:
     const before = answer.slice(0, selectionStart1);
     const after = answer.slice(selectionEnd1);
     changeAnswer(before + command + after);
-    setSelectionStart2(before.length + start);
-    setSelectionEnd2(before.length + end);
+    setSelectionStart2(selectionStart1 + start);
+    setSelectionEnd2(selectionStart1 + end);
+    setCur(!cur);
   }
 
   function updateSelection() {
@@ -56,6 +56,10 @@ export default function Question({ id, number, question, answer, changeAnswer }:
       console.log(inputRef.current.selectionStart, "→", inputRef.current.selectionEnd);
       setSelectionStart1(inputRef.current.selectionStart as number);
       setSelectionEnd1(inputRef.current.selectionEnd as number);
+    } else {
+      console.log("updateSelection inputRef.current is null");
+      setSelectionStart1(answer.length);
+      setSelectionEnd1(answer.length);
     }
   }
 
@@ -73,6 +77,7 @@ export default function Question({ id, number, question, answer, changeAnswer }:
 
   return (
     <Paper variant="outlined" sx={{ borderRadius: 2 }}>
+      {selectionStart1}→{selectionEnd1}　{selectionStart2}→{selectionEnd2}　{inputRef.current?.selectionStart}→{inputRef.current?.selectionEnd}
       <Box padding={2}>
         <Stack spacing={2}>
           <Typography variant="h2" fontSize={17}>{number}:</Typography>
@@ -98,8 +103,19 @@ export default function Question({ id, number, question, answer, changeAnswer }:
             value={answer}
             inputProps={{ style: { fontFamily: "monospace", fontSize: 17 } }}
             inputRef={inputRef}
-            onSelect={updateSelection}
-            onChange={(e) => { changeAnswer(e.target.value) }}
+            onChange={(e) => {
+              console.log("onChange");
+              changeAnswer(e.target.value)
+              updateSelection()
+            }}
+            onSelect={() => {
+              console.log("onSelect");
+              updateSelection()
+            }}
+            onClick={() => {
+              console.log("onClick");
+              updateSelection()
+            }}
           />
           <Stack direction="row" spacing={1}>
             <Button variant="outlined" onClick={() => { insertCommand("\\") }}>
