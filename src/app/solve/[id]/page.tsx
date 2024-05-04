@@ -57,17 +57,25 @@ export default function Solve({ params }: { params: { id: string } }) {
 
   return (
     <main>
-      <Stack
-        spacing={2} maxWidth={640} paddingTop={2} paddingBottom={2} margin="auto"
-      >
-        <Paper sx={{ borderRadius: 2, padding: 2 }}>
-          <Typography fontFamily="monospace">問題ID:{params.id}</Typography>
-          <Typography variant="h1" fontSize={30}>課題1</Typography>
-          <Typography>積分の問題です</Typography>
+      <Paper sx={{ borderRadius: 0, width: "100%" }}>
+        <Box paddingTop={1} paddingRight={3} display="flex" alignItems="center" justifyContent="flex-end">
           <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener">
-            KaTeXチートシート
+            KaTeX Cheat Sheet
           </Link>
-        </Paper>
+          <Typography fontFamily="monospace" marginLeft={2}>
+            FormID:{params.id}
+          </Typography>
+        </Box>
+        <Box maxWidth={640} margin="auto">
+          <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
+            <Typography variant="h1" fontSize={30}>課題1 積分の問題</Typography>
+            <Typography>KaTeXの書式で答えてください。書式がわからない場合は、上にある "KaTeX Cheat Sheet" をみてください。</Typography>
+          </Stack>
+        </Box>
+      </Paper>
+      <Stack
+        spacing={2} maxWidth={640} paddingTop={4} margin="auto"
+      >
         {questions.map((question, index) => {
           return (
             <Question

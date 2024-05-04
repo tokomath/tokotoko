@@ -21,14 +21,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
         <footer>
-          <Box maxWidth={640}>
-
-          </Box>
-          <Stack
-            spacing={2} maxWidth={640} paddingTop={2} paddingBottom={2} margin="auto" alignItems={"center"}
-          >
-            <Typography fontSize={28} >TokoToko / とことこ</Typography>
-          </Stack>
+          <Typography fontSize={14} textAlign={"center"} margin={2}>TokoToko / とことこ</Typography>
         </footer>
       </body>
     </html>
