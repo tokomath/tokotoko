@@ -17,11 +17,8 @@ interface QuestionProps {
 export default function Question({ id, number, question, answer, changeAnswer }: QuestionProps) {
   const inputRef = React.useRef<HTMLInputElement>();
 
-  const [selectionStart1, setSelectionStart1] = React.useState(0);
-  const [selectionEnd1, setSelectionEnd1] = React.useState(0);
-
-  const [selectionStart2, setSelectionStart2] = React.useState(0);
-  const [selectionEnd2, setSelectionEnd2] = React.useState(0);
+  const [selectionStart, setSelectionStart] = React.useState(0);
+  const [selectionEnd, setSelectionEnd] = React.useState(0);
 
   const [cur, setCur] = React.useState(true);
   const [isFirstRender, setIsFirstRender] = React.useState(true);
@@ -33,7 +30,7 @@ export default function Question({ id, number, question, answer, changeAnswer }:
     }
     else if (inputRef.current) {
       inputRef.current.focus();
-      inputRef.current.setSelectionRange(selectionStart2, selectionEnd2);
+      inputRef.current.setSelectionRange(selectionStart, selectionEnd);
       updateSelection();
     }
   }, [cur]);
@@ -43,23 +40,21 @@ export default function Question({ id, number, question, answer, changeAnswer }:
     start: number = command.length,
     end: number = command.length) => {
 
-    const before = answer.slice(0, selectionStart1);
-    const after = answer.slice(selectionEnd1);
+    const before = answer.slice(0, selectionStart);
+    const after = answer.slice(selectionEnd);
     changeAnswer(before + command + after);
-    setSelectionStart2(selectionStart1 + start);
-    setSelectionEnd2(selectionStart1 + end);
+    setSelectionStart(selectionStart + start);
+    setSelectionEnd(selectionStart + end);
     setCur(!cur);
   }
 
   const updateSelection = () => {
     if (inputRef.current) {
-      console.log(inputRef.current.selectionStart, "→", inputRef.current.selectionEnd);
-      setSelectionStart1(inputRef.current.selectionStart as number);
-      setSelectionEnd1(inputRef.current.selectionEnd as number);
+      setSelectionStart(inputRef.current.selectionStart as number);
+      setSelectionEnd(inputRef.current.selectionEnd as number);
     } else {
-      console.log("updateSelection inputRef.current is null");
-      setSelectionStart1(answer.length);
-      setSelectionEnd1(answer.length);
+      setSelectionStart(answer.length);
+      setSelectionEnd(answer.length);
     }
   }
 
@@ -77,7 +72,6 @@ export default function Question({ id, number, question, answer, changeAnswer }:
 
   return (
     <Paper variant="outlined" sx={{ borderRadius: 2 }}>
-      {selectionStart1}→{selectionEnd1}　{selectionStart2}→{selectionEnd2}　{inputRef.current?.selectionStart}→{inputRef.current?.selectionEnd}
       <Box padding={2}>
         <Stack spacing={2}>
           <Typography variant="h2" fontSize={17}>{number}:</Typography>
@@ -104,16 +98,13 @@ export default function Question({ id, number, question, answer, changeAnswer }:
             inputProps={{ style: { fontFamily: "monospace", fontSize: 17 } }}
             inputRef={inputRef}
             onChange={(e) => {
-              console.log("onChange");
               changeAnswer(e.target.value)
               updateSelection()
             }}
             onSelect={() => {
-              console.log("onSelect");
               updateSelection()
             }}
             onClick={() => {
-              console.log("onClick");
               updateSelection()
             }}
           />
