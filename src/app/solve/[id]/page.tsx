@@ -69,7 +69,7 @@ export default function Solve({ params }: { params: { id: string } }) {
         <Box maxWidth={640} margin="auto">
           <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
             <Typography variant="h1" fontSize={30}>課題1 積分の問題</Typography>
-            <Typography>KaTeXの書式で答えてください。書式がわからない場合は、上にある "KaTeX Cheat Sheet" をみてください。</Typography>
+            <Typography>KaTeXの書式で答えてください。書式がわからない場合は、上にある KaTeX Cheat Sheet をみてください。</Typography>
           </Stack>
         </Box>
       </Paper>
