@@ -58,48 +58,12 @@ export default function Grading({ params }: { params: { id: string } })
         createAnsData("2","Q3","$ \\frac{1}{6} x^6$"),
     ]
     
-    let rows = [
-        createStudentAnsData("Sample Guy1",student_answers),
-        createStudentAnsData("Sample Guy2",student_answers),
-        createStudentAnsData("Sample Guy3",student_answers),
-        createStudentAnsData("Sample Guy4",student_answers),
-        createStudentAnsData("Sample Guy5",student_answers),
-        createStudentAnsData("Sample Guy6",student_answers),
-        createStudentAnsData("Sample Guy7",student_answers),
-        createStudentAnsData("Sample Guy8",student_answers),
-        createStudentAnsData("Sample Guy9",student_answers),
-        createStudentAnsData("Sample Guy10",student_answers),
-        createStudentAnsData("Sample Guy11",student_answers),
-        createStudentAnsData("Sample Guy12",student_answers),
-        createStudentAnsData("Sample Guy13",student_answers),
-        createStudentAnsData("Sample Guy14",student_answers),
-        createStudentAnsData("Sample Guy15",student_answers),
-        createStudentAnsData("Sample Guy16",student_answers),
-        createStudentAnsData("Sample Guy17",student_answers),
-        createStudentAnsData("Sample Guy18",student_answers),
-        createStudentAnsData("Sample Guy19",student_answers),
-        createStudentAnsData("Sample Guy20",student_answers),
-        createStudentAnsData("Sample Guy21",student_answers),
-        createStudentAnsData("Sample Guy22",student_answers),
-        createStudentAnsData("Sample Guy23",student_answers),
-        createStudentAnsData("Sample Guy24",student_answers),
-        createStudentAnsData("Sample Guy25",student_answers),
-        createStudentAnsData("Sample Guy26",student_answers),
-        createStudentAnsData("Sample Guy27",student_answers),
-        createStudentAnsData("Sample Guy28",student_answers),
-        createStudentAnsData("Sample Guy29",student_answers),
-        createStudentAnsData("Sample Guy30",student_answers),
-        createStudentAnsData("Sample Guy31",student_answers),
-        createStudentAnsData("Sample Guy32",student_answers),
-        createStudentAnsData("Sample Guy33",student_answers),
-        createStudentAnsData("Sample Guy34",student_answers),
-        createStudentAnsData("Sample Guy35",student_answers),
-        createStudentAnsData("Sample Guy36",student_answers),
-        createStudentAnsData("Sample Guy37",student_answers),
-        createStudentAnsData("Sample Guy38",student_answers),
-        createStudentAnsData("Sample Guy39",student_answers),
-        createStudentAnsData("Sample Guy40",student_answers),
-    ];
+    let rows = [];
+    for(let i = 1;i < 41;i++)
+    {
+        let data = createStudentAnsData("Sample Guy"+i,student_answers);
+        rows.push(data);
+    }
 
     return (
         <>
