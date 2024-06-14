@@ -22,7 +22,7 @@ model Section {
   summary     String
   test        Test         @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   testId      Int
-  number  Int
+  number      Int
   subSections SubSection[]
   questions   Question[]
 }
@@ -32,7 +32,7 @@ model SubSection {
   summary        String
   section        Section         @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   sectionId      Int
-  number  Int
+  number         Int
   subSubSections SubSubSection[]
   questions      Question[]
 }
@@ -40,7 +40,7 @@ model SubSection {
 model SubSubSection {
   id           Int        @id @default(autoincrement())
   summary      String
-  number  Int
+  number       Int
   subSection   SubSection @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   subSectionId Int
   questions    Question[]
@@ -48,7 +48,7 @@ model SubSubSection {
 
 model Question {
   id              Int            @id @default(autoincrement())
-  number  Int
+  number          Int
   question        String
   SubSection      SubSection?    @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   subSectionId    Int?

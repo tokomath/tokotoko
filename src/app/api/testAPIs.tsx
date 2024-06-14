@@ -1,7 +1,7 @@
 "use server"
 
-import { Question, Test, Section, SubSection, SubSubSection, Prisma } from "@prisma/client";
-import { prisma } from "@/app/api/prsima_client"
+import {Question, Test, Section, SubSection, SubSubSection, Prisma} from "@prisma/client";
+import {prisma} from "@/app/api/prsima_client"
 
 export interface TestFrame {
   test: Test,
@@ -37,6 +37,7 @@ export const createTest = async (props: TestFrame) => {
       create: props.questions.map(question => {
         return {
           question: question.question,
+          number: question.number,
         }
       })
     },
@@ -44,10 +45,12 @@ export const createTest = async (props: TestFrame) => {
       create: props.sections.map(section => {
         return {
           summary: section.section.summary,
+          number: section.section.number,
           questions: {
             create: section.questions.map(question => {
               return {
                 question: question.question,
+                number: question.number,
               }
             })
           },
@@ -55,10 +58,12 @@ export const createTest = async (props: TestFrame) => {
             create: section.subSections.map(subSection => {
               return {
                 summary: subSection.subSection.summary,
+                number: subSection.subSection.number,
                 questions: {
                   create: subSection.questions.map(question => {
                     return {
                       question: question.question,
+                      number: question.number,
                     }
                   })
                 },
@@ -66,10 +71,12 @@ export const createTest = async (props: TestFrame) => {
                   create: subSection.subSubSections.map(subSubSection => {
                     return {
                       summary: subSubSection.subSubSection.summary,
+                      number: subSubSection.subSubSection.number,
                       questions: {
                         create: subSubSection.questions.map(question => {
                           return {
                             question: question.question,
+                            number: question.number,
                           }
                         })
                       }
@@ -83,7 +90,7 @@ export const createTest = async (props: TestFrame) => {
       })
     }
   }
-  await prisma.test.create({ data: test })
+  await prisma.test.create({data: test})
 }
 
 export const removeTest = async (props: DeleteTestProps) => {
@@ -186,7 +193,7 @@ export const removeTest = async (props: DeleteTestProps) => {
                                         }).then(
                                           async _ => {
                                             await prisma.test.deleteMany({
-                                              where: { id: props.id }
+                                              where: {id: props.id}
                                             }).then(
                                               async _ => {
                                                 await prisma.question.deleteMany({
