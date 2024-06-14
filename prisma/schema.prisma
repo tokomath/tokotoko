@@ -9,3 +9,24 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+model Student {
+  id      Int    @id @default(autoincrement())
+  name    String @unique
+  pass    String
+  classes Class[]
+}
+
+model Teacher {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  pass String
+  classes Class[]
+}
+
+model Class {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  students Student[]
+  teachers Teacher[]
+}
