@@ -106,6 +106,9 @@ export default function Question({ id, number, question, answer, changeAnswer }:
           onClick={() => {
             updateSelection()
           }}
+          onTouchEnd={() => {
+            updateSelection()
+          }}
         />
         <Stack direction="row" spacing={1}>
           <Button variant="outlined" onClick={() => { insertCommand("\\") }}>
