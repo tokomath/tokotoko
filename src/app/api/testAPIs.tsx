@@ -1,7 +1,7 @@
 "use server"
 
 import {Question, Test, Section, SubSection, Prisma} from "@prisma/client";
-import {prisma} from "@/app/api/prsima_client"
+import {prisma} from "@/app/api/prisma_client"
 
 export interface TestFrame {
   test: Test,
