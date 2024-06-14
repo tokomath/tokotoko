@@ -1,11 +1,11 @@
 "use client"
-import {Button} from '@mui/material';
-import {Stack} from "@mui/system";
-import {useCallback, useState} from "react";
-import {Unstable_NumberInput as NumberInput} from "@mui/base/Unstable_NumberInput";
-import {removeTest, createTest, DeleteTestProps, getTest} from "@/app/api/testAPIs";
-import {Question} from "@prisma/client";
-import {TestFrame, SectionFrame, SubSubSectionFrame, SubSectionFrame} from "@/app/api/testAPIs";
+import { Button } from '@mui/material';
+import { Stack } from "@mui/system";
+import { useCallback, useState } from "react";
+import { Unstable_NumberInput as NumberInput } from "@mui/base/Unstable_NumberInput";
+import { removeTest, createTest, DeleteTestProps, getTest } from "@/app/api/testAPIs";
+import { Question } from "@prisma/client";
+import { TestFrame, SectionFrame, SubSubSectionFrame, SubSectionFrame } from "@/app/api/testAPIs";
 
 export default function Home() {
   const [num, setNum] = useState(0);
@@ -19,7 +19,6 @@ export default function Home() {
         {
           id: 1,
           question: 'question',
-          answer: 'answer',
         } as Question
       ],
       sections: [
@@ -44,7 +43,6 @@ export default function Home() {
                     {
                       id: 1,
                       question: 'question',
-                      answer: 'answer',
                     } as Question
                   ]
                 } as SubSubSectionFrame
@@ -53,7 +51,6 @@ export default function Home() {
                 {
                   id: 1,
                   question: 'question',
-                  answer: 'answer',
                 } as Question
               ]
             } as SubSectionFrame
@@ -62,7 +59,6 @@ export default function Home() {
             {
               id: 1,
               question: 'question',
-              answer: 'answer',
             } as Question
           ]
         } as SectionFrame
