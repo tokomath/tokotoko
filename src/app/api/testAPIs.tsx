@@ -1,7 +1,7 @@
 "use server"
 
-import {Question, Test, Section, SubSection, SubSubSection, Prisma} from "@prisma/client";
-import {prisma} from "@/app/api/prsima_client"
+import { Question, Test, Section, SubSection, SubSubSection, Prisma } from "@prisma/client";
+import { prisma } from "@/app/api/prsima_client"
 
 export interface TestFrame {
   test: Test,
@@ -37,7 +37,6 @@ export const createTest = async (props: TestFrame) => {
       create: props.questions.map(question => {
         return {
           question: question.question,
-          answer: question.answer,
         }
       })
     },
@@ -49,7 +48,6 @@ export const createTest = async (props: TestFrame) => {
             create: section.questions.map(question => {
               return {
                 question: question.question,
-                answer: question.answer,
               }
             })
           },
@@ -61,7 +59,6 @@ export const createTest = async (props: TestFrame) => {
                   create: subSection.questions.map(question => {
                     return {
                       question: question.question,
-                      answer: question.answer,
                     }
                   })
                 },
@@ -73,7 +70,6 @@ export const createTest = async (props: TestFrame) => {
                         create: subSubSection.questions.map(question => {
                           return {
                             question: question.question,
-                            answer: question.answer,
                           }
                         })
                       }
@@ -87,7 +83,7 @@ export const createTest = async (props: TestFrame) => {
       })
     }
   }
-  await prisma.test.create({data: test})
+  await prisma.test.create({ data: test })
 }
 
 export const removeTest = async (props: DeleteTestProps) => {
@@ -190,7 +186,7 @@ export const removeTest = async (props: DeleteTestProps) => {
                                         }).then(
                                           async _ => {
                                             await prisma.test.deleteMany({
-                                              where: {id: props.id}
+                                              where: { id: props.id }
                                             }).then(
                                               async _ => {
                                                 await prisma.question.deleteMany({
