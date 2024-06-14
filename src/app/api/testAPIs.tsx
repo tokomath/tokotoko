@@ -38,6 +38,7 @@ export const createTest = async (props: TestFrame) => {
         return {
           question: question.question,
           number: question.number,
+          answer: question.answer,
         }
       })
     },
@@ -51,6 +52,7 @@ export const createTest = async (props: TestFrame) => {
               return {
                 question: question.question,
                 number: question.number,
+                answer: question.answer,
               }
             })
           },
@@ -64,6 +66,7 @@ export const createTest = async (props: TestFrame) => {
                     return {
                       question: question.question,
                       number: question.number,
+                      answer: question.answer,
                     }
                   })
                 },
@@ -77,6 +80,7 @@ export const createTest = async (props: TestFrame) => {
                           return {
                             question: question.question,
                             number: question.number,
+                            answer: question.answer,
                           }
                         })
                       }

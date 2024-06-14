@@ -50,6 +50,7 @@ model Question {
   id              Int            @id @default(autoincrement())
   number          Int
   question        String
+  answer          String
   SubSection      SubSection?    @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   subSectionId    Int?
   subSubSection   SubSubSection? @relation(fields: [subSubSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
