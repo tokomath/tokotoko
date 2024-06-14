@@ -1,28 +1,20 @@
 "use server"
 
-import {Question, Test, Section, SubSection, SubSubSection, Prisma} from "@prisma/client";
+import {Question, Test, Section, SubSection, Prisma} from "@prisma/client";
 import {prisma} from "@/app/api/prsima_client"
 
 export interface TestFrame {
   test: Test,
-  questions: Question[],
   sections: SectionFrame[],
 }
 
 export interface SectionFrame {
   section: Section,
   subSections: SubSectionFrame[],
-  questions: Question[],
 }
 
 export interface SubSectionFrame {
   subSection: SubSection,
-  subSubSections: SubSubSectionFrame[],
-  questions: Question[],
-}
-
-export interface SubSubSectionFrame {
-  subSubSection: SubSubSection,
   questions: Question[],
 }
 
@@ -33,29 +25,11 @@ export interface DeleteTestProps {
 export const createTest = async (props: TestFrame) => {
   let test: Prisma.TestCreateInput = {
     summary: props.test.summary,
-    questions: {
-      create: props.questions.map(question => {
-        return {
-          question: question.question,
-          number: question.number,
-          answer: question.answer,
-        }
-      })
-    },
     sections: {
       create: props.sections.map(section => {
         return {
           summary: section.section.summary,
           number: section.section.number,
-          questions: {
-            create: section.questions.map(question => {
-              return {
-                question: question.question,
-                number: question.number,
-                answer: question.answer,
-              }
-            })
-          },
           subSections: {
             create: section.subSections.map(subSection => {
               return {
@@ -70,23 +44,6 @@ export const createTest = async (props: TestFrame) => {
                     }
                   })
                 },
-                subSubSections: {
-                  create: subSection.subSubSections.map(subSubSection => {
-                    return {
-                      summary: subSubSection.subSubSection.summary,
-                      number: subSubSection.subSubSection.number,
-                      questions: {
-                        create: subSubSection.questions.map(question => {
-                          return {
-                            question: question.question,
-                            number: question.number,
-                            answer: question.answer,
-                          }
-                        })
-                      }
-                    }
-                  })
-                }
               }
             })
           }
@@ -118,120 +75,45 @@ export const removeTest = async (props: DeleteTestProps) => {
             }
           })
         )
-      }).map(value => {
-        value.then(async subsection => {
-          subsection.map(async i => {
-            return (
-              await prisma.subSubSection.findMany({
+      }).map(async subsection => {
+        subsection.then(i => {
+          return i.map(async _ => {
+            subsection.then(i => {
+              prisma.question.deleteMany({
                 where: {
-                  subSectionId: i.id,
-                },
-                select: {
-                  id: true
-                }
-              })
-            )
-          }).map(async subsubsection => {
-            subsubsection.then(i => {
-              return i.map(async _ => {
-                await prisma.question.deleteMany({
-                  where: {
-                    subSubSectionId: {
-                      in: i.map(idx => {
-                        return idx.id
-                      })
-                    }
+                  subSectionId: {
+                    in: i.map(j => {
+                      return j.id
+                    })
                   }
-                }).then(
-                  async _ => {
-                    await prisma.subSubSection.deleteMany({
-                      where: {
-                        subSectionId: {
-                          in: subsection.map(s => {
-                            return s.id
+                }
+              }).then(
+                async _ => {
+                  await prisma.subSection.deleteMany({
+                    where: {
+                      sectionId: {
+                        in: section.map(i => {
+                          return i.id
+                        })
+                      }
+                    }
+                  }).then(
+                    async _ => {
+                      await prisma.section.deleteMany({
+                        where: {
+                          testId: props.id
+                        }
+                      }).then(
+                        async _ => {
+                          await prisma.test.deleteMany({
+                            where: {id: props.id}
                           })
                         }
-                      }
-                    }).then(
-                      async _ => {
-                        await prisma.question.deleteMany({
-                          where: {
-                            subSectionId: {
-                              in: subsection.map(i => {
-                                return i.id
-                              })
-                            }
-                          }
-                        }).then(
-                          async () => {
-                            await prisma.subSection.deleteMany({
-                              where: {
-                                sectionId: {
-                                  in: section.map(i => {
-                                    return i.id
-                                  })
-                                }
-                              }
-                            }).then(
-                              async _ => {
-                                await prisma.question.deleteMany({
-                                  where: {
-                                    sectionId: {
-                                      in: section.map(i => {
-                                        return i.id
-                                      })
-                                    }
-                                  }
-                                }).then(
-                                  async _ => {
-                                    await prisma.section.deleteMany({
-                                      where: {
-                                        testId: props.id
-                                      }
-                                    }).then(
-                                      async _ => {
-                                        await prisma.question.deleteMany({
-                                          where: {
-                                            testId: props.id
-                                          }
-                                        }).then(
-                                          async _ => {
-                                            await prisma.test.deleteMany({
-                                              where: {id: props.id}
-                                            }).then(
-                                              async _ => {
-                                                await prisma.question.deleteMany({
-                                                  where: {
-                                                    testId: props.id,
-                                                    sectionId: {
-                                                      in: section.map(i => {
-                                                        return i.id
-                                                      })
-                                                    },
-                                                    subSectionId: {
-                                                      in: subsection.map(i => {
-                                                        return i.id
-                                                      })
-                                                    },
-                                                  }
-                                                })
-                                              }
-                                            )
-                                          }
-                                        )
-                                      }
-                                    )
-                                  }
-                                )
-                              }
-                            )
-                          }
-                        )
-                      }
-                    )
-                  }
-                )
-              })
+                      )
+                    }
+                  )
+                }
+              )
             })
           })
         })

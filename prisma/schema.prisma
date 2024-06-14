@@ -11,10 +11,9 @@ datasource db {
 }
 
 model Test {
-  id        Int        @id @default(autoincrement())
-  summary   String
-  sections  Section[]
-  questions Question[]
+  id       Int       @id @default(autoincrement())
+  summary  String
+  sections Section[]
 }
 
 model Section {
@@ -24,39 +23,22 @@ model Section {
   testId      Int
   number      Int
   subSections SubSection[]
-  questions   Question[]
 }
 
 model SubSection {
-  id             Int             @id @default(autoincrement())
-  summary        String
-  section        Section         @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  sectionId      Int
-  number         Int
-  subSubSections SubSubSection[]
-  questions      Question[]
-}
-
-model SubSubSection {
-  id           Int        @id @default(autoincrement())
-  summary      String
-  number       Int
-  subSection   SubSection @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subSectionId Int
-  questions    Question[]
+  id        Int        @id @default(autoincrement())
+  summary   String
+  section   Section    @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  sectionId Int
+  number    Int
+  questions Question[]
 }
 
 model Question {
-  id              Int            @id @default(autoincrement())
-  number          Int
-  question        String
-  answer          String
-  SubSection      SubSection?    @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subSectionId    Int?
-  subSubSection   SubSubSection? @relation(fields: [subSubSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subSubSectionId Int?
-  section         Section?       @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  sectionId       Int?
-  Test            Test?          @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  testId          Int?
+  id           Int         @id @default(autoincrement())
+  number       Int
+  question     String
+  answer       String
+  SubSection   SubSection? @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  subSectionId Int?
 }
