@@ -12,12 +12,11 @@ interface Test {
   summary: string,
 }
 
-export default function Mypage({ params }: { params: { id: string } }) {
+export default function Mypage({ params }: { params: { name: string } }) {
   const [tests, setTests] = useState<Test[]>([]);
   useEffect(() => {
     async function f() {
-      console.log("hello");
-      const tests = await axios.post("/api/mypage", { data: { name: params.id } });
+      const tests = await axios.post("/api/mypage", { data: { name: params.name } });
       setTests(tests.data);
     }
     f()
