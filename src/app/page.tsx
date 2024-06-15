@@ -14,6 +14,7 @@ export default function Home() {
 
     const test: TestFrame = {
       test: {
+        title: "Hello",
         id: 1,
         summary: 'test',
       },

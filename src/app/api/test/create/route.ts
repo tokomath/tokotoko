@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       connect : info.classes.map((c : string) => ({name : c})) || [],
       //connect: {name: "A"}
     },
+    title: info.title,
     summary: info.summary,
     sections: {
       create: info.sections.map((section:any) => {

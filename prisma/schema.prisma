@@ -12,6 +12,7 @@ datasource db {
 
 model Test {
   id          Int          @id @default(autoincrement())
+  title       String       @default("")
   summary     String
   sections    Section[]
   submittions Submittion[]
@@ -72,7 +73,7 @@ model Submittion {
   id        Int      @id @default(autoincrement())
   student   Student  @relation(fields: [studentId], references: [id])
   answers   Answer[]
-  test      Test    @relation(fields: [testId], references: [id])
+  test      Test     @relation(fields: [testId], references: [id])
   testId    Int
   studentId Int
 }

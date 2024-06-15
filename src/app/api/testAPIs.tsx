@@ -24,6 +24,7 @@ export interface DeleteTestProps {
 
 export const createTest = async (props: TestFrame) => {
   let test: Prisma.TestCreateInput = {
+    title: props.test.title,
     summary: props.test.summary,
     sections: {
       create: props.sections.map(section => {
