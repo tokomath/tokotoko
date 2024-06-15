@@ -6,9 +6,10 @@ const prisma = new PrismaClient();
 export async function POST(request: NextRequest) {
   const info = await request.json();
   try {
-    const teacher = await prisma.teacher.findUniqueOrThrow({ where: { name: info.teacher_name } });
-    const user = await prisma.class.create({ data: { name: info.name, teachers: { connect: { id: teacher.id } } } });
-    return NextResponse.json({ name: info.name });
+    for (let item of info.student_names){
+      const user = await prisma.student.create({ data: { name: item, pass: "pass" } });
+    }
+    return NextResponse.json({ message: "ok" });
   } catch (e) {
     return NextResponse.json({ message: "error" }, { status: 500 });
   }
