@@ -51,6 +51,7 @@ export const createTest = async (props: TestFrame) => {
       })
     }
   }
+  console.log(JSON.stringify(test.sections));
   await prisma.test.create({data: test})
 }
 

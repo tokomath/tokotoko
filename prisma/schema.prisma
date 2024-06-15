@@ -11,9 +11,11 @@ datasource db {
 }
 
 model Test {
-  id       Int       @id @default(autoincrement())
-  summary  String
-  sections Section[]
+  id          Int          @id @default(autoincrement())
+  summary     String
+  sections    Section[]
+  submittions Submittion[]
+  classes     Class[]
 }
 
 model Section {
@@ -44,16 +46,17 @@ model Question {
 }
 
 model Student {
-  id      Int    @id @default(autoincrement())
-  name    String @unique
-  pass    String
-  classes Class[]
+  id         Int          @id @default(autoincrement())
+  name       String       @unique
+  pass       String
+  classes    Class[]
+  Submittion Submittion[]
 }
 
 model Teacher {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-  pass String
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  pass    String
   classes Class[]
 }
 
@@ -62,4 +65,22 @@ model Class {
   name     String    @unique
   students Student[]
   teachers Teacher[]
+  tests    Test[]
+}
+
+model Submittion {
+  id        Int      @id @default(autoincrement())
+  student   Student  @relation(fields: [studentId], references: [id])
+  answers   Answer[]
+  test      Test    @relation(fields: [testId], references: [id])
+  testId    Int
+  studentId Int
+}
+
+model Answer {
+  id           Int         @id @default(autoincrement())
+  point        Int
+  text         String
+  Submittion   Submittion? @relation(fields: [submittionId], references: [id])
+  submittionId Int?
 }
