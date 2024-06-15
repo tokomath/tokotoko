@@ -29,7 +29,7 @@ export default function Mypage({params}: { params: { name: string } }) {
       {
         tests.map((item, idx) => (
           <ol key={idx}>
-            <Link href={"/test/form/" + idx}>
+            <Link href={"/test/form/" + item.id}>
               <Card>
                 <CardContent>
                   <Typography variant="h5">

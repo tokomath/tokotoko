@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     await Promise.all(cls.map(async (c) => {
         const tests = await prisma.test.findMany({ where: { classes: { some: c } } })
         tests.map(test => {
-          res.push({ class: c.name, summary: test.summary , id: c.id})
+          res.push({ class: c.name, summary: test.summary , id: test.id})
         })
     }))
     return NextResponse.json(res);
