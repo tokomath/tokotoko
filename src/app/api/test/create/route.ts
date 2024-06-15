@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
   const info = await request.json();
   let test: Prisma.TestCreateInput = {
     classes: {
-      //connect : info.classes.map((c : string) => ({: c})) || [],
-      connect: {name: info.classes[0]}
+      connect : info.classes.map((c : string) => ({name : c})) || [],
+      //connect: {name: "A"}
     },
     summary: info.summary,
     sections: {
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
                 number: subSection.subSection.number,
                 questions: {
                   create: subSection.subSection.questions.map((question:any) => {
-                    return question.question
+                    return question
                   })
                 },
               }

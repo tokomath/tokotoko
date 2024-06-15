@@ -1,7 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import {prisma} from "@/app/api/prisma_client"
 
 export async function POST(request: NextRequest) {
   const info = await request.json();
@@ -10,6 +8,7 @@ export async function POST(request: NextRequest) {
     const user = await prisma.class.create({ data: { name: info.name, teachers: { connect: { id: teacher.id } } } });
     return NextResponse.json({ name: info.name });
   } catch (e) {
+    console.log(e);
     return NextResponse.json({ message: "error" }, { status: 500 });
   }
 };
