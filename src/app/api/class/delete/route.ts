@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const info = await request.json();
   try {
     const teacher = await prisma.teacher.findUniqueOrThrow({ where: { name: info.teacher_name } });
-    if(teacher.pass == info.teacher_pass){
+    if(teacher.pass === info.teacher_pass){
       const user = await prisma.class.delete({ where: { name: info.name } });
       return NextResponse.json({ message: "ok"});
     }else{

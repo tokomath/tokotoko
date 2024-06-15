@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const info = await request.json();
   try {
     const teacher = await prisma.teacher.findUniqueOrThrow({ where: { name: info.teacher_name } });
-    if (teacher.pass = info.teacher_pass) { //teacher auth
+    if (teacher.pass === info.teacher_pass) { //teacher auth
       const user = await prisma.student.findUniqueOrThrow({ where: { name: info.student_name } });
       const user_id = user.id;
       const class_update = await prisma.class.update({
