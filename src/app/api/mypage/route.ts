@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 interface Test {
   class: string,
   summary: string,
+  id: number,
 }
 
 export async function POST(request: NextRequest) {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
     await Promise.all(cls.map(async (c) => {
         const tests = await prisma.test.findMany({ where: { classes: { some: c } } })
         tests.map(test => {
-          res.push({ class: c.name, summary: test.summary })
+          res.push({ class: c.name, summary: test.summary , id: c.id})
         })
     }))
     return NextResponse.json(res);
