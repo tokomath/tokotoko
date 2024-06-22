@@ -19,10 +19,10 @@ model Class {
 }
 
 model Student {
-  id         Int          @id @default(autoincrement())
-  name       String       @unique
-  pass       String
-  classes    Class[]
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  pass        String
+  classes     Class[]
   submittions Submittion[]
 }
 
@@ -38,7 +38,7 @@ model Test {
   title       String
   summary     String
   sections    Section[]
-  endDate    DateTime
+  endDate     DateTime     @default(now())
   submittions Submittion[]
   classes     Class[]
 }
@@ -50,7 +50,7 @@ model Section {
   summary     String
   subSections SubSection[]
 
-  test        Test         @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  test Test @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
 model SubSection {
@@ -60,38 +60,38 @@ model SubSection {
   summary   String
   questions Question[]
 
-  section   Section    @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  section Section @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
 model Question {
-  id           Int         @id @default(autoincrement())
-  subSectionId Int
-  number       Int
-  question     String
-  answer       String
+  id                Int      @id @default(autoincrement())
+  subSectionId      Int
+  number            Int
+  question          String
+  answer            String
   submittionAnswers Answer[]
 
-  SubSection  SubSection  @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  SubSection SubSection @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
 model Submittion {
-  id        Int      @id @default(autoincrement())
-  testId    Int
-  studentId Int
+  id             Int      @id @default(autoincrement())
+  testId         Int
+  studentId      Int
   submittionDate DateTime @default(now())
-  answers   Answer[]
+  answers        Answer[]
 
-  test      Test     @relation(fields: [testId], references: [id])
-  student   Student  @relation(fields: [studentId], references: [id])
+  test    Test    @relation(fields: [testId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
 }
 
 model Answer {
-  id           Int         @id @default(autoincrement())
+  id           Int    @id @default(autoincrement())
   submittionId Int
   questionId   Int
   point        Int
   text         String
 
-  Submittion   Submittion @relation(fields: [submittionId], references: [id])
-  question     Question @relation(fields:[submittionId],references:[id])
+  Submittion Submittion @relation(fields: [submittionId], references: [id])
+  question   Question   @relation(fields: [submittionId], references: [id])
 }

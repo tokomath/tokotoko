@@ -1,8 +1,9 @@
 "use client"
 import React, {useState} from "react";
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {Dayjs} from "dayjs"
+import dayjs from 'dayjs'
 
 interface TestType {
   title: string,
@@ -29,11 +30,14 @@ interface QuestionType {
 }
 
 import {Card, Stack, Input, TextField, Button, Container, Box} from '@mui/material';
+import {LocalizationProvider} from "@mui/x-date-pickers";
+import axios from "axios";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionType[]>([])
   const [testTitle, setTestTitle] = useState('')
   const [testSummary, setTestSummary] = useState('')
+  const [endDate, setEndDate] = useState<Dayjs>(dayjs())
 
   const handleSectionChange = (item: SectionType, index: number) => {
     const newS = sections.map((s: SectionType, i: number) => {
@@ -53,21 +57,42 @@ export default function Page() {
     setSections(newS2)
   }
   const handleAdd = () => {
-    setSections([...sections].concat({summary:"", subSections: [], number: sections.length + 1}))
+    setSections([...sections].concat({summary: "", subSections: [], number: sections.length + 1}))
+  }
+
+  const data = {title: testTitle, summary: testSummary, sections: sections, endDate: endDate.toJSON(), classes:[]}
+
+  const createTest = async () => {
+    //TODO classes
+    //const data = {title: testTitle, summary: testSummary, sections: sections, endDate: endDate.toJSON(), classes:[]}
+    const response = await axios.post('/api/test/create', data).catch(
+      (e) => {
+        const str = JSON.stringify(e.response.data)
+        alert("test created\n" + str)
+      }
+    )
   }
 
   return (
     <Box width="100vw" justifyContent="center" display="flex">
       <Stack gap={2}>
-        <TextField label="testTitle" onChange={(e)=>setTestTitle(e.target.value)}></TextField>
-        <TextField label="testSummary" onChange={(e)=>setTestSummary(e.target.value)}></TextField>
+        <Button variant={"contained"} onClick={createTest}>Create Test</Button>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DateTimePicker value={endDate} onChange={(val: Dayjs | null) => {
+            if (val !== null) {
+              setEndDate(val);
+            }
+          }}/>
+        </LocalizationProvider>
+        <TextField label="testTitle" onChange={(e) => setTestTitle(e.target.value)}></TextField>
+        <TextField label="testSummary" onChange={(e) => setTestSummary(e.target.value)}></TextField>
         {sections.map((s: SectionType, index: number) => (
           <Section key={index} index={index} section={s} setSection={(s: SectionType) => {
             handleSectionChange(s, index)
           }} deleteSection={() => handleRemove(index)}/>
         ))}
         <Button onClick={handleAdd}>Add Section</Button>
-        <p>{JSON.stringify({title:testTitle, summary:testSummary,sections:sections})}</p>
+        <p>{JSON.stringify(data)}</p>
       </Stack>
     </Box>
   );
@@ -123,7 +148,7 @@ const SubSection = ({index, subSection, setSubSection, deleteSubSection}: any) =
       if (i === index) {
         return item
       } else {
-        return {question: q.question, answer: q.answer, i: i + 1}
+        return {question: q.question, answer: q.answer, number: i + 1}
       }
     })
     setSubSection({...subSection, questions: newQ})
