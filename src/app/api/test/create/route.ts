@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import {NextResponse, NextRequest} from "next/server";
 import {Question, Test, Section, SubSection, Prisma} from "@prisma/client";
 import {prisma} from "@/app/api/prisma_client"
 
@@ -17,13 +17,13 @@ export interface SubSectionFrame {
   questions: Question[],
 }
 
-export interface Sec{
+export interface Sec {
   summary: String,
   number: number,
   subSections: SubSection[],
 }
 
-export interface SubSec{
+export interface SubSec {
   summary: String,
   number: number,
   questions: any,
@@ -37,38 +37,42 @@ export async function POST(request: NextRequest) {
   const info = await request.json();
   let test: Prisma.TestCreateInput = {
     classes: {
-      connect : info.classes.map((c : string) => ({name : c})) || [],
+      connect: info.classes.map((c: string) => ({name: c})) || [],
       //connect: {name: "A"}
     },
     title: info.title,
     summary: info.summary,
+    //endDate: info.endDate,
     sections: {
-      create: info.sections.map((section:any) => {
+      create: info.sections.map((section: any) => {
+        console.log(section)
         return {
-          summary: section.section.summary,
-          number: section.section.number,
-          subSections: {
-            create: section.section.subSections.map((subSection:any) => {
-              return {
-                summary: subSection.subSection.summary,
-                number: subSection.subSection.number,
-                questions: {
-                  create: subSection.subSection.questions.map((question:any) => {
-                    return question
-                  })
-                },
-              }
-            })
-          }
+          summary: section.summary,
+          number: section.number,
+          subSections:
+            {
+              create: section.subSections.map((subSection: any) => {
+                console.log(subSection)
+                return {
+                  summary: subSection.summary,
+                  number: subSection.number,
+                  questions: {
+                    create: subSection.questions.map((question: any) => {
+                      return question
+                    })
+                  },
+                }
+              })
+            }
         }
       })
     }
   }
-  try{
+  try {
     console.log(JSON.stringify(test.sections));
     await prisma.test.create({data: test})
     return NextResponse.json({message: "ok"});
-  }catch(e){
-    return NextResponse.json({message: e},{status: 500});
+  } catch (e) {
+    return NextResponse.json({message: e}, {status: 500});
   }
 }
