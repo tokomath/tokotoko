@@ -10,40 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Test {
-  id          Int          @id @default(autoincrement())
-  title       String       @default("")
-  summary     String
-  sections    Section[]
-  submittions Submittion[]
-  classes     Class[]
-}
-
-model Section {
-  id          Int          @id @default(autoincrement())
-  summary     String
-  test        Test         @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  testId      Int
-  number      Int
-  subSections SubSection[]
-}
-
-model SubSection {
-  id        Int        @id @default(autoincrement())
-  summary   String
-  section   Section    @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  sectionId Int
-  number    Int
-  questions Question[]
-}
-
-model Question {
-  id           Int         @id @default(autoincrement())
-  number       Int
-  question     String
-  answer       String
-  SubSection   SubSection? @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  subSectionId Int?
+model Class {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  students Student[]
+  teachers Teacher[]
+  tests    Test[]
 }
 
 model Student {
@@ -51,7 +23,7 @@ model Student {
   name       String       @unique
   pass       String
   classes    Class[]
-  Submittion Submittion[]
+  submittions Submittion[]
 }
 
 model Teacher {
@@ -61,27 +33,65 @@ model Teacher {
   classes Class[]
 }
 
-model Class {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  students Student[]
-  teachers Teacher[]
-  tests    Test[]
+model Test {
+  id          Int          @id @default(autoincrement())
+  title       String
+  summary     String
+  sections    Section[]
+  endDate    DateTime
+  submittions Submittion[]
+  classes     Class[]
+}
+
+model Section {
+  id          Int          @id @default(autoincrement())
+  testId      Int
+  number      Int
+  summary     String
+  subSections SubSection[]
+
+  test        Test         @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+}
+
+model SubSection {
+  id        Int        @id @default(autoincrement())
+  sectionId Int
+  number    Int
+  summary   String
+  questions Question[]
+
+  section   Section    @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+}
+
+model Question {
+  id           Int         @id @default(autoincrement())
+  subSectionId Int
+  number       Int
+  question     String
+  answer       String
+  submittionAnswers Answer[]
+
+  SubSection  SubSection  @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
 model Submittion {
   id        Int      @id @default(autoincrement())
-  student   Student  @relation(fields: [studentId], references: [id])
-  answers   Answer[]
-  test      Test     @relation(fields: [testId], references: [id])
   testId    Int
   studentId Int
+  submittionDate DateTime @default(now())
+  answers   Answer[]
+
+  test      Test     @relation(fields: [testId], references: [id])
+  student   Student  @relation(fields: [studentId], references: [id])
 }
 
 model Answer {
   id           Int         @id @default(autoincrement())
+  submittionId Int
+  questionId   Int
   point        Int
   text         String
-  Submittion   Submittion? @relation(fields: [submittionId], references: [id])
-  submittionId Int?
+
+  Submittion   Submittion @relation(fields: [submittionId], references: [id])
+  question     Question @relation(fields:[submittionId],references:[id])
 }
