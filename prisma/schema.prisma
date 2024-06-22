@@ -38,6 +38,7 @@ model Test {
   title       String
   summary     String
   sections    Section[]
+  startDate   DateTime     @default(now())
   endDate     DateTime     @default(now())
   submittions Submittion[]
   classes     Class[]

@@ -35,6 +35,7 @@ export interface DeleteTestProps {
 
 export async function POST(request: NextRequest) {
   const info = await request.json();
+
   let test: Prisma.TestCreateInput = {
     classes: {
       connect: info.classes.map((c: string) => ({name: c})) || [],
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     },
     title: info.title,
     summary: info.summary,
-    //endDate: info.endDate,
+    endDate: info.endDate,
     sections: {
       create: info.sections.map((section: any) => {
         console.log(section)
@@ -68,11 +69,12 @@ export async function POST(request: NextRequest) {
       })
     }
   }
-  try {
-    console.log(JSON.stringify(test.sections));
-    await prisma.test.create({data: test})
-    return NextResponse.json({message: "ok"});
-  } catch (e) {
-    return NextResponse.json({message: e}, {status: 500});
-  }
+
+    try {
+      console.log(JSON.stringify(test.sections));
+      await prisma.test.create({data: test})
+      return NextResponse.json({message: "ok"});
+    } catch (e) {
+      return NextResponse.json({message: e}, {status: 500});
+    }
 }

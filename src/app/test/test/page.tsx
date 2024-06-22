@@ -38,6 +38,7 @@ export default function Page() {
   const [testTitle, setTestTitle] = useState('')
   const [testSummary, setTestSummary] = useState('')
   const [endDate, setEndDate] = useState<Dayjs>(dayjs())
+  const [startDate, setStartDate] = useState<Dayjs>(dayjs())
 
   const handleSectionChange = (item: SectionType, index: number) => {
     const newS = sections.map((s: SectionType, i: number) => {
@@ -78,6 +79,13 @@ export default function Page() {
       <Stack gap={2}>
         <Button variant={"contained"} onClick={createTest}>Create Test</Button>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <p>start date</p>
+          <DateTimePicker value={startDate} onChange={(val: Dayjs | null) => {
+            if (val !== null) {
+              setStartDate(val);
+            }
+          }}/>
+          <p>end date</p>
           <DateTimePicker value={endDate} onChange={(val: Dayjs | null) => {
             if (val !== null) {
               setEndDate(val);
