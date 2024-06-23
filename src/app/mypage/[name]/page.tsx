@@ -1,7 +1,7 @@
 "use client";
 import axios from 'axios'
 import {useEffect, useState} from "react";
-import {List, ListItem, Card, CardContent, Typography, Button, Link} from "@mui/material";
+import {List, ListItem, Card, CardContent, Typography, Button, Link, Box} from "@mui/material";
 import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
 import Question from "@/compornents/Question";
@@ -25,25 +25,26 @@ export default function Mypage({params}: { params: { name: string } }) {
   }, []);
 
   return (
-    <li>
+    <Stack justifyContent={"center"} alignItems={"center"}>
+      <h2>assigned tests</h2>
       {
         tests.map((item, idx) => (
-          <ol key={idx}>
-            <Link href={"/test/form/" + item.id}>
+            <Link key={idx} href={"/test/form/" + item.id}>
               <Card>
-                <CardContent>
-                  <Typography variant="h5">
-                    {item.summary}
-                  </Typography>
-                  <Typography variant="h6">
-                    {"class:  " + item.class}
-                  </Typography>
-                </CardContent>
+                <Box width={400}>
+                  <CardContent>
+                    <Typography variant="h5">
+                      {item.summary}
+                    </Typography>
+                    <Typography variant="h6">
+                      {"class:  " + item.class}
+                    </Typography>
+                  </CardContent>
+                </Box>
               </Card>
             </Link>
-          </ol>
         ))
       }
-    </li>
+    </Stack>
   )
 }
