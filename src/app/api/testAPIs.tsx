@@ -2,8 +2,10 @@
 
 import {Question, Test, Section, SubSection, Prisma} from "@prisma/client";
 import {prisma} from "@/app/api/prisma_client"
+import dayjs from "dayjs"
 
 export interface TestFrame {
+  title: string,
   test: Test,
   sections: SectionFrame[],
 }
@@ -24,7 +26,9 @@ export interface DeleteTestProps {
 
 export const createTest = async (props: TestFrame) => {
   let test: Prisma.TestCreateInput = {
+    title: props.test.title,
     summary: props.test.summary,
+    endDate: props.test.endDate,
     sections: {
       create: props.sections.map(section => {
         return {
@@ -51,6 +55,7 @@ export const createTest = async (props: TestFrame) => {
       })
     }
   }
+  console.log(JSON.stringify(test.sections));
   await prisma.test.create({data: test})
 }
 
@@ -123,7 +128,7 @@ export const removeTest = async (props: DeleteTestProps) => {
 }
 
 export const getTest = async () => {
-  const test: Test[] = await prisma.test.findMany({});
+  const test = await prisma.test.findFirst();
   console.log(test)
   return test;
 }
