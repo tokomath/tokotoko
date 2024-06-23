@@ -17,7 +17,7 @@ export default function Mypage({params}: { params: { name: string } }) {
   const [tests, setTests] = useState<Test[]>([]);
   useEffect(() => {
     async function f() {
-      const tests = await axios.post("/api/mypage", {data: {name: params.name}});
+      const tests = await axios.post("/mypage", {data: {name: params.name}});
       setTests(tests.data);
     }
 

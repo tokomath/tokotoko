@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   console.log(info);
   try {
     let res: Test[] = [];
-    const cls = await prisma.class.findMany({ where: { students: {some : {name: info.data.name}} } })
+    const cls = await prisma.class.findMany({ where: { teachers: {some : {name: info.data.name}} } })
     //console.log(cls);
     await Promise.all(cls.map(async (c) => {
         const tests = await prisma.test.findMany({ where: { classes: { some: c } } })
