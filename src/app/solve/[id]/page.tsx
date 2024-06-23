@@ -25,8 +25,14 @@ export interface Question {
   question: string,
 }
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
 // サンプルデータ
-export const parts: Part[] = [
+const parts: Part[] = [
   {
     id: "0",
     title: "Part1",
@@ -131,13 +137,9 @@ export const parts: Part[] = [
   },
 ];
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
 function CustomTabPanel(props: TabPanelProps) {
+
+
   const { children, value, index, ...other } = props;
 
   return (
