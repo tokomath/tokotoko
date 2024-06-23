@@ -148,7 +148,7 @@ function CustomTabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box>{children}</Box>}
     </div>
   );
 }
@@ -235,7 +235,7 @@ export default function Solve({ params }: { params: { id: string } }) {
             {part.sections.map((section) => (
               <Paper key={section.id} sx={{ marginTop: 2, padding: 2 }}>
                 <Typography variant="h6">{section.title}</Typography>
-                {section.questions.map((question) => (
+                {section.questions.map((question, index) => (
                   <React.Fragment key={question.id}>
                     <Divider sx={{ my: 1 }} />
                     <Question
