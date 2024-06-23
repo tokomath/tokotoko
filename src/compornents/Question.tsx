@@ -71,71 +71,72 @@ export default function Question({ id, number, question, answer, changeAnswer }:
   }
 
   return (
-    <Paper sx={{ borderRadius: 2, padding: 2 }} variant="outlined">
-      <Stack spacing={2}>
-        <Typography variant="h2" fontSize={17}>{number}:</Typography>
-        <Box display="flex">
-          <Latex>{question}</Latex>
-        </Box>
-        <Box
-          display="flex"
-          minHeight={80}
-          alignItems="center"
-        >
-          <AnswerBox />
-        </Box>
 
-        <TextField
-          placeholder="Answer"
-          hiddenLabel
-          fullWidth
-          size="small"
-          variant="filled"
-          multiline
-          spellCheck="false"
-          value={answer}
-          inputProps={{ style: { fontFamily: "monospace", fontSize: 17 } }}
-          inputRef={inputRef}
-          onChange={(e) => {
-            changeAnswer(e.target.value)
-            updateSelection()
-          }}
-          onSelect={() => {
-            updateSelection()
-          }}
-          onClick={() => {
-            updateSelection()
-          }}
-          onTouchEnd={() => {
-            updateSelection()
-          }}
-        />
-        <Stack direction="row" spacing={1}>
-          <Button variant="outlined" onClick={() => { insertCommand("\\") }}>
-            \
-          </Button>
-          <Button variant="outlined" onClick={() => insertCommand("\\frac{a}{b}", 6, 7)}>
-            <InlineMath math="\frac{a}{b}"></InlineMath>
-          </Button>
-          <Button variant="outlined" onClick={() => insertCommand("\\int")}>
-            <InlineMath math="\int"></InlineMath>
-          </Button>
-          <Button variant="outlined" onClick={() => insertCommand("\\int_{a}^{b}", 6, 7)}>
-            <InlineMath math="\int_{a}^{b}"></InlineMath>
-          </Button>
-        </Stack>
-        <Stack direction="row" spacing={1} display="flex">
-          <Button variant="outlined" onClick={() => insertCommand("\\begin{vmatrix}\n  a & b \\\\\n  c & d\n\\end{vmatrix}", 18, 19)}>
-            <InlineMath math="\begin{vmatrix}a & b \\\\ c & d \end{vmatrix}"></InlineMath>
-          </Button>
-          <Button variant="outlined" onClick={() => insertCommand("\\begin{pmatrix}\n  a & b \\\\\n  c & d\n\\end{pmatrix}", 18, 19)}>
-            <InlineMath math="\begin{pmatrix}a & b \\\\ c & d \end{pmatrix}"></InlineMath>
-          </Button>
-          <Button variant="outlined" onClick={() => insertCommand("\\sum_{i=1}^{n}")}>
-            <InlineMath math="\sum_{i=1}^{n}"></InlineMath>
-          </Button>
-        </Stack>
+    <Stack spacing={2}>
+      {/* 横に並べる */}
+      <Box display="flex" alignItems="center">
+        <Typography variant="h2" fontSize={17}>{number}　</Typography>
+        <Latex>{question}</Latex>
+      </Box>
+      <Box
+        display="flex"
+        minHeight={80}
+        alignItems="center"
+      >
+        <AnswerBox />
+      </Box>
+
+      <TextField
+        placeholder="Answer"
+        hiddenLabel
+        fullWidth
+        size="small"
+        variant="filled"
+        multiline
+        spellCheck="false"
+        value={answer}
+        inputProps={{ style: { fontFamily: "monospace", fontSize: 17 } }}
+        inputRef={inputRef}
+        onChange={(e) => {
+          changeAnswer(e.target.value)
+          updateSelection()
+        }}
+        onSelect={() => {
+          updateSelection()
+        }}
+        onClick={() => {
+          updateSelection()
+        }}
+        onTouchEnd={() => {
+          updateSelection()
+        }}
+      />
+      <Stack direction="row" spacing={1}>
+        <Button variant="outlined" onClick={() => { insertCommand("\\") }}>
+          \
+        </Button>
+        <Button variant="outlined" onClick={() => insertCommand("\\frac{a}{b}", 6, 7)}>
+          <InlineMath math="\frac{a}{b}"></InlineMath>
+        </Button>
+        <Button variant="outlined" onClick={() => insertCommand("\\int")}>
+          <InlineMath math="\int"></InlineMath>
+        </Button>
+        <Button variant="outlined" onClick={() => insertCommand("\\int_{a}^{b}", 6, 7)}>
+          <InlineMath math="\int_{a}^{b}"></InlineMath>
+        </Button>
       </Stack>
-    </Paper>
+      <Stack direction="row" spacing={1} display="flex">
+        <Button variant="outlined" onClick={() => insertCommand("\\begin{vmatrix}\n  a & b \\\\\n  c & d\n\\end{vmatrix}", 18, 19)}>
+          <InlineMath math="\begin{vmatrix}a & b \\\\ c & d \end{vmatrix}"></InlineMath>
+        </Button>
+        <Button variant="outlined" onClick={() => insertCommand("\\begin{pmatrix}\n  a & b \\\\\n  c & d\n\\end{pmatrix}", 18, 19)}>
+          <InlineMath math="\begin{pmatrix}a & b \\\\ c & d \end{pmatrix}"></InlineMath>
+        </Button>
+        <Button variant="outlined" onClick={() => insertCommand("\\sum_{i=1}^{n}")}>
+          <InlineMath math="\sum_{i=1}^{n}"></InlineMath>
+        </Button>
+      </Stack>
+    </Stack>
+
   )
 }
