@@ -1,9 +1,12 @@
 "use client"
 import React, {useState} from "react";
-import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+// import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
+// import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {AppBar, Typography} from "@mui/material";
 import {Dayjs} from "dayjs"
 import dayjs from 'dayjs'
+
+import {Tabs, Tab} from '@mui/material';
 
 interface TestType {
   title: string,
@@ -30,15 +33,17 @@ interface QuestionType {
 }
 
 import {Card, Stack, Input, TextField, Button, Container, Box} from '@mui/material';
-import {LocalizationProvider} from "@mui/x-date-pickers";
+// import {LocalizationProvider} from "@mui/x-date-pickers";
 import axios from "axios";
+import {TabPanel} from "@mui/base";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionType[]>([])
   const [testTitle, setTestTitle] = useState('')
   const [testSummary, setTestSummary] = useState('')
-  const [endDate, setEndDate] = useState<Dayjs>(dayjs())
-  const [startDate, setStartDate] = useState<Dayjs>(dayjs())
+  //Todo
+  // const [endDate, setEndDate] = useState<Dayjs>(dayjs())
+  // const [startDate, setStartDate] = useState<Dayjs>(dayjs())
 
   const handleSectionChange = (item: SectionType, index: number) => {
     const newS = sections.map((s: SectionType, i: number) => {
@@ -60,8 +65,8 @@ export default function Page() {
   const handleAdd = () => {
     setSections([...sections].concat({summary: "", subSections: [], number: sections.length + 1}))
   }
-
-  const data = {title: testTitle, summary: testSummary, sections: sections, endDate: endDate.toJSON(), classes:[]}
+  //Todo :date
+  const data = {title: testTitle, summary: testSummary, sections: sections,/* endDate: endDate.toJSON(),*/ classes: []}
 
   const createTest = async () => {
     //TODO classes
@@ -74,31 +79,89 @@ export default function Page() {
     )
   }
 
+  const [value, setValue] = React.useState(0);
+
+  const handleChange = (event: any, newValue: any) => {
+    setValue(newValue);
+  };
+
+  function a11yProps(index: number) {
+    return {
+      id: `simple-tab-${index}`,
+      'aria-controls': `simple-tabpanel-${index}`,
+    };
+  }
+
+  function TabPanel(props) {
+    const {children, value, index} = props;
+
+    return (
+      <div
+        role="tabpanel"
+        hidden={value !== index}
+        id={`simple-tabpanel-${index}`}
+        aria-labelledby={`simple-tab-${index}`}
+      >
+        {value === index && (
+          <Box p={3}>
+            {children}
+          </Box>
+        )}
+      </div>
+    );
+  }
+
   return (
     <Box width="100vw" justifyContent="center" display="flex">
       <Stack gap={2}>
         <Button variant={"contained"} onClick={createTest}>Create Test</Button>
+        {/*
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <p>start date</p>
+          <Typography variant="h6">開始日</Typography>
           <DateTimePicker value={startDate} onChange={(val: Dayjs | null) => {
             if (val !== null) {
               setStartDate(val);
             }
           }}/>
-          <p>end date</p>
+          <Typography variant="h6">締め切り</Typography>
           <DateTimePicker value={endDate} onChange={(val: Dayjs | null) => {
             if (val !== null) {
               setEndDate(val);
             }
           }}/>
         </LocalizationProvider>
-        <TextField label="testTitle" onChange={(e) => setTestTitle(e.target.value)}></TextField>
-        <TextField label="testSummary" onChange={(e) => setTestSummary(e.target.value)}></TextField>
-        {sections.map((s: SectionType, index: number) => (
-          <Section key={index} index={index} section={s} setSection={(s: SectionType) => {
-            handleSectionChange(s, index)
-          }} deleteSection={() => handleRemove(index)}/>
-        ))}
+        */}
+        {/*タイトル・概要*/}
+        <TextField label="タイトル" onChange={(e) => setTestTitle(e.target.value)}></TextField>
+        <TextField label="説明" onChange={(e) => setTestSummary(e.target.value)}></TextField>
+
+        <Box
+          sx={{flexGrow: 1, bgcolor: 'background.paper', display: 'flex'}}
+          alignSelf={"center"}
+          width={"90%"}
+        >
+          <Tabs
+            value={value}
+            onChange={handleChange}
+            orientation="vertical"
+            variant="scrollable"
+            sx={{borderRight: 1, borderColor: 'divider'}}
+            aria-label="section tabs"
+          >
+            {sections.map((s: SectionType, index: number) => (
+              <Tab label={index} {...a11yProps(index)} key={index}/>
+            ))}
+          </Tabs>
+
+          {sections.map((s: SectionType, index: number) => (
+            <TabPanel value={value} index={index} key={index}>
+              <Section key={index} index={index} section={s} setSection={(s: SectionType) => {
+                handleSectionChange(s, index)
+              }} deleteSection={() => handleRemove(index)}/>
+            </TabPanel>
+          ))}
+        </Box>
+
         <Button onClick={handleAdd}>Add Section</Button>
         <p>{JSON.stringify(data)}</p>
       </Stack>
