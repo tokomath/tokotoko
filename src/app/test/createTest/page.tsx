@@ -165,20 +165,21 @@ export default function Page() {
 
         {sections.map((s: SectionType, index: number) => (
           <TabPanel value={value} index={index} key={index}>
-            <Section key={index} index={index} section={s} setSection={(s: SectionType) => {
-              handleSectionChange(s, index)
-            }} deleteSection={() => handleRemove(index)}/>
+            <Section key={index} index={index} section={s}
+                     setSection={(s: SectionType) => {
+                       handleSectionChange(s, index)
+                     }}
+                     deleteSection={() => handleRemove(index)}/>
           </TabPanel>
         ))}
       </Box>
 
-      <Button onClick={handleAdd}>Add Section</Button>
       <p>{JSON.stringify(data)}</p>
     </Stack>
   );
 };
 
-const Section = ({index, section, setSection}: any) => {
+const Section = ({index, section, setSection, deleteSection}: any) => {
   const handleSubSectionChange = (item: SubSectionType, index: number) => {
     const newS = section.subSections.map((s: SubSectionType, i: number) => {
       if (i === index) {
@@ -190,14 +191,6 @@ const Section = ({index, section, setSection}: any) => {
     setSection({...section, subSections: newS})
   }
 
-  const handleRemove = (index: number) => {
-    const newS = section.subSections.filter((q: SubSectionType, i: number) => i !== index)
-    const newS2 = newS.map((q: SubSectionType, i: number) => {
-      return {summary: q.summary, questions: q.questions, number: i + 1}
-    })
-    setSection({...section, subSections: newS2})
-  }
-
   const handleAdd = () => {
     const newQ = [...section.subSections]
     setSection({
@@ -206,15 +199,23 @@ const Section = ({index, section, setSection}: any) => {
     })
   }
 
+  const handleRemoveSubSection = (index: number) => {
+    const newS = section.subSections.filter((q: SubSectionType, i: number) => i !== index)
+    const newS2 = newS.map((q: SubSectionType, i: number) => {
+      return {summary: q.summary, questions: q.questions, number: i + 1}
+    })
+    setSection({...section, subSections: newS2})
+  }
+
   return (
     <Stack justifyContent="center" display="flex" width={"100%"} height={"100%"} gap={2} alignItems={"left"}>
       <Box width={"100%"} alignItems={"right"}>
-        <Button startIcon={<DeleteIcon/>}>Delete</Button>
+        <Button startIcon={<DeleteIcon/>} onClick={deleteSection}>Delete</Button>
       </Box>
       {section.subSections.map((s: SubSectionType, index: number) => (
         <SubSection key={index} index={index} subSection={s} setSubSection={(s: SubSectionType) => {
           handleSubSectionChange(s, index)
-        }} deleteSubSection={() => handleRemove(index)}/>
+        }} deleteSubSection={() => handleRemoveSubSection(index)}/>
       ))}
       <Button onClick={handleAdd}>Add SubSec</Button>
     </Stack>
