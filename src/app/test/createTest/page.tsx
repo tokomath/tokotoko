@@ -2,11 +2,18 @@
 import React, {useState} from "react";
 // import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
 // import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {AppBar, Typography} from "@mui/material";
+import {AppBar, Icon, Typography} from "@mui/material";
 import {Dayjs} from "dayjs"
 import dayjs from 'dayjs'
 
-import {Tabs, Tab} from '@mui/material';
+import {addStyles, EditableMathField} from 'react-mathquill'
+
+import {IconButton, Tabs, Tab} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+
+addStyles()
 
 interface TestType {
   title: string,
@@ -85,37 +92,37 @@ export default function Page() {
     setValue(newValue);
   };
 
-  function a11yProps(index: number) {
+  const a11yProps = (index: number) => {
     return {
       id: `simple-tab-${index}`,
       'aria-controls': `simple-tabpanel-${index}`,
     };
   }
 
-  function TabPanel(props) {
+  const TabPanel = (props: any) => {
     const {children, value, index} = props;
 
     return (
-      <div
+      <Box
         role="tabpanel"
         hidden={value !== index}
         id={`simple-tabpanel-${index}`}
         aria-labelledby={`simple-tab-${index}`}
+        width={"100%"}
       >
         {value === index && (
           <Box p={3}>
             {children}
           </Box>
         )}
-      </div>
+      </Box>
     );
   }
 
   return (
-    <Box width="100vw" justifyContent="center" display="flex">
-      <Stack gap={2}>
-        <Button variant={"contained"} onClick={createTest}>Create Test</Button>
-        {/*
+    <Stack gap={2} justifyContent={"center"} display={"flex"}>
+      <Button variant={"contained"} onClick={createTest}>Create Test</Button>
+      {/*
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Typography variant="h6">開始日</Typography>
           <DateTimePicker value={startDate} onChange={(val: Dayjs | null) => {
@@ -131,41 +138,43 @@ export default function Page() {
           }}/>
         </LocalizationProvider>
         */}
-        {/*タイトル・概要*/}
-        <TextField label="タイトル" onChange={(e) => setTestTitle(e.target.value)}></TextField>
-        <TextField label="説明" onChange={(e) => setTestSummary(e.target.value)}></TextField>
+      {/*タイトル・概要*/}
+      <TextField label="タイトル" onChange={(e) => setTestTitle(e.target.value)}></TextField>
+      <TextField label="説明" onChange={(e) => setTestSummary(e.target.value)}></TextField>
 
-        <Box
-          sx={{flexGrow: 1, bgcolor: 'background.paper', display: 'flex'}}
-          alignSelf={"center"}
-          width={"90%"}
+      <Box
+        sx={{flexGrow: 1, bgcolor: 'background.paper', display: 'flex'}}
+        alignSelf={"center"}
+        width={"90vw"}
+        height={"100%"}
+        p={"10px"}
+      >
+        <Tabs
+          value={value}
+          onChange={handleChange}
+          orientation="vertical"
+          variant="scrollable"
+          sx={{borderRight: 1, borderColor: 'divider'}}
+          aria-label="section tabs"
         >
-          <Tabs
-            value={value}
-            onChange={handleChange}
-            orientation="vertical"
-            variant="scrollable"
-            sx={{borderRight: 1, borderColor: 'divider'}}
-            aria-label="section tabs"
-          >
-            {sections.map((s: SectionType, index: number) => (
-              <Tab label={index} {...a11yProps(index)} key={index}/>
-            ))}
-          </Tabs>
-
           {sections.map((s: SectionType, index: number) => (
-            <TabPanel value={value} index={index} key={index}>
-              <Section key={index} index={index} section={s} setSection={(s: SectionType) => {
-                handleSectionChange(s, index)
-              }} deleteSection={() => handleRemove(index)}/>
-            </TabPanel>
+            <Tab label={index} {...a11yProps(index)} key={index}/>
           ))}
-        </Box>
+          <Tab icon={<AddIcon/>} onClick={handleAdd} {...a11yProps(sections.length)}/>
+        </Tabs>
 
-        <Button onClick={handleAdd}>Add Section</Button>
-        <p>{JSON.stringify(data)}</p>
-      </Stack>
-    </Box>
+        {sections.map((s: SectionType, index: number) => (
+          <TabPanel value={value} index={index} key={index}>
+            <Section key={index} index={index} section={s} setSection={(s: SectionType) => {
+              handleSectionChange(s, index)
+            }} deleteSection={() => handleRemove(index)}/>
+          </TabPanel>
+        ))}
+      </Box>
+
+      <Button onClick={handleAdd}>Add Section</Button>
+      <p>{JSON.stringify(data)}</p>
+    </Stack>
   );
 };
 
@@ -198,18 +207,17 @@ const Section = ({index, section, setSection}: any) => {
   }
 
   return (
-    <Card>
-      <Box justifyContent="center" display="flex">
-        <Stack gap={2}>
-          {section.subSections.map((s: SubSectionType, index: number) => (
-            <SubSection key={index} index={index} subSection={s} setSubSection={(s: SubSectionType) => {
-              handleSubSectionChange(s, index)
-            }} deleteSubSection={() => handleRemove(index)}/>
-          ))}
-          <Button onClick={handleAdd}>Add SubSec</Button>
-        </Stack>
+    <Stack justifyContent="center" display="flex" width={"100%"} height={"100%"} gap={2} alignItems={"left"}>
+      <Box width={"100%"} alignItems={"right"}>
+        <Button startIcon={<DeleteIcon/>}>Delete</Button>
       </Box>
-    </Card>
+      {section.subSections.map((s: SubSectionType, index: number) => (
+        <SubSection key={index} index={index} subSection={s} setSubSection={(s: SubSectionType) => {
+          handleSubSectionChange(s, index)
+        }} deleteSubSection={() => handleRemove(index)}/>
+      ))}
+      <Button onClick={handleAdd}>Add SubSec</Button>
+    </Stack>
   )
 }
 
@@ -241,11 +249,14 @@ const SubSection = ({index, subSection, setSubSection, deleteSubSection}: any) =
 
   return (
     <Card>
-      <Box justifyContent="center" display="flex">
-        <Stack gap={1} width={600} margin={2}>
+      <Box alignSelf={"left"} width={"auto"} display="flex">
+
+        <Stack gap={1} width={"100%"} margin={2}>
           <Box display="flex" justifyContent="space-between">
-            <h5>{"(" + subSection.number + ")"}</h5>
-            <Button onClick={deleteSubSection}>×</Button>
+            <Typography variant={"h5"}>{subSection.number + "."}</Typography>
+            <IconButton aria-label="delete" onClick={deleteSubSection}>
+              <CloseIcon/>
+            </IconButton>
           </Box>
           {subSection.questions.map((q: QuestionType, index: number) => (
             <Question key={index} index={index} question={q} setQuestion={(q: QuestionType) => {
@@ -267,15 +278,17 @@ const Question = ({index, question, setQuestion, deleteQuestion}: any) => {
   }
   const answerInput = (e: any) => {
     const newQ = question
-    newQ.answer = e.target.value
+    newQ.answer = e
     setQuestion(newQ)
   }
 
   return (
-    <Stack gap={1} width={400} padding={2} border="1p">
+    <Stack gap={1} width={"100%"} padding={2} border="1p">
       <Box display="flex" justifyContent="space-between">
-        <h5>{"(" + question.number + ")"}</h5>
-        <Button onClick={deleteQuestion}>×</Button>
+        <Typography variant={"h6"}>{"(" + question.number + ")"}</Typography>
+        <IconButton aria-label="delete" onClick={deleteQuestion}>
+          <CloseIcon/>
+        </IconButton>
       </Box>
       <TextField label={"question"} onChange={questionInput}></TextField>
       <TextField label={"answer"} onChange={answerInput}></TextField>
