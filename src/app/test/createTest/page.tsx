@@ -13,32 +13,8 @@ import axios from "axios";
 import {TestFrame, SectionFrame, SubSectionFrame} from "@/app/api/testAPIs";
 import {Test, Section, SubSection, Question} from "@prisma/client";
 
-interface TestType {
-  title: string,
-  summary: string,
-  sections: SectionType[],
-}
-
-interface SectionType {
-  summary: string,
-  number: number,
-  subSections: SubSectionType[],
-}
-
-interface SubSectionType {
-  summary: string,
-  number: number,
-  questions: QuestionType[],
-}
-
-interface QuestionType {
-  question: string,
-  number: number,
-  answer: string,
-}
-
 export default function Page() {
-  const [sections, setSections] = useState<SectionType[]>([])
+  const [sections, setSections] = useState<SectionFrame[]>([])
   const [testTitle, setTestTitle] = useState("")
   const [testSummary, setTestSummary] = useState("")
   const [value, setValue] = React.useState(0);
@@ -47,12 +23,13 @@ export default function Page() {
   // const [endDate, setEndDate] = useState<Dayjs>(dayjs())
   // const [startDate, setStartDate] = useState<Dayjs>(dayjs())
 
-  const handleSectionChange = (item: SectionType, index: number) => {
-    const newS = sections.map((s: SectionType, i: number) => {
+  const handleSectionChange = (item: SectionFrame, index: number) => {
+    const newS: SectionFrame[] = sections.map((s: SectionFrame, i: number) => {
       if (i === index) {
         return item
       } else {
-        return {summary: s.summary, subSections: s.subSections, number: s.number}
+        const section: Section = {id: 1, testId: 1, summary: s.section.summary, number: s.section.number}
+        return {section: section, subSections: s.subSections}
       }
     })
     setSections(newS)
@@ -61,14 +38,16 @@ export default function Page() {
     if (sections.length === value) {
       setValue(value - 1)
     }
-    const newS = sections.filter((q: SectionType, i: number) => i !== index)
-    const newS2 = newS.map((q: SectionType, i: number) => {
-      return {summary: q.summary, subSections: q.subSections, number: index + 1}
+    const newS: SectionFrame[] = sections.filter((q: SectionFrame, i: number) => i !== index)
+    const newS2: SectionFrame[] = newS.map((q: SectionFrame, i: number) => {
+      const section: Section = {id: 1, testId: 1, summary: q.section.summary, number: index + 1}
+      return {section: section, subSections: q.subSections}
     })
     setSections(newS2)
   }
   const handleAdd = () => {
-    setSections([...sections].concat({summary: "", subSections: [], number: sections.length + 1}))
+    const section: Section = {id: 1, testId: 1, summary: "", number: sections.length + 1}
+    setSections([...sections].concat({section: section, subSections: []}))
   }
   //Todo :date
   const data = {title: testTitle, summary: testSummary, sections: sections,/* endDate: endDate.toJSON(),*/ classes: []}
@@ -130,7 +109,7 @@ export default function Page() {
           aria-label="section tabs"
         >
           <Tab label={"metadata"}/>
-          {sections.map((s: SectionType, index: number) => (
+          {sections.map((s: SectionFrame, index: number) => (
             <Tab label={index} {...a11yProps(index)} key={index}/>
           ))}
           <Tab icon={<AddIcon/>} onClick={handleAdd} {...a11yProps(sections.length)}/>
@@ -144,10 +123,10 @@ export default function Page() {
             <TextField label="説明" value={testSummary} onChange={(e) => setTestSummary(e.target.value)}/>
           </Stack>
         </TabPanels>
-        {sections.map((s: SectionType, index: number) => (
+        {sections.map((s: SectionFrame, index: number) => (
           <TabPanels value={value} index={index + 1} key={index + 1}>
             <SectionPage key={index} index={index} section={s}
-                         setSection={(s: SectionType) => {
+                         setSection={(s: SectionFrame) => {
                            handleSectionChange(s, index)
                          }}
                          deleteSection={() => handleRemove(index)}/>
@@ -181,12 +160,13 @@ const TabPanels = (props: any) => {
 
 
 const SectionPage = ({index, section, setSection, deleteSection}: any) => {
-  const handleSubSectionChange = (item: SubSectionType, index: number) => {
-    const newS = section.subSections.map((s: SubSectionType, i: number) => {
+  const handleSubSectionChange = (item: SubSectionFrame, index: number) => {
+    const newS = section.subSections.map((s: SubSectionFrame, i: number) => {
       if (i === index) {
         return item
       } else {
-        return {summary: s.summary, questions: s.questions, number: s.number}
+        const subSection: SubSection = {id: 1, sectionId: 1, summary: s.subSection.summary, number: s.subSection.number}
+        return {subSection: subSection, questions: s.questions}
       }
     })
     setSection({...section, subSections: newS})
@@ -201,9 +181,10 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
   }
 
   const handleRemoveSubSection = (index: number) => {
-    const newS = section.subSections.filter((q: SubSectionType, i: number) => i !== index)
-    const newS2 = newS.map((q: SubSectionType, i: number) => {
-      return {summary: q.summary, questions: q.questions, number: i + 1}
+    const newS = section.subSections.filter((q: SubSectionFrame, i: number) => i !== index)
+    const newS2 = newS.map((q: SubSectionFrame, i: number) => {
+      const subSection: SubSection = {id: 1, sectionId: 1, summary: q.subSection.summary, number: i + 1}
+      return {subSection: subSection, questions: q.questions}
     })
     setSection({...section, subSections: newS2})
   }
@@ -215,8 +196,8 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
           deleteSection
         }>Delete</Button>
       </Box>
-      {section.subSections.map((s: SubSectionType, index: number) => (
-        <SubSectionPage key={index} index={index} subSection={s} setSubSection={(s: SubSectionType) => {
+      {section.subSections.map((s: SubSectionFrame, index: number) => (
+        <SubSectionPage key={index} index={index} subSection={s} setSubSection={(s: SubSectionFrame) => {
           handleSubSectionChange(s, index)
         }} deleteSubSection={() => handleRemoveSubSection(index)}/>
       ))}
@@ -226,8 +207,8 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
 }
 
 const SubSectionPage = ({index, subSection, setSubSection, deleteSubSection}: any) => {
-  const handleQuestionChange = (item: QuestionType, index: number) => {
-    const newQ = subSection.questions.map((q: QuestionType, i: number) => {
+  const handleQuestionChange = (item: Question, index: number) => {
+    const newQ = subSection.questions.map((q: Question, i: number) => {
       if (i === index) {
         return item
       } else {
@@ -237,8 +218,8 @@ const SubSectionPage = ({index, subSection, setSubSection, deleteSubSection}: an
     setSubSection({...subSection, questions: newQ})
   }
   const handleRemove = (index: number) => {
-    const newQ = subSection.questions.filter((q: QuestionType, i: number) => i !== index)
-    const newQ2 = newQ.map((q: QuestionType, i: number) => {
+    const newQ = subSection.questions.filter((q: Question, i: number) => i !== index)
+    const newQ2 = newQ.map((q: Question, i: number) => {
       return {question: q.question, answer: q.answer, number: i + 1}
     })
     setSubSection({...subSection, questions: newQ2})
@@ -261,8 +242,8 @@ const SubSectionPage = ({index, subSection, setSubSection, deleteSubSection}: an
               <CloseIcon/>
             </IconButton>
           </Box>
-          {subSection.questions.map((q: QuestionType, index: number) => (
-            <QuestionPage key={index} index={index} question={q} setQuestion={(q: QuestionType) => {
+          {subSection.questions.map((q: Question, index: number) => (
+            <QuestionPage key={index} index={index} question={q} setQuestion={(q: Question) => {
               handleQuestionChange(q, index)
             }} deleteQuestion={() => handleRemove(index)}/>
           ))}
