@@ -3,15 +3,18 @@ import React, {useEffect, useState} from "react";
 // import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
 // import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {Box, Button, Card, IconButton, Stack, Tab, Tabs, TextField, Typography} from "@mui/material";
+import {InlineMath, BlockMath} from "react-katex";
+import Latex from "react-latex-next";
+import 'katex/dist/katex.min.css';
 
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 // import {LocalizationProvider} from "@mui/x-date-pickers";
-import axios from "axios";
 
 import {TestFrame, SectionFrame, SubSectionFrame} from "@/app/api/testAPIs";
 import {Test, Section, SubSection, Question} from "@prisma/client";
+import {Block} from "@mui/icons-material";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionFrame[]>([])
@@ -214,8 +217,27 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
 }
 
 const SubSectionPage = ({indexProps, subSectionProps, setSubSection, deleteSubSection}: any) => {
-  const index: number = indexProps
-  const subSection: SubSectionFrame = subSectionProps
+  const [subSectionSummary, setSubSectionSummary] = useState(subSectionProps.subSection.summary)
+  const index: number = indexProps;
+  const subSection: SubSectionFrame = subSectionProps;
+
+
+  const changeSubSectionSummary = (newSummary: string) => {
+    const newSubSection: SubSectionFrame = {
+      subSection: {
+        id: 1,
+        sectionId: 1,
+        summary: newSummary,
+        number: subSection.subSection.number
+      }, questions: subSection.questions
+    }
+    setSubSection(newSubSection)
+  }
+
+  useEffect(() => {
+    changeSubSectionSummary(subSectionSummary)
+  }, [subSectionSummary]);
+
   const handleQuestionChange = (item: Question, index: number) => {
     const newQ = subSection.questions.map((q: Question, i: number) => {
       if (i === index) {
@@ -254,11 +276,15 @@ const SubSectionPage = ({indexProps, subSectionProps, setSubSection, deleteSubSe
       <Box alignSelf={"left"} width={"auto"} display="flex">
         <Stack gap={1} width={"100%"} margin={2}>
           <Box display="flex" justifyContent="space-between">
-            <Typography variant={"h5"}>{subSection.subSection.number + "."}</Typography>
+            <InlineMath>{subSection.subSection.number + ". \\quad" + subSectionSummary}</InlineMath>
             <IconButton aria-label="delete" onClick={deleteSubSection}>
               <CloseIcon/>
             </IconButton>
           </Box>
+          <TextField label={"SubSection"} value={subSectionSummary}
+                     onChange={(e) => {
+                       setSubSectionSummary(e.target.value)
+                     }}/>
           {subSection.questions.map((q: Question, index: number) => (
             <QuestionPage key={index} index={index} question={q} setQuestion={(q: Question) => {
               handleQuestionChange(q, index)
@@ -286,12 +312,13 @@ const QuestionPage = ({index, question, setQuestion, deleteQuestion}: any) => {
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">
       <Box display="flex" justifyContent="space-between">
-        <Typography variant={"h6"}>{"(" + question.number + ")"}</Typography>
+        <InlineMath>{"(" + question.number + ")\\quad" + stateQuestion}</InlineMath>
         <IconButton aria-label="delete" onClick={deleteQuestion}>
           <CloseIcon/>
         </IconButton>
       </Box>
       <TextField label={"question"} value={stateQuestion} onChange={(e) => setStateQuestion(e.target.value)}/>
+      <InlineMath>{"A.\\quad" + stateAnswer}</InlineMath>
       <TextField label={"answer"} value={stateAnswer} onChange={(e) => setStateAnswer(e.target.value)}/>
     </Stack>
   )

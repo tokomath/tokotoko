@@ -24,7 +24,6 @@
     "react-dom": "^18",
     "react-is": "^18.3.1",
     "react-katex": "^3.0.1",
-    "react-latex-next": "^3.0.0",
     "react-mathquill": "^1.0.3",
     "zustand": "^4.5.2"
   },
