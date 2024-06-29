@@ -1,5 +1,5 @@
 "use client"
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 // import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
 // import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {Box, Button, Card, IconButton, Stack, Tab, Tabs, TextField, Typography} from "@mui/material";
@@ -276,20 +276,16 @@ const SubSection = ({index, subSection, setSubSection, deleteSubSection}: any) =
 }
 
 const Question = ({index, question, setQuestion, deleteQuestion}: any) => {
-  const [stateQuestion, setStateQuestion] = useState("")
-  const [stateAnswer, setStateAnswer] = useState("")
+  const [stateQuestion, setStateQuestion] = useState(question.question)
+  const [stateAnswer, setStateAnswer] = useState(question.answer)
 
-  //TODO:なんとかしてuseStateから値を返す
-  const questionInput = (e: any) => {
+  useEffect(() => {
     const newQ = question
-    newQ.question = e.target.value
-    setQuestion(newQ)
-  }
-  const answerInput = (e: any) => {
-    const newQ = question
-    newQ.answer = e
-    setQuestion(newQ)
-  }
+    question.question = stateQuestion
+    question.answer = stateAnswer
+
+    setQuestion(newQ);
+  }, [stateQuestion, stateAnswer]);
 
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">
@@ -299,8 +295,8 @@ const Question = ({index, question, setQuestion, deleteQuestion}: any) => {
           <CloseIcon/>
         </IconButton>
       </Box>
-      <TextField label={"question"} onChange={(e) => setStateQuestion(e.target.value)}/>
-      <TextField label={"answer"} onChange={(e) => setStateAnswer(e.target.value)}/>
+      <TextField label={"question"} value={stateQuestion} onChange={(e) => setStateQuestion(e.target.value)}/>
+      <TextField label={"answer"} value={stateAnswer} onChange={(e) => setStateAnswer(e.target.value)}/>
     </Stack>
   )
 }
