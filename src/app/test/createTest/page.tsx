@@ -1,18 +1,17 @@
 "use client"
-import React, {useState, useEffect} from "react";
+import React, {useEffect, useState} from "react";
 // import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
 // import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {Box, Button, Card, IconButton, Stack, Tab, Tabs, TextField, Typography} from "@mui/material";
 
-import {addStyles} from 'react-mathquill'
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 // import {LocalizationProvider} from "@mui/x-date-pickers";
 import axios from "axios";
-import {TabPanel} from "@mui/base";
 
-addStyles()
+import {TestFrame, SectionFrame, SubSectionFrame} from "@/app/api/testAPIs";
+import {Test, Section, SubSection, Question} from "@prisma/client";
 
 interface TestType {
   title: string,
@@ -147,11 +146,11 @@ export default function Page() {
         </TabPanels>
         {sections.map((s: SectionType, index: number) => (
           <TabPanels value={value} index={index + 1} key={index + 1}>
-            <Section key={index} index={index} section={s}
-                     setSection={(s: SectionType) => {
-                       handleSectionChange(s, index)
-                     }}
-                     deleteSection={() => handleRemove(index)}/>
+            <SectionPage key={index} index={index} section={s}
+                         setSection={(s: SectionType) => {
+                           handleSectionChange(s, index)
+                         }}
+                         deleteSection={() => handleRemove(index)}/>
           </TabPanels>
         ))}
       </Box>
@@ -181,7 +180,7 @@ const TabPanels = (props: any) => {
 }
 
 
-const Section = ({index, section, setSection, deleteSection}: any) => {
+const SectionPage = ({index, section, setSection, deleteSection}: any) => {
   const handleSubSectionChange = (item: SubSectionType, index: number) => {
     const newS = section.subSections.map((s: SubSectionType, i: number) => {
       if (i === index) {
@@ -217,7 +216,7 @@ const Section = ({index, section, setSection, deleteSection}: any) => {
         }>Delete</Button>
       </Box>
       {section.subSections.map((s: SubSectionType, index: number) => (
-        <SubSection key={index} index={index} subSection={s} setSubSection={(s: SubSectionType) => {
+        <SubSectionPage key={index} index={index} subSection={s} setSubSection={(s: SubSectionType) => {
           handleSubSectionChange(s, index)
         }} deleteSubSection={() => handleRemoveSubSection(index)}/>
       ))}
@@ -226,7 +225,7 @@ const Section = ({index, section, setSection, deleteSection}: any) => {
   )
 }
 
-const SubSection = ({index, subSection, setSubSection, deleteSubSection}: any) => {
+const SubSectionPage = ({index, subSection, setSubSection, deleteSubSection}: any) => {
   const handleQuestionChange = (item: QuestionType, index: number) => {
     const newQ = subSection.questions.map((q: QuestionType, i: number) => {
       if (i === index) {
@@ -255,7 +254,6 @@ const SubSection = ({index, subSection, setSubSection, deleteSubSection}: any) =
   return (
     <Card>
       <Box alignSelf={"left"} width={"auto"} display="flex">
-
         <Stack gap={1} width={"100%"} margin={2}>
           <Box display="flex" justifyContent="space-between">
             <Typography variant={"h5"}>{subSection.number + "."}</Typography>
@@ -264,7 +262,7 @@ const SubSection = ({index, subSection, setSubSection, deleteSubSection}: any) =
             </IconButton>
           </Box>
           {subSection.questions.map((q: QuestionType, index: number) => (
-            <Question key={index} index={index} question={q} setQuestion={(q: QuestionType) => {
+            <QuestionPage key={index} index={index} question={q} setQuestion={(q: QuestionType) => {
               handleQuestionChange(q, index)
             }} deleteQuestion={() => handleRemove(index)}/>
           ))}
@@ -275,7 +273,7 @@ const SubSection = ({index, subSection, setSubSection, deleteSubSection}: any) =
   )
 }
 
-const Question = ({index, question, setQuestion, deleteQuestion}: any) => {
+const QuestionPage = ({index, question, setQuestion, deleteQuestion}: any) => {
   const [stateQuestion, setStateQuestion] = useState(question.question)
   const [stateAnswer, setStateAnswer] = useState(question.answer)
 
