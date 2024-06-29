@@ -28,8 +28,7 @@ export default function Page() {
       if (i === index) {
         return item
       } else {
-        const section: Section = {id: 1, testId: 1, summary: s.section.summary, number: s.section.number}
-        return {section: section, subSections: s.subSections}
+        return {section: s.section, subSections: s.subSections}
       }
     })
     setSections(newS)
@@ -165,26 +164,30 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
       if (i === index) {
         return item
       } else {
-        const subSection: SubSection = {id: 1, sectionId: 1, summary: s.subSection.summary, number: s.subSection.number}
-        return {subSection: subSection, questions: s.questions}
+        return {subSection: s.subSection, questions: s.questions}
       }
     })
     setSection({...section, subSections: newS})
   }
 
   const handleAdd = () => {
-    const newQ = [...section.subSections]
-    setSection({
-      ...section,
-      subSections: [...section.subSections].concat({summary: "", questions: [], number: section.subSections.length + 1})
-    })
+    const newSubSection: SubSectionFrame = {
+      subSection: {
+        id: 1,
+        sectionId: 1,
+        summary: "",
+        number: section.subSections.length + 1
+      }, questions: []
+    }
+    const subSections: SubSectionFrame[] = [...section.subSections].concat(newSubSection)
+    const newSection: SectionFrame = {section: section.section, subSections: subSections}
+    setSection(newSection)
   }
 
   const handleRemoveSubSection = (index: number) => {
     const newS = section.subSections.filter((q: SubSectionFrame, i: number) => i !== index)
     const newS2 = newS.map((q: SubSectionFrame, i: number) => {
-      const subSection: SubSection = {id: 1, sectionId: 1, summary: q.subSection.summary, number: i + 1}
-      return {subSection: subSection, questions: q.questions}
+      return {subSection: q.subSection, questions: q.questions}
     })
     setSection({...section, subSections: newS2})
   }
@@ -197,7 +200,7 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
         }>Delete</Button>
       </Box>
       {section.subSections.map((s: SubSectionFrame, index: number) => (
-        <SubSectionPage key={index} index={index} subSection={s} setSubSection={(s: SubSectionFrame) => {
+        <SubSectionPage key={index} indexProps={index} subSectionProps={s} setSubSection={(s: SubSectionFrame) => {
           handleSubSectionChange(s, index)
         }} deleteSubSection={() => handleRemoveSubSection(index)}/>
       ))}
@@ -206,13 +209,16 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
   )
 }
 
-const SubSectionPage = ({index, subSection, setSubSection, deleteSubSection}: any) => {
+const SubSectionPage = ({indexProps, subSectionProps, setSubSection, deleteSubSection}: any) => {
+  const index: number = indexProps
+  const subSection: SubSectionFrame = subSectionProps
   const handleQuestionChange = (item: Question, index: number) => {
     const newQ = subSection.questions.map((q: Question, i: number) => {
       if (i === index) {
         return item
       } else {
-        return {question: q.question, answer: q.answer, number: i + 1}
+        const question: Question = {id: 1, subSectionId: 1, question: q.question, number: i + 1, answer: q.answer}
+        return question;
       }
     })
     setSubSection({...subSection, questions: newQ})
@@ -226,10 +232,17 @@ const SubSectionPage = ({index, subSection, setSubSection, deleteSubSection}: an
   }
   const handleAdd = () => {
     const newQ = [...subSection.questions]
-    setSubSection({
-      ...subSection,
-      questions: [...subSection.questions].concat({question: "", answer: "", number: subSection.questions.length + 1})
-    })
+    const question: Question = {
+      id: 1,
+      subSectionId: 1,
+      question: "",
+      number: subSection.questions.length + 1,
+      answer: ""
+    }
+
+    const questions: Question[] = [...subSection.questions].concat(question)
+    const newSubSection: SubSectionFrame = {subSection: subSection.subSection, questions: questions}
+    setSubSection(newSubSection)
   }
 
   return (
@@ -237,7 +250,7 @@ const SubSectionPage = ({index, subSection, setSubSection, deleteSubSection}: an
       <Box alignSelf={"left"} width={"auto"} display="flex">
         <Stack gap={1} width={"100%"} margin={2}>
           <Box display="flex" justifyContent="space-between">
-            <Typography variant={"h5"}>{subSection.number + "."}</Typography>
+            <Typography variant={"h5"}>{subSection.subSection.number + "."}</Typography>
             <IconButton aria-label="delete" onClick={deleteSubSection}>
               <CloseIcon/>
             </IconButton>
