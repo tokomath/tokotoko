@@ -119,8 +119,23 @@ export default function Page() {
     );
   }
 
+  const plusPanel = () => {
+    if (sections.length === 0) {
+      return (
+        <TabPanel value={value} index={sections.length}>
+          <Button onClick={handleAdd}>Add Section</Button>
+        </TabPanel>
+      )
+    } else {
+      if (value === sections.length) {
+        setValue(value - 1)
+      }
+    }
+
+  }
+
   return (
-    <Stack gap={2} justifyContent={"center"} display={"flex"}>
+    <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"} bgcolor={"blue"}>
       <Button variant={"contained"} onClick={createTest}>Create Test</Button>
       {/*
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -145,7 +160,7 @@ export default function Page() {
       <Box
         sx={{flexGrow: 1, bgcolor: 'background.paper', display: 'flex'}}
         alignSelf={"center"}
-        width={"90vw"}
+        width={"100%"}
         height={"100%"}
         p={"10px"}
       >
@@ -172,6 +187,7 @@ export default function Page() {
                      deleteSection={() => handleRemove(index)}/>
           </TabPanel>
         ))}
+        {plusPanel()}
       </Box>
 
       <p>{JSON.stringify(data)}</p>
@@ -210,7 +226,9 @@ const Section = ({index, section, setSection, deleteSection}: any) => {
   return (
     <Stack justifyContent="center" display="flex" width={"100%"} height={"100%"} gap={2} alignItems={"left"}>
       <Box width={"100%"} alignItems={"right"}>
-        <Button startIcon={<DeleteIcon/>} onClick={deleteSection}>Delete</Button>
+        <Button startIcon={<DeleteIcon/>} onClick={
+          deleteSection
+        }>Delete</Button>
       </Box>
       {section.subSections.map((s: SubSectionType, index: number) => (
         <SubSection key={index} index={index} subSection={s} setSubSection={(s: SubSectionType) => {
