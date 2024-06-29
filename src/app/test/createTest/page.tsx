@@ -40,8 +40,10 @@ interface QuestionType {
 
 export default function Page() {
   const [sections, setSections] = useState<SectionType[]>([])
-  const [testTitle, setTestTitle] = useState('')
-  const [testSummary, setTestSummary] = useState('')
+  const [testTitle, setTestTitle] = useState("")
+  const [testSummary, setTestSummary] = useState("")
+  const [value, setValue] = React.useState(0);
+
   //Todo
   // const [endDate, setEndDate] = useState<Dayjs>(dayjs())
   // const [startDate, setStartDate] = useState<Dayjs>(dayjs())
@@ -83,8 +85,6 @@ export default function Page() {
     )
   }
 
-  const [value, setValue] = React.useState(0);
-
   const handleChange = (event: any, newValue: any) => {
     setValue(newValue);
   };
@@ -94,26 +94,6 @@ export default function Page() {
       id: `simple-tab-${index}`,
       'aria-controls': `simple-tabpanel-${index}`,
     };
-  }
-
-  const TabPanel = (props: any) => {
-    const {children, value, index} = props;
-
-    return (
-      <Box
-        role="tabpanel"
-        hidden={value !== index}
-        id={`simple-tabpanel-${index}`}
-        aria-labelledby={`simple-tab-${index}`}
-        width={"100%"}
-      >
-        {value === index && (
-          <Box p={3}>
-            {children}
-          </Box>
-        )}
-      </Box>
-    );
   }
 
   return (
@@ -139,8 +119,8 @@ export default function Page() {
         sx={{flexGrow: 1, bgcolor: 'background.paper', display: 'flex'}}
         alignSelf={"center"}
         width={"100%"}
-        height={"100%"}
         p={"10px"}
+        overflow={"scroll"}
       >
         <Tabs
           value={value}
@@ -157,31 +137,49 @@ export default function Page() {
           <Tab icon={<AddIcon/>} onClick={handleAdd} {...a11yProps(sections.length)}/>
         </Tabs>
 
-        <TabPanel value={value} index={0}>
-          <Box display="flex" justifyContent="center" alignItems="center" width={"100%"}>
-            <Stack gap={2} width={"100%"} padding={2} border="1p">
-              <Typography variant={"h5"}>Test Metadata</Typography>
-              {/*タイトル・概要*/}
-              <TextField label="タイトル" onChange={(e) => setTestTitle(e.target.value)}></TextField>
-              <TextField label="説明" onChange={(e) => setTestSummary(e.target.value)}></TextField>
-            </Stack>
-
-          </Box>
-        </TabPanel>
+        <TabPanels value={value} index={0}>
+          <Stack gap={2} width={"100%"} padding={2} border="1p">
+            <Typography variant={"h5"}>Test Metadata</Typography>
+            {/*タイトル・概要*/}
+            <TextField label="タイトル" value={testTitle} onChange={(e) => setTestTitle(e.target.value)}/>
+            <TextField label="説明" value={testSummary} onChange={(e) => setTestSummary(e.target.value)}/>
+          </Stack>
+        </TabPanels>
         {sections.map((s: SectionType, index: number) => (
-          <TabPanel value={value} index={index + 1} key={index + 1}>
+          <TabPanels value={value} index={index + 1} key={index + 1}>
             <Section key={index} index={index} section={s}
                      setSection={(s: SectionType) => {
                        handleSectionChange(s, index)
                      }}
                      deleteSection={() => handleRemove(index)}/>
-          </TabPanel>
+          </TabPanels>
         ))}
       </Box>
-      <p>{JSON.stringify(data)}</p>
     </Stack>
   );
 };
+
+// stateが更新されるたびにレンダリングされるのを避ける
+// Page()の中に書かないで
+const TabPanels = (props: any) => {
+  const {children, value, index} = props;
+  return (
+    <Box
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      width={"100%"}
+    >
+      {value === index && (
+        <Box p={3}>
+          {children}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
 
 const Section = ({index, section, setSection, deleteSection}: any) => {
   const handleSubSectionChange = (item: SubSectionType, index: number) => {
@@ -278,6 +276,10 @@ const SubSection = ({index, subSection, setSubSection, deleteSubSection}: any) =
 }
 
 const Question = ({index, question, setQuestion, deleteQuestion}: any) => {
+  const [stateQuestion, setStateQuestion] = useState("")
+  const [stateAnswer, setStateAnswer] = useState("")
+
+  //TODO:なんとかしてuseStateから値を返す
   const questionInput = (e: any) => {
     const newQ = question
     newQ.question = e.target.value
@@ -297,8 +299,8 @@ const Question = ({index, question, setQuestion, deleteQuestion}: any) => {
           <CloseIcon/>
         </IconButton>
       </Box>
-      <TextField label={"question"} onChange={questionInput}></TextField>
-      <TextField label={"answer"} onChange={answerInput}></TextField>
+      <TextField label={"question"} onChange={(e) => setStateQuestion(e.target.value)}/>
+      <TextField label={"answer"} onChange={(e) => setStateAnswer(e.target.value)}/>
     </Stack>
   )
 }
