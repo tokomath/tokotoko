@@ -2,16 +2,15 @@
 import React, {useState} from "react";
 // import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
 // import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {AppBar, Icon, Typography} from "@mui/material";
-import {Dayjs} from "dayjs"
-import dayjs from 'dayjs'
+import {Box, Button, Card, IconButton, Stack, Tab, Tabs, TextField, Typography} from "@mui/material";
 
-import {addStyles, EditableMathField} from 'react-mathquill'
-
-import {IconButton, Tabs, Tab} from '@mui/material';
+import {addStyles} from 'react-mathquill'
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+// import {LocalizationProvider} from "@mui/x-date-pickers";
+import axios from "axios";
+import {TabPanel} from "@mui/base";
 
 addStyles()
 
@@ -38,11 +37,6 @@ interface QuestionType {
   number: number,
   answer: string,
 }
-
-import {Card, Stack, Input, TextField, Button, Container, Box} from '@mui/material';
-// import {LocalizationProvider} from "@mui/x-date-pickers";
-import axios from "axios";
-import {TabPanel} from "@mui/base";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionType[]>([])
