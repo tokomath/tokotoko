@@ -63,6 +63,9 @@ export default function Page() {
     setSections(newS)
   }
   const handleRemove = (index: number) => {
+    if (sections.length === value) {
+      setValue(value - 1)
+    }
     const newS = sections.filter((q: SectionType, i: number) => i !== index)
     const newS2 = newS.map((q: SectionType, i: number) => {
       return {summary: q.summary, subSections: q.subSections, number: index + 1}
@@ -119,23 +122,8 @@ export default function Page() {
     );
   }
 
-  const plusPanel = () => {
-    if (sections.length === 0) {
-      return (
-        <TabPanel value={value} index={sections.length}>
-          <Button onClick={handleAdd}>Add Section</Button>
-        </TabPanel>
-      )
-    } else {
-      if (value === sections.length) {
-        setValue(value - 1)
-      }
-    }
-
-  }
-
   return (
-    <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"} bgcolor={"blue"}>
+    <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
       <Button variant={"contained"} onClick={createTest}>Create Test</Button>
       {/*
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -153,10 +141,6 @@ export default function Page() {
           }}/>
         </LocalizationProvider>
         */}
-      {/*タイトル・概要*/}
-      <TextField label="タイトル" onChange={(e) => setTestTitle(e.target.value)}></TextField>
-      <TextField label="説明" onChange={(e) => setTestSummary(e.target.value)}></TextField>
-
       <Box
         sx={{flexGrow: 1, bgcolor: 'background.paper', display: 'flex'}}
         alignSelf={"center"}
@@ -172,14 +156,26 @@ export default function Page() {
           sx={{borderRight: 1, borderColor: 'divider'}}
           aria-label="section tabs"
         >
+          <Tab label={"metadata"}/>
           {sections.map((s: SectionType, index: number) => (
             <Tab label={index} {...a11yProps(index)} key={index}/>
           ))}
           <Tab icon={<AddIcon/>} onClick={handleAdd} {...a11yProps(sections.length)}/>
         </Tabs>
 
+        <TabPanel value={value} index={0}>
+          <Box display="flex" justifyContent="center" alignItems="center" width={"100%"}>
+            <Stack gap={2} width={"100%"} padding={2} border="1p">
+              <Typography variant={"h5"}>Test Metadata</Typography>
+              {/*タイトル・概要*/}
+              <TextField label="タイトル" onChange={(e) => setTestTitle(e.target.value)}></TextField>
+              <TextField label="説明" onChange={(e) => setTestSummary(e.target.value)}></TextField>
+            </Stack>
+
+          </Box>
+        </TabPanel>
         {sections.map((s: SectionType, index: number) => (
-          <TabPanel value={value} index={index} key={index}>
+          <TabPanel value={value} index={index + 1} key={index + 1}>
             <Section key={index} index={index} section={s}
                      setSection={(s: SectionType) => {
                        handleSectionChange(s, index)
@@ -187,9 +183,7 @@ export default function Page() {
                      deleteSection={() => handleRemove(index)}/>
           </TabPanel>
         ))}
-        {plusPanel()}
       </Box>
-
       <p>{JSON.stringify(data)}</p>
     </Stack>
   );
