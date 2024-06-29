@@ -54,12 +54,16 @@ export default function Page() {
   const createTest = async () => {
     //TODO classes
     //const data = {title: testTitle, summary: testSummary, sections: sections, endDate: endDate.toJSON(), classes:[]}
+    /*
     const response = await axios.post('/api/test/create', data).catch(
       (e) => {
         const str = JSON.stringify(e.response.data)
         alert("test created\n" + str)
       }
     )
+    */
+    alert(JSON.stringify(sections))
+
   }
 
   const handleChange = (event: any, newValue: any) => {
