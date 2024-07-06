@@ -12,7 +12,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 // import {LocalizationProvider} from "@mui/x-date-pickers";
 
-import {TestFrame, SectionFrame, SubSectionFrame} from "@/app/api/testAPIs";
+import {TestFrame, SectionFrame, SubSectionFrame, createTest} from "@/app/api/testAPIs";
 import {Test, Section, SubSection, Question} from "@prisma/client";
 import {Block} from "@mui/icons-material";
 
@@ -54,7 +54,7 @@ export default function Page() {
   //Todo :date
   const data = {title: testTitle, summary: testSummary, sections: sections,/* endDate: endDate.toJSON(),*/ classes: []}
 
-  const createTest = async () => {
+  const createTestButtonFunction = async () => {
     //TODO classes
     //const data = {title: testTitle, summary: testSummary, sections: sections, endDate: endDate.toJSON(), classes:[]}
     /*
@@ -66,7 +66,9 @@ export default function Page() {
     )
     */
     alert(JSON.stringify(sections))
-
+    const newTest: Test = {id: 1, title: testTitle, summary: testSummary, startDate: new Date(), endDate: new Date()}
+    const newTestFrame: TestFrame = {test: newTest, sections: sections}
+    await createTest(newTestFrame)
   }
 
   const handleChange = (event: any, newValue: any) => {
@@ -82,7 +84,7 @@ export default function Page() {
 
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
-      <Button variant={"contained"} onClick={createTest}>Create Test</Button>
+      <Button variant={"contained"} onClick={createTestButtonFunction}>Create Test</Button>
       {/*
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <Typography variant="h6">開始日</Typography>
