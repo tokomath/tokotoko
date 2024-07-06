@@ -93,6 +93,6 @@ model Answer {
   point        Int
   text         String
 
-  Submittion Submittion @relation(fields: [submittionId], references: [id])
-  question   Question   @relation(fields: [submittionId], references: [id])
+  submittion Submittion @relation(fields: [submittionId], references: [id])
+  question   Question    @relation(fields: [questionId], references: [id])
 }
