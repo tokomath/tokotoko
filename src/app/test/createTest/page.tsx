@@ -10,7 +10,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 // import {LocalizationProvider} from "@mui/x-date-pickers";
 
 import {TestFrame, SectionFrame, SubSectionFrame, createTest} from "@/app/api/testAPIs";
-import {Test, Section, SubSection, Question} from "@prisma/client";
+import {Test, Section, Question} from "@prisma/client";
 import dayjs, {Dayjs} from "dayjs";
 import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
@@ -49,21 +49,11 @@ export default function Page() {
     const section: Section = {id: 1, testId: 1, summary: "", number: sections.length + 1}
     setSections([...sections].concat({section: section, subSections: []}))
   }
-  //Todo :date
-  const data = {title: testTitle, summary: testSummary, sections: sections,/* endDate: endDate.toJSON(),*/ classes: []}
 
   const createTestButtonFunction = async () => {
     //TODO classes
-    //const data = {title: testTitle, summary: testSummary, sections: sections, endDate: endDate.toJSON(), classes:[]}
-    /*
-    const response = await axios.post('/api/test/create', data).catch(
-      (e) => {
-        const str = JSON.stringify(e.response.data)
-        alert("test created\n" + str)
-      }
-    )
-    */
-    alert(JSON.stringify(sections))
+
+    alert("Complete Create Test")
     const newTest: Test = {
       id: 1,
       title: testTitle,
@@ -284,7 +274,6 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
 
 const SubSectionPage = ({indexProps, subSectionProps, setSubSection, deleteSubSection}: any) => {
   const [subSectionSummary, setSubSectionSummary] = useState(subSectionProps.subSection.summary)
-  const index: number = indexProps;
   const subSection: SubSectionFrame = subSectionProps;
 
 
@@ -323,7 +312,6 @@ const SubSectionPage = ({indexProps, subSectionProps, setSubSection, deleteSubSe
     setSubSection({...subSection, questions: newQ2})
   }
   const handleAdd = () => {
-    const newQ = [...subSection.questions]
     const question: Question = {
       id: 1,
       subSectionId: 1,
@@ -373,7 +361,7 @@ const QuestionPage = ({index, question, setQuestion, deleteQuestion}: any) => {
     question.answer = stateAnswer
 
     setQuestion(newQ);
-  }, [stateQuestion, stateAnswer]);
+  }, [stateQuestion, stateAnswer, question, setQuestion]);
 
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">

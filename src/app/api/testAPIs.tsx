@@ -2,7 +2,6 @@
 
 import {Question, Test, Section, SubSection, Prisma} from "@prisma/client";
 import {prisma} from "@/app/api/prisma_client"
-import dayjs from "dayjs"
 
 export interface TestFrame {
   test: Test,
