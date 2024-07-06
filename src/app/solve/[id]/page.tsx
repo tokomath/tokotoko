@@ -186,7 +186,7 @@ export default function Solve({ params }: { params: { id: string } }) {
   };
 
   const handleSubmit = () => {
-    const answeredQuestionIds = Object.keys(answers).filter(id => answers[id] !== "");
+    const answeredQuestionIds = Object.keys(answers);
 
     if (answeredQuestionIds.length > 0) {
       const confirmationMessage = answeredQuestionIds.map(id => {
