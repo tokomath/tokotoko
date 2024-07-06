@@ -1,10 +1,7 @@
 "use client"
 import React, {useEffect, useState} from "react";
-// import {DateTimePicker} from "@mui/x-date-pickers/DateTimePicker";
-// import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {Box, Button, Card, IconButton, Stack, Tab, Tabs, TextField, Typography} from "@mui/material";
-import {InlineMath, BlockMath} from "react-katex";
-import Latex from "react-latex-next";
+import {InlineMath} from "react-katex";
 import 'katex/dist/katex.min.css';
 
 import CloseIcon from '@mui/icons-material/Close';
@@ -14,7 +11,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 import {TestFrame, SectionFrame, SubSectionFrame, createTest} from "@/app/api/testAPIs";
 import {Test, Section, SubSection, Question} from "@prisma/client";
-import {Block} from "@mui/icons-material";
+import dayjs, {Dayjs} from "dayjs";
+import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionFrame[]>([])
@@ -22,9 +21,8 @@ export default function Page() {
   const [testSummary, setTestSummary] = useState("")
   const [value, setValue] = React.useState(0);
 
-  //Todo
-  // const [endDate, setEndDate] = useState<Dayjs>(dayjs())
-  // const [startDate, setStartDate] = useState<Dayjs>(dayjs())
+  const [endDate, setEndDate] = useState<Dayjs>(dayjs())
+  const [startDate, setStartDate] = useState<Dayjs>(dayjs())
 
   const handleSectionChange = (item: SectionFrame, index: number) => {
     const newS: SectionFrame[] = sections.map((s: SectionFrame, i: number) => {
@@ -66,7 +64,13 @@ export default function Page() {
     )
     */
     alert(JSON.stringify(sections))
-    const newTest: Test = {id: 1, title: testTitle, summary: testSummary, startDate: new Date(), endDate: new Date()}
+    const newTest: Test = {
+      id: 1,
+      title: testTitle,
+      summary: testSummary,
+      startDate: startDate.toDate(),
+      endDate: endDate.toDate()
+    }
     const newTestFrame: TestFrame = {test: newTest, sections: sections}
     await createTest(newTestFrame)
   }
@@ -82,25 +86,10 @@ export default function Page() {
     };
   }
 
+
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
       <Button variant={"contained"} onClick={createTestButtonFunction}>Create Test</Button>
-      {/*
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <Typography variant="h6">開始日</Typography>
-          <DateTimePicker value={startDate} onChange={(val: Dayjs | null) => {
-            if (val !== null) {
-              setStartDate(val);
-            }
-          }}/>
-          <Typography variant="h6">締め切り</Typography>
-          <DateTimePicker value={endDate} onChange={(val: Dayjs | null) => {
-            if (val !== null) {
-              setEndDate(val);
-            }
-          }}/>
-        </LocalizationProvider>
-        */}
       <Box
         sx={{flexGrow: 1, bgcolor: 'background.paper', display: 'flex'}}
         alignSelf={"center"}
@@ -124,12 +113,16 @@ export default function Page() {
         </Tabs>
 
         <TabPanels value={value} index={0}>
-          <Stack gap={2} width={"100%"} padding={2} border="1p">
-            <Typography variant={"h5"}>Test Metadata</Typography>
-            {/*タイトル・概要*/}
-            <TextField label="タイトル" value={testTitle} onChange={(e) => setTestTitle(e.target.value)}/>
-            <TextField label="説明" value={testSummary} onChange={(e) => setTestSummary(e.target.value)}/>
-          </Stack>
+          <MetaDataPage
+            testTitle={testTitle}
+            setTestTitle={setTestTitle}
+            testSummary={testSummary}
+            setTestSummary={setTestSummary}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+          />
         </TabPanels>
         {sections.map((s: SectionFrame, index: number) => (
           <TabPanels value={value} index={index + 1} key={index + 1}>
@@ -166,6 +159,39 @@ const TabPanels = (props: any) => {
   );
 }
 
+const MetaDataPage = ({
+                        testTitle,
+                        setTestTitle,
+                        testSummary,
+                        setTestSummary,
+                        startDate,
+                        setStartDate,
+                        endDate,
+                        setEndDate
+                      }: any) => {
+  return (
+    <Stack gap={2} width={"100%"} padding={2} border="1p">
+      <Typography variant={"h5"}>Test Metadata</Typography>
+      {/*タイトル・概要*/}
+      <TextField label="タイトル" value={testTitle} onChange={(e) => setTestTitle(e.target.value)}/>
+      <TextField label="説明" value={testSummary} onChange={(e) => setTestSummary(e.target.value)}/>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Typography variant="h6">開始日</Typography>
+        <DateTimePicker value={startDate} onChange={(val: Dayjs | null) => {
+          if (val !== null) {
+            setStartDate(val);
+          }
+        }}/>
+        <Typography variant="h6">締め切り</Typography>
+        <DateTimePicker value={endDate} onChange={(val: Dayjs | null) => {
+          if (val !== null) {
+            setEndDate(val);
+          }
+        }}/>
+      </LocalizationProvider>
+    </Stack>
+  )
+}
 
 const SectionPage = ({index, section, setSection, deleteSection}: any) => {
   const handleSubSectionChange = (item: SubSectionFrame, index: number) => {
