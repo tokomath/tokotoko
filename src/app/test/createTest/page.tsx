@@ -1,6 +1,6 @@
 "use client"
 import React, {useEffect, useState} from "react";
-import {Box, Button, Card, IconButton, Stack, Tab, Tabs, TextField, Typography} from "@mui/material";
+import {Alert, Box, Button, Card, IconButton, Stack, Tab, Tabs, TextField, Typography} from "@mui/material";
 import {InlineMath} from "react-katex";
 import 'katex/dist/katex.min.css';
 
@@ -87,9 +87,30 @@ export default function Page() {
   }
 
 
+  // エラーを追加する場合はCreateErrorとcheckDataErrorを変更する
+  const CreateError = () => {
+    const isAfterWarning = () => {
+      if (startDate.isAfter(endDate)) {
+        return (
+          <Alert severity="error">開始日が締め切りより後です</Alert>
+        )
+      }
+    }
+    return (
+      isAfterWarning()
+    )
+  }
+
+  const checkDataError = () => {
+    return startDate.isAfter(endDate)
+  }
+
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
-      <Button variant={"contained"} onClick={createTestButtonFunction}>Create Test</Button>
+      <Button variant={"contained"} onClick={createTestButtonFunction} disabled={checkDataError()}>Create Test</Button>
+      <CreateError/>
+
+
       <Box
         sx={{flexGrow: 1, bgcolor: 'background.paper', display: 'flex'}}
         alignSelf={"center"}
@@ -160,6 +181,7 @@ const TabPanels = (props: any) => {
 }
 
 const MetaDataPage = ({
+                        // SectionPage内のstate
                         testTitle,
                         setTestTitle,
                         testSummary,
@@ -169,6 +191,21 @@ const MetaDataPage = ({
                         endDate,
                         setEndDate
                       }: any) => {
+  const dateWarning = () => {
+    const isBeforeWarning = () => {
+      if (startDate.isBefore(dayjs())) {
+        return (
+          <Alert severity="warning">開始日が現在日より前です</Alert>
+        )
+      }
+    }
+
+    return (
+      <Stack spacing={"5px"}>
+        {isBeforeWarning()}
+      </Stack>
+    );
+  }
   return (
     <Stack gap={2} width={"100%"} padding={2} border="1p">
       <Typography variant={"h5"}>Test Metadata</Typography>
@@ -189,6 +226,7 @@ const MetaDataPage = ({
           }
         }}/>
       </LocalizationProvider>
+      {dateWarning()}
     </Stack>
   )
 }
