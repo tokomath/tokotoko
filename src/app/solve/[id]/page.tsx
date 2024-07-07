@@ -58,15 +58,15 @@ function CustomTabPanel(props: TabPanelProps) {
 
 function a11yProps(index: number) {
   return {
-    id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
+    id: `tab-${index + 1}`,
+    'aria-controls': `The tab of part-${index + 1}`,
   };
 }
 
 export default function Solve({ params }: { params: { id: string } }) {
+  const [testData, setTestData] = useState<TestType | null>(null);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
-  const [testData, setTestData] = useState<TestType | null>(null);
 
   const loadForm = async (id: string) => {
     const response = await axios.post("/api/test/get", { id: Number(id) }).then((res) => {
@@ -75,10 +75,6 @@ export default function Solve({ params }: { params: { id: string } }) {
       alert(e);
     });
   }
-
-  useEffect(() => {
-    loadForm(params.id);
-  }, []);
 
   const changeAnswer = (questionId: number, answer: string) => {
     setAnswers(prevAnswers => ({
@@ -110,12 +106,17 @@ export default function Solve({ params }: { params: { id: string } }) {
     setPartIndex(newValue);
   };
 
+  useEffect(() => {
+    loadForm(params.id);
+  }, []);
+
   if (!testData) {
     return <div>Loading...</div>;
   }
 
   return (
     <main>
+      {/* ヘッダー部分 */}
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
         <Box paddingTop={1} paddingRight={1} display="flex" flexWrap="wrap" alignItems="center" justifyContent="flex-end">
           <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener" marginX={1}>
@@ -132,8 +133,10 @@ export default function Solve({ params }: { params: { id: string } }) {
           </Stack>
         </Box>
       </Paper>
+
+      {/* 問題部分 */}
       <Box sx={{ width: '100%', marginTop: 2 }}>
-        <Tabs value={partIndex} onChange={handleChange} aria-label="基本的なタブの例">
+        <Tabs value={partIndex} onChange={handleChange} aria-label="Tabs of each PART">
           {testData.sections.map((section, index) => (
             <Tab key={section.number} label={`Part ${section.number}`} {...a11yProps(index)} />
           ))}
@@ -142,7 +145,7 @@ export default function Solve({ params }: { params: { id: string } }) {
           <CustomTabPanel key={section.number} value={partIndex} index={index}>
             {section.subSections.map((subSection) => (
               <Paper key={subSection.number} sx={{ marginTop: 2, padding: 2 }}>
-                <Typography variant="h6">{subSection.summary}</Typography>
+                <Typography variant="h6">Section{subSection.number} {subSection.summary}</Typography>
                 {subSection.questions.map((question) => (
                   <React.Fragment key={question.id}>
                     <Divider sx={{ my: 1 }} />
@@ -166,7 +169,7 @@ export default function Solve({ params }: { params: { id: string } }) {
           endIcon={<SendIcon />}
           onClick={handleSubmit}
         >
-          送信
+          Send
         </Button>
       </Box>
     </main>
