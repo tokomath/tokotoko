@@ -130,6 +130,7 @@ export default function Solve({ params }: { params: { id: string } }) {
           <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
             <Typography variant="h1" fontSize={30}>{testData.title}</Typography>
             <Typography>{testData.summary}</Typography>
+            <Typography>Start:{testData.startDate.toString()}　→　Deadline:{testData.endDate.toString()}</Typography>
           </Stack>
         </Box>
       </Paper>
