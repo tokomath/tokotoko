@@ -7,23 +7,31 @@ import Question from "@/compornents/Question";
 import SendIcon from '@mui/icons-material/Send';
 import axios from "axios";
 
-// インターフェース定義
-export interface Part {
-  id: string,
+export interface TestType {
   title: string;
-  sections: Section[];
+  summary: string;
+  startDate: Date;
+  endDate: Date;
+  sections: SectionType[];
 }
 
-export interface Section {
-  id: string,
-  title: string;
-  questions: Question[];
+export interface SectionType {
+  summary: string;
+  number: number;
+  subSections: SubSectionType[];
 }
 
-export interface Question {
-  id: string,
-  number: string,
-  question: string,
+export interface SubSectionType {
+  summary: string;
+  number: number;
+  questions: QuestionType[];
+}
+
+export interface QuestionType {
+  question: string;
+  number: number;
+  answer: string;
+  id: number;
 }
 
 interface TabPanelProps {
@@ -32,115 +40,7 @@ interface TabPanelProps {
   value: number;
 }
 
-// サンプルデータ
-const parts: Part[] = [
-  {
-    id: "0",
-    title: "Part1",
-    sections: [
-      {
-        id: "0",
-        title: "問題1",
-        questions: [
-          {
-            id: "0",
-            number: "(1)",
-            question: "$ \\int x^3 dx $ を解け 1-1-1",
-          },
-          {
-            id: "1",
-            number: "(2)",
-            question: "$ \\int x^3 dx $ を解け 1-1-2",
-          },
-          {
-            id: "2",
-            number: "(3)",
-            question: "$ \\int x^3 dx $ を解け 1-1-3",
-          },
-        ],
-      },
-      {
-        id: "1",
-        title: "問題2",
-        questions: [
-          {
-            id: "3",
-            number: "(1)",
-            question: "$ \\int x^3 dx $ を解け 1-2-1",
-          },
-          {
-            id: "4",
-            number: "(2)",
-            question: "$ \\int x^3 dx $ を解け 1-2-2",
-          },
-          {
-            id: "5",
-            number: "(3)",
-            question: "$ \\int x^3 dx $ を解け 1-2-3",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "1",
-    title: "Part2",
-    sections: [
-      {
-        id: "0",
-        title: "問題1",
-        questions: [
-          {
-            id: "6",
-            number: "(1)",
-            question: "$ \\int x^3 dx $ を解け 2-1-1",
-          },
-          {
-            id: "7",
-            number: "(2)",
-            question: "$ \\int x^3 dx $ を解け 2-1-2",
-          },
-          {
-            id: "8",
-            number: "(3)",
-            question: "$ \\int x^3 dx $ を解け 2-1-3",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "Part3",
-    sections: [
-      {
-        id: "0",
-        title: "問題1",
-        questions: [
-          {
-            id: "9",
-            number: "(1)",
-            question: "$ \\int x^3 dx $ を解け 3-1-1",
-          },
-          {
-            id: "10",
-            number: "(2)",
-            question: "$ \\int x^3 dx $ を解け 3-1-2",
-          },
-          {
-            id: "11",
-            number: "(3)",
-            question: "$ \\int x^3 dx $ を解け 3-1-3",
-          },
-        ],
-      },
-    ],
-  },
-];
-
 function CustomTabPanel(props: TabPanelProps) {
-
-
   const { children, value, index, ...other } = props;
 
   return (
@@ -166,20 +66,21 @@ function a11yProps(index: number) {
 export default function Solve({ params }: { params: { id: number } }) {
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
+  const [testData, setTestData] = useState<TestType | null>(null);
 
-  const handleLoad = async (id: number) => {
-    const response = await axios.post("/api/test/get", { id: id }).then((res) => {
-      console.log(res.data);
+  const loadForm = async (id: number) => {
+    const response = await axios.post("/api/test/get", { id: 1 }).then((res) => {
+      setTestData(res.data as TestType);
     }).catch((e) => {
       alert(e);
-    })
+    });
   }
 
   useEffect(() => {
-    handleLoad(params.id);
+    loadForm(params.id);
   }, []);
 
-  const changeAnswer = (questionId: string, answer: string) => {
+  const changeAnswer = (questionId: number, answer: string) => {
     setAnswers(prevAnswers => ({
       ...prevAnswers,
       [questionId]: answer
@@ -191,9 +92,9 @@ export default function Solve({ params }: { params: { id: number } }) {
 
     if (answeredQuestionIds.length > 0) {
       const confirmationMessage = answeredQuestionIds.map(id => {
-        const { title: partTitle, sections } = parts.find(part => part.sections.some(section => section.questions.some(question => question.id === id))) || { title: "", sections: [] };
-        const { title: sectionTitle, questions } = sections.find(section => section.questions.some(question => question.id === id)) || { title: "", questions: [] };
-        const { number, question } = questions.find(question => question.id === id) || { number: "", question: "" };
+        const { summary: partTitle, subSections } = testData?.sections.find(section => section.subSections.some(subSection => subSection.questions.some(question => question.id === Number(id)))) || { summary: "", subSections: [] };
+        const { summary: sectionTitle, questions } = subSections.find(subSection => subSection.questions.some(question => question.id === Number(id))) || { summary: "", questions: [] };
+        const { number, question } = questions.find(question => question.id === Number(id)) || { number: "", question: "" };
         return `${partTitle} ${sectionTitle} ${number} ${question}: ${answers[id]}`;
       }).join("\n");
 
@@ -209,6 +110,10 @@ export default function Solve({ params }: { params: { id: number } }) {
     setPartIndex(newValue);
   };
 
+  if (!testData) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <main>
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
@@ -222,28 +127,28 @@ export default function Solve({ params }: { params: { id: number } }) {
         </Box>
         <Box maxWidth={640} margin="auto">
           <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
-            <Typography variant="h1" fontSize={30}>課題1 積分の問題</Typography>
-            <Typography>KaTeXの書式で答えてください。書式がわからない場合は、上にある KaTeX Help をみてください。</Typography>
+            <Typography variant="h1" fontSize={30}>{testData.title}</Typography>
+            <Typography>{testData.summary}</Typography>
           </Stack>
         </Box>
       </Paper>
       <Box sx={{ width: '100%', marginTop: 2 }}>
         <Tabs value={partIndex} onChange={handleChange} aria-label="基本的なタブの例">
-          {parts.map((part, index) => (
-            <Tab key={part.id} label={part.title} {...a11yProps(index)} />
+          {testData.sections.map((section, index) => (
+            <Tab key={section.number} label={`Part ${section.number}`} {...a11yProps(index)} />
           ))}
         </Tabs>
-        {parts.map((part, index) => (
-          <CustomTabPanel key={part.id} value={partIndex} index={index}>
-            {part.sections.map((section) => (
-              <Paper key={section.id} sx={{ marginTop: 2, padding: 2 }}>
-                <Typography variant="h6">{section.title}</Typography>
-                {section.questions.map((question, index) => (
+        {testData.sections.map((section, index) => (
+          <CustomTabPanel key={section.number} value={partIndex} index={index}>
+            {section.subSections.map((subSection) => (
+              <Paper key={subSection.number} sx={{ marginTop: 2, padding: 2 }}>
+                <Typography variant="h6">{subSection.summary}</Typography>
+                {subSection.questions.map((question) => (
                   <React.Fragment key={question.id}>
                     <Divider sx={{ my: 1 }} />
                     <Question
-                      id={question.id}
-                      number={question.number}
+                      id={question.id.toString()}
+                      number={question.number.toString()}
                       question={question.question}
                       answer={answers[question.id]}
                       changeAnswer={(answer) => changeAnswer(question.id, answer)}
