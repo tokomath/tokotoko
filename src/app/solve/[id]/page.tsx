@@ -167,11 +167,8 @@ export default function Solve({ params }: { params: { id: number } }) {
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
 
-  const [testId, setTestId] = useState<number>(0);
-
-  const handleLoad = async () => {
-    const response = await axios.post("/api/test/get", { id: 1 }).then((res) => {
-      alert(res.data);
+  const handleLoad = async (id: number) => {
+    const response = await axios.post("/api/test/get", { id: id }).then((res) => {
       console.log(res.data);
     }).catch((e) => {
       alert(e);
@@ -179,18 +176,7 @@ export default function Solve({ params }: { params: { id: number } }) {
   }
 
   useEffect(() => {
-    setTestId(params.id);
-    handleLoad();
-
-    // const initialAnswers: { [key: string]: string } = {};
-    // parts.forEach(part => {
-    //   part.sections.forEach(section => {
-    //     section.questions.forEach(question => {
-    //       initialAnswers[question.id] = "";
-    //     });
-    //   });
-    // });
-    // setAnswers(initialAnswers);
+    handleLoad(params.id);
   }, []);
 
   const changeAnswer = (questionId: string, answer: string) => {
