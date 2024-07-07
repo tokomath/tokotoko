@@ -135,7 +135,7 @@ export default function Solve({ params }: { params: { id: string } }) {
       </Paper>
 
       {/* 問題部分 */}
-      <Box sx={{ width: '100%', marginTop: 2 }}>
+      <Box maxWidth={640} margin="auto" >
         <Tabs value={partIndex} onChange={handleChange} aria-label="Tabs of each PART">
           {testData.sections.map((section, index) => (
             <Tab key={section.number} label={`Part ${section.number}`} {...a11yProps(index)} />
@@ -162,16 +162,17 @@ export default function Solve({ params }: { params: { id: string } }) {
             ))}
           </CustomTabPanel>
         ))}
+        <Box display="flex" justifyContent="flex-end" marginTop={2} paddingRight={2}>
+          <Button
+            variant="contained"
+            endIcon={<SendIcon />}
+            onClick={handleSubmit}
+          >
+            Send
+          </Button>
+        </Box>
       </Box>
-      <Box display="flex" justifyContent="flex-end" marginTop={2} paddingRight={2}>
-        <Button
-          variant="contained"
-          endIcon={<SendIcon />}
-          onClick={handleSubmit}
-        >
-          Send
-        </Button>
-      </Box>
-    </main>
+
+    </main >
   );
 }
