@@ -63,13 +63,13 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Solve({ params }: { params: { id: number } }) {
+export default function Solve({ params }: { params: { id: string } }) {
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
   const [testData, setTestData] = useState<TestType | null>(null);
 
-  const loadForm = async (id: number) => {
-    const response = await axios.post("/api/test/get", { id: 1 }).then((res) => {
+  const loadForm = async (id: string) => {
+    const response = await axios.post("/api/test/get", { id: Number(id) }).then((res) => {
       setTestData(res.data as TestType);
     }).catch((e) => {
       alert(e);
