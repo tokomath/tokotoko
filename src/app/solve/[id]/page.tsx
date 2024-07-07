@@ -5,6 +5,7 @@ import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
 import Question from "@/compornents/Question";
 import SendIcon from '@mui/icons-material/Send';
+import axios from "axios";
 
 // インターフェース定義
 export interface Part {
@@ -162,20 +163,34 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Solve({ params }: { params: { id: string } }) {
+export default function Solve({ params }: { params: { id: number } }) {
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
 
+  const [testId, setTestId] = useState<number>(0);
+
+  const handleLoad = async () => {
+    const response = await axios.post("/api/test/get", { id: 1 }).then((res) => {
+      alert(res.data);
+      console.log(res.data);
+    }).catch((e) => {
+      alert(e);
+    })
+  }
+
   useEffect(() => {
-    const initialAnswers: { [key: string]: string } = {};
-    parts.forEach(part => {
-      part.sections.forEach(section => {
-        section.questions.forEach(question => {
-          initialAnswers[question.id] = "";
-        });
-      });
-    });
-    setAnswers(initialAnswers);
+    setTestId(params.id);
+    handleLoad();
+
+    // const initialAnswers: { [key: string]: string } = {};
+    // parts.forEach(part => {
+    //   part.sections.forEach(section => {
+    //     section.questions.forEach(question => {
+    //       initialAnswers[question.id] = "";
+    //     });
+    //   });
+    // });
+    // setAnswers(initialAnswers);
   }, []);
 
   const changeAnswer = (questionId: string, answer: string) => {
