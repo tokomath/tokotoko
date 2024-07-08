@@ -199,7 +199,7 @@ export default function Solve({ params }: { params: { id: string } }) {
 
         <Box display="flex" justifyContent="space-between" marginTop={2} paddingRight={2}>
           <Privious index={partIndex} setIndex={setPartIndex} />
-          <Next index={partIndex} setIndex={setPartIndex} />
+          <Next index={partIndex} setIndex={setPartIndex} maxIndex={testData.sections.length} />
         </Box>
 
         <Box display="flex" justifyContent="flex-end" marginTop={2} paddingRight={2}>
@@ -218,6 +218,15 @@ export default function Solve({ params }: { params: { id: string } }) {
 }
 
 function Privious({ index, setIndex }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>> }) {
+  if (index === 0) {
+    return (
+      <Button
+        disabled
+      >
+        Previous Part
+      </Button>
+    )
+  }
   return (
     <Button
       onClick={
@@ -230,7 +239,17 @@ function Privious({ index, setIndex }: { index: number, setIndex: React.Dispatch
 
 }
 
-function Next({ index, setIndex }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>> }) {
+function Next({ index, setIndex, maxIndex }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>>, maxIndex: number }) {
+  if (index === maxIndex - 1) {
+    return (
+      <Button
+        disabled
+      >
+        Next Part
+      </Button>
+    )
+  }
+
   return (
     <Button
       onClick={
