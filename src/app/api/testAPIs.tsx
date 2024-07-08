@@ -131,3 +131,12 @@ export const getTest = async () => {
   console.log(test)
   return test;
 }
+
+// no info about sections ...
+export const getTestById = async (id: number) => {
+  const test = await prisma.test.findUnique({
+    where: {id: id}
+  });
+  console.log(test)
+  return test;
+}
