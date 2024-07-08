@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { Box, Button, Link, Paper, Tab, Tabs, Typography, Divider } from "@mui/material";
 import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
@@ -143,6 +143,10 @@ export default function Solve({ params }: { params: { id: string } }) {
     }
   }, [testData]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [partIndex]);
+
   if (!testData) {
     return <div>Loading...</div>;
   }
@@ -253,7 +257,9 @@ function Next({ index, setIndex, maxIndex }: { index: number, setIndex: React.Di
   return (
     <Button
       onClick={
-        () => setIndex(index + 1)
+        () => {
+          setIndex(index + 1);
+        }
       }
     >
       Next Part
