@@ -2,10 +2,8 @@
 
 import {Question, Test, Section, SubSection, Prisma} from "@prisma/client";
 import {prisma} from "@/app/api/prisma_client"
-import dayjs from "dayjs"
 
 export interface TestFrame {
-  title: string,
   test: Test,
   sections: SectionFrame[],
 }
@@ -28,6 +26,7 @@ export const createTest = async (props: TestFrame) => {
   let test: Prisma.TestCreateInput = {
     title: props.test.title,
     summary: props.test.summary,
+    startDate: props.test.startDate,
     endDate: props.test.endDate,
     sections: {
       create: props.sections.map(section => {
