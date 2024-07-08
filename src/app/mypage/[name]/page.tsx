@@ -8,12 +8,9 @@ import {Test, Student, Class} from "@prisma/client";
 
 
 import SchoolIcon from '@mui/icons-material/School';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Stack from '@mui/material/Stack';
-import Question from "@/compornents/Question";
-import SendIcon from '@mui/icons-material/Send';
-import {getClassByStudent} from "@/app/api/class/get/route";
 import {getTestByClass} from "@/app/api/testAPIs";
+import {getClassByStudent} from "@/app/api/class/get/getClass";
 
 interface TestInterface {
   test: Test,

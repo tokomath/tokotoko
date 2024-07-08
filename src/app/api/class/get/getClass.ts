@@ -3,7 +3,7 @@
 import {prisma} from "@/app/api/prisma_client"
 
 export const getClassByStudent = async (studentId: number) => {
-  const classes = await prisma.class.findMany({
+  return prisma.class.findMany({
     where: {
       students: {
         some: {
@@ -12,6 +12,4 @@ export const getClassByStudent = async (studentId: number) => {
       }
     }
   });
-
-  return classes;
 }
