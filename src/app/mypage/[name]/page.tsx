@@ -4,30 +4,46 @@ import axios from 'axios'
 import React, {useEffect, useState} from "react";
 import {List, ListItem, Card, CardContent, Typography, Button, Link, Box} from "@mui/material";
 import 'katex/dist/katex.min.css';
-import {Test} from "@prisma/client";
+import {Test, Student, Class} from "@prisma/client";
 
-import {getTestById} from "@/app/api/testAPIs";
 
 import SchoolIcon from '@mui/icons-material/School';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Stack from '@mui/material/Stack';
 import Question from "@/compornents/Question";
 import SendIcon from '@mui/icons-material/Send';
+import {getClassByStudent} from "@/app/api/class/get/route";
+import {getTestByClass} from "@/app/api/testAPIs";
+
+interface TestInterface {
+  test: Test,
+  class: Class,
+};
 
 export default function Mypage({params}: { params: { name: string } }) {
-  const [testId, setTestId] = useState<number[]>([])
-  const [tests, setTests] = useState<Test[]>([]);
+  const student: Student = {name: params.name, id: 1} as Student
 
-  const getTestId = async () => {
-  }
+  const [testId, setTestId] = useState<number[]>([])
+  const [tests, setTests] = useState<TestInterface[]>([]);
+
+  useEffect(() => {
+    getTests()
+  }, [])
 
   const getTests = async () => {
-    const res = await Promise.all(testId.map(async (id: number) => {
-      return getTestById(id)
-    }))
-    const filled: Test[] = res.filter((item) => item !== null) as Test[]
+    const test = await getClassByStudent(student.id)
+      .then(async (classes: Class[]) => {
+        const tmp = classes.map(async (c: Class) => {
+          const tmpClass = await getTestByClass(c.id)
+          return tmpClass.map((t: Test) => {
+            return {test: t, class: c}
+          })
+        });
+        return tmp
 
-    setTests(filled)
+      })
+
+    setTests((await Promise.all(test)).flat(1))
   }
 
   const TestCard = () => {
@@ -37,22 +53,29 @@ export default function Mypage({params}: { params: { name: string } }) {
           tests.map((item, idx) => (
             // eslint-disable-next-line react/jsx-key
             <Box margin={"15px"}>
-              <Card key={idx}>
-                <CardContent>
-                  <Link href={"/solve/" + item.id}>
-                    <Stack direction={"row"}>
-                      <Typography alignSelf={"center"} variant="h5">
-                        {item.summary}
-                        <OpenInNewIcon fontSize={"small"}/>
+              <Link href={"/solve/" + item.test.id}>
+                <Card key={idx}>
+                  <CardContent>
+                    <Stack direction={"row"} justifyContent={"space-between"}>
+                      <Typography alignSelf={"center"} variant="h4">
+                        {item.test.title}
                       </Typography>
+                      <Stack>
+                        <Typography textAlign={"right"} variant="h6">
+                          {"deadline/  " + item.test.endDate.toDateString()}
+                        </Typography>
+                        <Typography textAlign={"right"} variant="h6">
+                          {"class/  " + item.class.name}
+                        </Typography>
+                      </Stack>
                     </Stack>
-                  </Link>
 
-                  <Typography variant="h6">
-                    {"class:  " + item.class}
-                  </Typography>
-                </CardContent>
-              </Card>
+                    <Typography variant="h6">
+                      {"summary:  " + item.test.summary}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Link>
             </Box>
           ))
         }

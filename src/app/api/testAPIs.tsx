@@ -133,10 +133,15 @@ export const getTest = async () => {
 }
 
 // no info about sections ...
-export const getTestById = async (id: number) => {
-  const test = await prisma.test.findUnique({
-    where: {id: id}
+export const getTestByClass = async (classId: number) => {
+  const tests = await prisma.test.findMany({
+    where: {
+      classes: {
+        some: {
+          id: classId
+        }
+      }
+    }
   });
-  console.log(test)
-  return test;
+  return tests;
 }
