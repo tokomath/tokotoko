@@ -97,7 +97,8 @@ export default function Page() {
 
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
-      <Button variant={"contained"} onClick={createTestButtonFunction} disabled={checkDataError()}>Create Test</Button>
+      <Button variant={"contained"} onClick={createTestButtonFunction} /*disabled={checkDataError()}*/ >Create
+        Test</Button>
       <CreateError/>
 
 
@@ -258,9 +259,7 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
   return (
     <Stack justifyContent="center" display="flex" width={"100%"} height={"100%"} gap={2} alignItems={"left"}>
       <Box width={"100%"} alignItems={"right"}>
-        <Button startIcon={<DeleteIcon/>} onClick={
-          deleteSection
-        }>Delete</Button>
+        <Button startIcon={<DeleteIcon/>} onClick={deleteSection}>Delete</Button>
       </Box>
       {section.subSections.map((s: SubSectionFrame, index: number) => (
         <SubSectionPage key={index} indexProps={index} subSectionProps={s} setSubSection={(s: SubSectionFrame) => {
@@ -352,28 +351,31 @@ const SubSectionPage = ({indexProps, subSectionProps, setSubSection, deleteSubSe
 }
 
 const QuestionPage = ({index, question, setQuestion, deleteQuestion}: any) => {
-  const [stateQuestion, setStateQuestion] = useState(question.question)
-  const [stateAnswer, setStateAnswer] = useState(question.answer)
-
-  useEffect(() => {
+  const setAns = (newAns: string) => {
     const newQ = question
-    question.question = stateQuestion
-    question.answer = stateAnswer
+    question.answer = newAns
 
     setQuestion(newQ);
-  }, [stateQuestion, stateAnswer, question, setQuestion]);
+  }
+
+  const setQues = (newQues: string) => {
+    const newQ = question
+    question.question = newQues
+
+    setQuestion(newQ);
+  }
 
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">
       <Box display="flex" justifyContent="space-between">
-        <InlineMath>{"(" + question.number + ")\\quad" + stateQuestion}</InlineMath>
+        <InlineMath>{"(" + question.number + ")\\quad" + question.question}</InlineMath>
         <IconButton aria-label="delete" onClick={deleteQuestion}>
           <CloseIcon/>
         </IconButton>
       </Box>
-      <TextField label={"question"} value={stateQuestion} onChange={(e) => setStateQuestion(e.target.value)}/>
-      <InlineMath>{"A.\\quad" + stateAnswer}</InlineMath>
-      <TextField label={"answer"} value={stateAnswer} onChange={(e) => setStateAnswer(e.target.value)}/>
+      <TextField label={"question"} value={question.question} onChange={(e) => setQues(e.target.value)}/>
+      <InlineMath>{"A.\\quad" + question.answer}</InlineMath>
+      <TextField label={"answer"} value={question.answer} onChange={(e) => setAns(e.target.value)}/>
     </Stack>
   )
 }
