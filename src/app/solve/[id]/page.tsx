@@ -196,6 +196,12 @@ export default function Solve({ params }: { params: { id: string } }) {
             ))}
           </CustomTabPanel>
         ))}
+
+        <Box display="flex" justifyContent="space-between" marginTop={2} paddingRight={2}>
+          <Privious index={partIndex} setIndex={setPartIndex} />
+          <Next index={partIndex} setIndex={setPartIndex} />
+        </Box>
+
         <Box display="flex" justifyContent="flex-end" marginTop={2} paddingRight={2}>
           <Button
             variant="contained"
@@ -209,4 +215,30 @@ export default function Solve({ params }: { params: { id: string } }) {
 
     </main >
   );
+}
+
+function Privious({ index, setIndex }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>> }) {
+  return (
+    <Button
+      onClick={
+        () => setIndex(index - 1)
+      }
+    >
+      Previous Part
+    </Button>
+  )
+
+}
+
+function Next({ index, setIndex }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>> }) {
+  return (
+    <Button
+      onClick={
+        () => setIndex(index + 1)
+      }
+    >
+      Next Part
+    </Button>
+  )
+
 }
