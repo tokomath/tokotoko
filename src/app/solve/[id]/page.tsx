@@ -69,8 +69,10 @@ export default function Solve({ params }: { params: { id: string } }) {
   const [partIndex, setPartIndex] = useState(0);
 
   const loadForm = async (id: string) => {
+    console.log(answers);
     const response = await axios.post("/api/test/get", { id: Number(id) }).then((res) => {
       setTestData(res.data as TestType);
+      console.log(res.data.sections);
     }).catch((e) => {
       alert(e);
     });
@@ -83,24 +85,41 @@ export default function Solve({ params }: { params: { id: string } }) {
     }));
   };
 
-  const handleSubmit = () => {
-    const answeredQuestionIds = Object.keys(answers);
+  const handleSubmit = async () => {
+    let id = "";
+    let pass = "";
 
-    if (answeredQuestionIds.length > 0) {
-      const confirmationMessage = answeredQuestionIds.map(id => {
-        const { summary: partTitle, subSections } = testData?.sections.find(section => section.subSections.some(subSection => subSection.questions.some(question => question.id === Number(id)))) || { summary: "", subSections: [] };
-        const { summary: sectionTitle, questions } = subSections.find(subSection => subSection.questions.some(question => question.id === Number(id))) || { summary: "", questions: [] };
-        const { number, question } = questions.find(question => question.id === Number(id)) || { number: "", question: "" };
-        return `${partTitle} ${sectionTitle} ${number} ${question}: ${answers[id]}`;
-      }).join("\n");
-
-      if (window.confirm(`送信しますか？\n${confirmationMessage}`)) {
-        // 送信処理を追加
-      }
+    const idPrompt = prompt("Student Name");
+    if (!idPrompt) {
+      return; // 入力キャンセル
     } else {
-      alert("質問に答えを入力してください。");
+      id = idPrompt;
     }
-  };
+
+    const passPrompt = prompt("Password");
+    if (!passPrompt) {
+      return; // 入力キャンセル
+    } else {
+      pass = passPrompt;
+    }
+
+    const answerList: any = []
+    const ans = { ...answers }
+    Object.keys(ans).forEach((key) => {
+      // @ts-ignore
+      answerList.push({ id: Number(key), text: ans[key] })
+    })
+    const response = await axios.post("/api/test/submit", {
+      student_name: String(id),
+      student_pass: String(pass),
+      test_id: Number(params.id),
+      answers: answerList
+    }).then((res) => {
+      alert("Submited")
+    }).catch((e) => {
+      alert(e)
+    })
+  }
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setPartIndex(newValue);
@@ -109,6 +128,20 @@ export default function Solve({ params }: { params: { id: string } }) {
   useEffect(() => {
     loadForm(params.id);
   }, []);
+
+  useEffect(() => {
+    if (testData) {
+      const initialAnswers: { [key: string]: string } = {};
+      testData.sections.forEach(section => {
+        section.subSections.forEach(subSection => {
+          subSection.questions.forEach(question => {
+            initialAnswers[question.id] = "";
+          });
+        });
+      });
+      setAnswers(initialAnswers);
+    }
+  }, [testData]);
 
   if (!testData) {
     return <div>Loading...</div>;
