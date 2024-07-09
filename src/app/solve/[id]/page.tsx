@@ -6,6 +6,7 @@ import Stack from '@mui/material/Stack';
 import Question from "@/compornents/Question";
 import SendIcon from '@mui/icons-material/Send';
 import axios from "axios";
+import Latex from "react-latex-next";
 
 export interface TestType {
   title: string;
@@ -183,7 +184,8 @@ export default function Solve({ params }: { params: { id: string } }) {
           <CustomTabPanel key={section.number} value={partIndex} index={index}>
             {section.subSections.map((subSection) => (
               <Paper key={subSection.number} sx={{ marginTop: 2, padding: 2 }}>
-                <Typography variant="h6">Section{subSection.number} {subSection.summary}</Typography>
+                <Typography variant="h6">Section{subSection.number}</Typography>
+                <Latex>{subSection.summary}</Latex>
                 {subSection.questions.map((question) => (
                   <React.Fragment key={question.id}>
                     <Divider sx={{ my: 1 }} />
