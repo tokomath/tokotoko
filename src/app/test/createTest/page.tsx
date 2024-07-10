@@ -70,8 +70,6 @@ export default function Page() {
   }
 
   const createTestButtonFunction = async () => {
-    //TODO classes
-
     alert("Complete Create Test")
     const newTest: Test = {
       id: 1,
@@ -113,7 +111,9 @@ export default function Page() {
   const checkDataError = () => {
     return startDate.isAfter(endDate)
   }
-  const handleClassChange = (event) => {
+
+  // クラスの割り当て用
+  const handleClassChange = (event: any) => {
     const {
       target: {value},
     } = event;
@@ -212,11 +212,11 @@ const MetaDataPage = ({
                         setEndDate,
                         asignedClass,
                         handleClassChange,
-
                       }: any) => {
   const [classList, setClassList] = useState<Class[]>([])
   useEffect(() => {
     const fetchClasses = async () => {
+      // TODO: teacherIdを取得
       const classes: Class[] = await getAllClass()
       setClassList(classes)
     }
@@ -238,8 +238,6 @@ const MetaDataPage = ({
       </Stack>
     );
   }
-
-  // TODO: teacherIdを取得、割当する
 
   const ClassAssign = () => {
     return (
