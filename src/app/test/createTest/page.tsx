@@ -43,6 +43,17 @@ export default function Page() {
   const [startDate, setStartDate] = useState<Dayjs>(dayjs())
   const [asignedClass, setAsignedClass] = useState<Class[]>([])
 
+  const [classList, setClassList] = useState<Class[]>([])
+  console.log(asignedClass)
+  useEffect(() => {
+    const fetchClasses = async () => {
+      // TODO: teacherIdを取得
+      const classes: Class[] = await getAllClass()
+      setClassList(classes)
+    }
+    fetchClasses()
+  }, [])
+
   const handleSectionChange = (item: SectionFrame, index: number) => {
     const newS: SectionFrame[] = sections.map((s: SectionFrame, i: number) => {
       if (i === index) {
@@ -78,7 +89,7 @@ export default function Page() {
       startDate: startDate.toDate(),
       endDate: endDate.toDate()
     }
-    const newTestFrame: TestFrame = {test: newTest, sections: sections}
+    const newTestFrame: TestFrame = {test: newTest, sections: sections, classes: asignedClass}
     await createTest(newTestFrame)
   }
 
@@ -113,15 +124,17 @@ export default function Page() {
   }
 
   // クラスの割り当て用
-  const handleClassChange = (event: any) => {
-    const {
-      target: {value},
-    } = event;
-    setAsignedClass(
-      typeof value === 'string' ? value.split(',') : value,
-    );
-  };
+  const handleClassChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const values = event.target.value as number[];
+    const select = classList.filter(item => values.includes(item.id))
 
+    setAsignedClass(select);
+  };
+  // const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  //   const selectedIds = event.target.value as number[];
+  //   const selectedObjects = options.filter(option => selectedIds.includes(option.id));
+  //   setSelectedItems(selectedObjects);
+  // };
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
       <Button variant={"contained"} onClick={createTestButtonFunction} /*disabled={checkDataError()}*/ >Create
@@ -163,6 +176,7 @@ export default function Page() {
             setEndDate={setEndDate}
             asignedClass={asignedClass}
             handleClassChange={handleClassChange}
+            classList={classList}
           />
         </TabPanels>
         {sections.map((s: SectionFrame, index: number) => (
@@ -212,17 +226,8 @@ const MetaDataPage = ({
                         setEndDate,
                         asignedClass,
                         handleClassChange,
+                        classList,
                       }: any) => {
-  const [classList, setClassList] = useState<Class[]>([])
-  useEffect(() => {
-    const fetchClasses = async () => {
-      // TODO: teacherIdを取得
-      const classes: Class[] = await getAllClass()
-      setClassList(classes)
-    }
-    fetchClasses()
-    console.log(classList)
-  }, [])
   const dateWarning = () => {
     const isBeforeWarning = () => {
       if (startDate.isBefore(dayjs())) {
@@ -247,14 +252,15 @@ const MetaDataPage = ({
           labelId={"ClassAssign"}
           id={"ClassAssign"}
           multiple
-          value={asignedClass}
+          value={asignedClass.map((option: Class) => option.id)}
           input={<OutlinedInput label="Class"/>}
           onChange={handleClassChange}
           renderValue={(selected) => (
             <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 0.5}}>
-              {selected.map((value: string) => (
-                <Chip key={value} label={value}/>
-              ))}
+              {(selected as number[]).map((value: number) => {
+                const item = classList.find((option: Class) => option.id === value);
+                return item ? <Chip key={value} label={item.name}/> : null;
+              })}
             </Box>
           )}
         >
@@ -262,7 +268,7 @@ const MetaDataPage = ({
             classList.map((c: Class) => (
               <MenuItem
                 key={c.id}
-                value={c.name}
+                value={c.id}
               >
                 {c.name}
               </MenuItem>
