@@ -14,6 +14,7 @@ import {Test, Section, Question} from "@prisma/client";
 import dayjs, {Dayjs} from "dayjs";
 import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import Latex from "react-latex-next";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionFrame[]>([])
@@ -329,7 +330,7 @@ const SubSectionPage = ({indexProps, subSectionProps, setSubSection, deleteSubSe
       <Box alignSelf={"left"} width={"auto"} display="flex">
         <Stack gap={1} width={"100%"} margin={2}>
           <Box display="flex" justifyContent="space-between">
-            <InlineMath>{subSection.subSection.number + ". \\quad" + subSectionSummary}</InlineMath>
+            <Latex>{subSection.subSection.number + "." + subSectionSummary}</Latex>
             <IconButton aria-label="delete" onClick={deleteSubSection}>
               <CloseIcon/>
             </IconButton>
@@ -368,7 +369,7 @@ const QuestionPage = ({index, question, setQuestion, deleteQuestion}: any) => {
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">
       <Box display="flex" justifyContent="space-between">
-        <InlineMath>{"(" + question.number + ")\\quad" + question.question}</InlineMath>
+        <Latex>{"(" + question.number + ") " + question.question}</Latex>
         <IconButton aria-label="delete" onClick={deleteQuestion}>
           <CloseIcon/>
         </IconButton>
