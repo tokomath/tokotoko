@@ -15,7 +15,7 @@ import {
   TextField,
   Typography,
   FormControl, OutlinedInput,
-  MenuItem,
+  MenuItem, SelectChangeEvent, Chip,
 } from "@mui/material";
 import {InlineMath} from "react-katex";
 import 'katex/dist/katex.min.css';
@@ -113,9 +113,15 @@ export default function Page() {
   const checkDataError = () => {
     return startDate.isAfter(endDate)
   }
-  const handleClassChange = () => {
+  const handleClassChange = (event) => {
+    const {
+      target: {value},
+    } = event;
+    setAsignedClass(
+      typeof value === 'string' ? value.split(',') : value,
+    );
+  };
 
-  }
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
       <Button variant={"contained"} onClick={createTestButtonFunction} /*disabled={checkDataError()}*/ >Create
@@ -238,7 +244,7 @@ const MetaDataPage = ({
   const ClassAssign = () => {
     return (
       <FormControl>
-        <InputLabel id={"ClassAssign"}>クラスを割り当て</InputLabel>
+        <InputLabel id={"ClassAssign"}>class</InputLabel>
         <Select
           labelId={"ClassAssign"}
           id={"ClassAssign"}
@@ -246,12 +252,19 @@ const MetaDataPage = ({
           value={asignedClass}
           input={<OutlinedInput label="Class"/>}
           onChange={handleClassChange}
+          renderValue={(selected) => (
+            <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 0.5}}>
+              {selected.map((value: string) => (
+                <Chip key={value} label={value}/>
+              ))}
+            </Box>
+          )}
         >
           {
             classList.map((c: Class) => (
               <MenuItem
                 key={c.id}
-                value={c.id}
+                value={c.name}
               >
                 {c.name}
               </MenuItem>
@@ -282,6 +295,7 @@ const MetaDataPage = ({
         }}/>
       </LocalizationProvider>
       {dateWarning()}
+      <Typography variant="h6">クラスの割り当て</Typography>
       <ClassAssign/>
     </Stack>
   )
