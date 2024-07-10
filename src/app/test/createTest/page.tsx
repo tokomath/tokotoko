@@ -1,6 +1,22 @@
 "use client"
+
 import React, {useEffect, useState} from "react";
-import {Alert, Box, Button, Card, IconButton, Stack, Tab, Tabs, TextField, Typography} from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  IconButton,
+  InputLabel,
+  Select,
+  Stack,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+  FormControl, OutlinedInput,
+  MenuItem,
+} from "@mui/material";
 import {InlineMath} from "react-katex";
 import 'katex/dist/katex.min.css';
 
@@ -10,11 +26,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 // import {LocalizationProvider} from "@mui/x-date-pickers";
 
 import {TestFrame, SectionFrame, SubSectionFrame, createTest} from "@/app/api/testAPIs";
-import {Test, Section, Question} from "@prisma/client";
+import {Test, Section, Question, Class} from "@prisma/client";
 import dayjs, {Dayjs} from "dayjs";
 import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import Latex from "react-latex-next";
+import {getAllClass, getClassByTeacher} from "@/app/api/class/get/getClass";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionFrame[]>([])
@@ -24,6 +41,7 @@ export default function Page() {
 
   const [endDate, setEndDate] = useState<Dayjs>(dayjs())
   const [startDate, setStartDate] = useState<Dayjs>(dayjs())
+  const [asignedClass, setAsignedClass] = useState<Class[]>([])
 
   const handleSectionChange = (item: SectionFrame, index: number) => {
     const newS: SectionFrame[] = sections.map((s: SectionFrame, i: number) => {
@@ -95,7 +113,9 @@ export default function Page() {
   const checkDataError = () => {
     return startDate.isAfter(endDate)
   }
+  const handleClassChange = () => {
 
+  }
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
       <Button variant={"contained"} onClick={createTestButtonFunction} /*disabled={checkDataError()}*/ >Create
@@ -135,6 +155,8 @@ export default function Page() {
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
+            asignedClass={asignedClass}
+            handleClassChange={handleClassChange}
           />
         </TabPanels>
         {sections.map((s: SectionFrame, index: number) => (
@@ -181,8 +203,20 @@ const MetaDataPage = ({
                         startDate,
                         setStartDate,
                         endDate,
-                        setEndDate
+                        setEndDate,
+                        asignedClass,
+                        handleClassChange,
+
                       }: any) => {
+  const [classList, setClassList] = useState<Class[]>([])
+  useEffect(() => {
+    const fetchClasses = async () => {
+      const classes: Class[] = await getAllClass()
+      setClassList(classes)
+    }
+    fetchClasses()
+    console.log(classList)
+  }, [])
   const dateWarning = () => {
     const isBeforeWarning = () => {
       if (startDate.isBefore(dayjs())) {
@@ -198,6 +232,35 @@ const MetaDataPage = ({
       </Stack>
     );
   }
+
+  // TODO: teacherIdを取得、割当する
+
+  const ClassAssign = () => {
+    return (
+      <FormControl>
+        <InputLabel id={"ClassAssign"}>クラスを割り当て</InputLabel>
+        <Select
+          labelId={"ClassAssign"}
+          id={"ClassAssign"}
+          multiple
+          value={asignedClass}
+          input={<OutlinedInput label="Class"/>}
+          onChange={handleClassChange}
+        >
+          {
+            classList.map((c: Class) => (
+              <MenuItem
+                key={c.id}
+                value={c.id}
+              >
+                {c.name}
+              </MenuItem>
+            ))}
+        </Select>
+      </FormControl>
+    )
+  }
+
   return (
     <Stack gap={2} width={"100%"} padding={2} border="1p">
       <Typography variant={"h5"}>Test Metadata</Typography>
@@ -211,7 +274,7 @@ const MetaDataPage = ({
             setStartDate(val);
           }
         }}/>
-        <Typography variant="h6">締め切り</Typography>
+        <Typography variant="h6">締め切り日</Typography>
         <DateTimePicker value={endDate} onChange={(val: Dayjs | null) => {
           if (val !== null) {
             setEndDate(val);
@@ -219,6 +282,7 @@ const MetaDataPage = ({
         }}/>
       </LocalizationProvider>
       {dateWarning()}
+      <ClassAssign/>
     </Stack>
   )
 }
