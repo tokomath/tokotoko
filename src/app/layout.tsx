@@ -1,15 +1,11 @@
-import type {Metadata} from "next";
+"use client"
 import {Inter} from "next/font/google";
 import {AppRouterCacheProvider} from "@mui/material-nextjs/v14-appRouter";
 import "./globals.css";
-import { Box, Stack, Typography } from "@mui/material";
+import {Typography} from "@mui/material";
+import {SessionProvider} from "next-auth/react";
 
 const inter = Inter({subsets: ["latin"]});
-
-export const metadata: Metadata = {
-  title: "TokoToko",
-  description: "E-learning for math",
-};
 
 export default function RootLayout({
                                      children,
@@ -18,12 +14,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
-        <footer>
-          <Typography fontSize={14} textAlign={"center"} margin={2}>TokoToko / とことこ</Typography>
-        </footer>
-      </body>
+    <body className={inter.className}>
+    <SessionProvider>
+      <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
+    </SessionProvider>
+    <footer>
+      <Typography fontSize={14} textAlign={"center"} margin={2}>TokoToko / とことこ</Typography>
+    </footer>
+    </body>
     </html>
   );
 }
