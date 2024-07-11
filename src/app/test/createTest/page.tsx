@@ -114,13 +114,25 @@ export default function Page() {
         )
       }
     }
+
+    const isClassError = () => {
+      if (asignedClass.length === 0) {
+        return (
+          <Alert severity="error">クラスが選択されていません</Alert>
+        )
+      }
+    }
+
     return (
-      isAfterWarning()
+      <Stack gap={"5px"}>
+        {isAfterWarning()}
+        {isClassError()}
+      </Stack>
     )
   }
 
   const checkDataError = () => {
-    return startDate.isAfter(endDate)
+    return startDate.isAfter(endDate) || asignedClass.length === 0
   }
 
   // クラスの割り当て用
@@ -130,14 +142,9 @@ export default function Page() {
 
     setAsignedClass(select);
   };
-  // const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-  //   const selectedIds = event.target.value as number[];
-  //   const selectedObjects = options.filter(option => selectedIds.includes(option.id));
-  //   setSelectedItems(selectedObjects);
-  // };
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
-      <Button variant={"contained"} onClick={createTestButtonFunction} /*disabled={checkDataError()}*/ >Create
+      <Button variant={"contained"} onClick={createTestButtonFunction} disabled={checkDataError()}>Create
         Test</Button>
       <CreateError/>
 
