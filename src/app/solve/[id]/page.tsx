@@ -205,18 +205,9 @@ export default function Solve({ params }: { params: { id: string } }) {
 
         <Box display="flex" justifyContent="space-between" marginTop={2} paddingRight={2}>
           <Privious index={partIndex} setIndex={setPartIndex} />
-          <Next index={partIndex} setIndex={setPartIndex} maxIndex={testData.sections.length} />
+          <Next index={partIndex} setIndex={setPartIndex} maxIndex={testData.sections.length} handleSubmit={handleSubmit} />
         </Box>
 
-        <Box display="flex" justifyContent="flex-end" marginTop={2} paddingRight={2}>
-          <Button
-            variant="contained"
-            endIcon={<SendIcon />}
-            onClick={handleSubmit}
-          >
-            Send
-          </Button>
-        </Box>
       </Box>
 
     </main >
@@ -226,11 +217,7 @@ export default function Solve({ params }: { params: { id: string } }) {
 function Privious({ index, setIndex }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>> }) {
   if (index === 0) {
     return (
-      <Button
-        disabled
-      >
-        Previous Part
-      </Button>
+      <div></div>
     )
   }
   return (
@@ -245,13 +232,15 @@ function Privious({ index, setIndex }: { index: number, setIndex: React.Dispatch
 
 }
 
-function Next({ index, setIndex, maxIndex }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>>, maxIndex: number }) {
+function Next({ index, setIndex, maxIndex, handleSubmit }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>>, maxIndex: number, handleSubmit: () => void }) {
   if (index === maxIndex - 1) {
     return (
       <Button
-        disabled
+        variant="contained"
+        endIcon={<SendIcon />}
+        onClick={handleSubmit}
       >
-        Next Part
+        Send
       </Button>
     )
   }
