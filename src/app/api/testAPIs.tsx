@@ -1,11 +1,12 @@
 "use server"
 
-import {Question, Test, Section, SubSection, Prisma} from "@prisma/client";
+import {Class, Prisma, Question, Section, SubSection, Test} from "@prisma/client";
 import {prisma} from "@/app/api/prisma_client"
 
 export interface TestFrame {
   test: Test,
   sections: SectionFrame[],
+  classes: Class[],
 }
 
 export interface SectionFrame {
@@ -50,6 +51,13 @@ export const createTest = async (props: TestFrame) => {
               }
             })
           }
+        }
+      })
+    },
+    classes: {
+      connect: props.classes.map(i => {
+        return {
+          id: i.id
         }
       })
     }
@@ -134,7 +142,7 @@ export const getTest = async () => {
 
 // no info about sections ...
 export const getTestByClass = async (classId: number) => {
-  const tests = await prisma.test.findMany({
+  return prisma.test.findMany({
     where: {
       classes: {
         some: {
@@ -143,5 +151,4 @@ export const getTestByClass = async (classId: number) => {
       }
     }
   });
-  return tests;
 }

@@ -1,6 +1,22 @@
 "use client"
+
 import React, {useEffect, useState} from "react";
-import {Alert, Box, Button, Card, IconButton, Stack, Tab, Tabs, TextField, Typography} from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  IconButton,
+  InputLabel,
+  Select,
+  Stack,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+  FormControl, OutlinedInput,
+  MenuItem, SelectChangeEvent, Chip,
+} from "@mui/material";
 import {InlineMath} from "react-katex";
 import 'katex/dist/katex.min.css';
 
@@ -10,10 +26,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 // import {LocalizationProvider} from "@mui/x-date-pickers";
 
 import {TestFrame, SectionFrame, SubSectionFrame, createTest} from "@/app/api/testAPIs";
-import {Test, Section, Question} from "@prisma/client";
+import {Test, Section, Question, Class} from "@prisma/client";
 import dayjs, {Dayjs} from "dayjs";
 import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import Latex from "react-latex-next";
+import {getAllClass, getClassByTeacher} from "@/app/api/class/get/getClass";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionFrame[]>([])
@@ -23,6 +41,18 @@ export default function Page() {
 
   const [endDate, setEndDate] = useState<Dayjs>(dayjs())
   const [startDate, setStartDate] = useState<Dayjs>(dayjs())
+  const [asignedClass, setAsignedClass] = useState<Class[]>([])
+
+  const [classList, setClassList] = useState<Class[]>([])
+  console.log(asignedClass)
+  useEffect(() => {
+    const fetchClasses = async () => {
+      // TODO: teacherIdを取得
+      const classes: Class[] = await getAllClass()
+      setClassList(classes)
+    }
+    fetchClasses()
+  }, [])
 
   const handleSectionChange = (item: SectionFrame, index: number) => {
     const newS: SectionFrame[] = sections.map((s: SectionFrame, i: number) => {
@@ -51,8 +81,6 @@ export default function Page() {
   }
 
   const createTestButtonFunction = async () => {
-    //TODO classes
-
     alert("Complete Create Test")
     const newTest: Test = {
       id: 1,
@@ -61,7 +89,7 @@ export default function Page() {
       startDate: startDate.toDate(),
       endDate: endDate.toDate()
     }
-    const newTestFrame: TestFrame = {test: newTest, sections: sections}
+    const newTestFrame: TestFrame = {test: newTest, sections: sections, classes: asignedClass}
     await createTest(newTestFrame)
   }
 
@@ -86,18 +114,37 @@ export default function Page() {
         )
       }
     }
+
+    const isClassError = () => {
+      if (asignedClass.length === 0) {
+        return (
+          <Alert severity="error">クラスが選択されていません</Alert>
+        )
+      }
+    }
+
     return (
-      isAfterWarning()
+      <Stack gap={"5px"}>
+        {isAfterWarning()}
+        {isClassError()}
+      </Stack>
     )
   }
 
   const checkDataError = () => {
-    return startDate.isAfter(endDate)
+    return startDate.isAfter(endDate) || asignedClass.length === 0
   }
 
+  // クラスの割り当て用
+  const handleClassChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    const values = event.target.value as number[];
+    const select = classList.filter(item => values.includes(item.id))
+
+    setAsignedClass(select);
+  };
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
-      <Button variant={"contained"} onClick={createTestButtonFunction} /*disabled={checkDataError()}*/ >Create
+      <Button variant={"contained"} onClick={createTestButtonFunction} disabled={checkDataError()}>Create
         Test</Button>
       <CreateError/>
 
@@ -134,6 +181,9 @@ export default function Page() {
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
+            asignedClass={asignedClass}
+            handleClassChange={handleClassChange}
+            classList={classList}
           />
         </TabPanels>
         {sections.map((s: SectionFrame, index: number) => (
@@ -180,7 +230,10 @@ const MetaDataPage = ({
                         startDate,
                         setStartDate,
                         endDate,
-                        setEndDate
+                        setEndDate,
+                        asignedClass,
+                        handleClassChange,
+                        classList,
                       }: any) => {
   const dateWarning = () => {
     const isBeforeWarning = () => {
@@ -197,6 +250,41 @@ const MetaDataPage = ({
       </Stack>
     );
   }
+
+  const ClassAssign = () => {
+    return (
+      <FormControl>
+        <InputLabel id={"ClassAssign"}>class</InputLabel>
+        <Select
+          labelId={"ClassAssign"}
+          id={"ClassAssign"}
+          multiple
+          value={asignedClass.map((option: Class) => option.id)}
+          input={<OutlinedInput label="Class"/>}
+          onChange={handleClassChange}
+          renderValue={(selected) => (
+            <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 0.5}}>
+              {(selected as number[]).map((value: number) => {
+                const item = classList.find((option: Class) => option.id === value);
+                return item ? <Chip key={value} label={item.name}/> : null;
+              })}
+            </Box>
+          )}
+        >
+          {
+            classList.map((c: Class) => (
+              <MenuItem
+                key={c.id}
+                value={c.id}
+              >
+                {c.name}
+              </MenuItem>
+            ))}
+        </Select>
+      </FormControl>
+    )
+  }
+
   return (
     <Stack gap={2} width={"100%"} padding={2} border="1p">
       <Typography variant={"h5"}>Test Metadata</Typography>
@@ -210,7 +298,7 @@ const MetaDataPage = ({
             setStartDate(val);
           }
         }}/>
-        <Typography variant="h6">締め切り</Typography>
+        <Typography variant="h6">締め切り日</Typography>
         <DateTimePicker value={endDate} onChange={(val: Dayjs | null) => {
           if (val !== null) {
             setEndDate(val);
@@ -218,6 +306,8 @@ const MetaDataPage = ({
         }}/>
       </LocalizationProvider>
       {dateWarning()}
+      <Typography variant="h6">クラスの割り当て</Typography>
+      <ClassAssign/>
     </Stack>
   )
 }
@@ -329,7 +419,7 @@ const SubSectionPage = ({indexProps, subSectionProps, setSubSection, deleteSubSe
       <Box alignSelf={"left"} width={"auto"} display="flex">
         <Stack gap={1} width={"100%"} margin={2}>
           <Box display="flex" justifyContent="space-between">
-            <InlineMath>{subSection.subSection.number + ". \\quad" + subSectionSummary}</InlineMath>
+            <Latex>{subSection.subSection.number + "." + subSectionSummary}</Latex>
             <IconButton aria-label="delete" onClick={deleteSubSection}>
               <CloseIcon/>
             </IconButton>
@@ -368,7 +458,7 @@ const QuestionPage = ({index, question, setQuestion, deleteQuestion}: any) => {
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">
       <Box display="flex" justifyContent="space-between">
-        <InlineMath>{"(" + question.number + ")\\quad" + question.question}</InlineMath>
+        <Latex>{"(" + question.number + ") " + question.question}</Latex>
         <IconButton aria-label="delete" onClick={deleteQuestion}>
           <CloseIcon/>
         </IconButton>
