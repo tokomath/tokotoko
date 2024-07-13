@@ -1,10 +1,19 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Box, Button, Link, Paper, Tab, Tabs, Typography, Divider } from "@mui/material";
-import 'katex/dist/katex.min.css';
-import Stack from '@mui/material/Stack';
+import {
+  Box,
+  Button,
+  Link,
+  Paper,
+  Tab,
+  Tabs,
+  Typography,
+  Divider,
+} from "@mui/material";
+import "katex/dist/katex.min.css";
+import Stack from "@mui/material/Stack";
 import Question from "@/compornents/Question";
-import SendIcon from '@mui/icons-material/Send';
+import SendIcon from "@mui/icons-material/Send";
 import axios from "axios";
 
 export interface TestType {
@@ -58,8 +67,7 @@ function CustomTabPanel(props: TabPanelProps) {
 
 function a11yProps(index: number) {
   return {
-    id: `tab-${index + 1}`,
-    'aria-controls': `The tab of part-${index + 1}`,
+    "aria-controls": `The tab of part-${index + 1}`,
   };
 }
 
@@ -69,17 +77,20 @@ export default function Solve({ params }: { params: { id: string } }) {
   const [partIndex, setPartIndex] = useState(0);
 
   const loadForm = async (id: string) => {
-    const response = await axios.post("/api/test/get", { id: Number(id) }).then((res) => {
-      setTestData(res.data as TestType);
-    }).catch((e) => {
-      alert(e);
-    });
-  }
+    const response = await axios
+      .post("/api/test/get", { id: Number(id) })
+      .then((res) => {
+        setTestData(res.data as TestType);
+      })
+      .catch((e) => {
+        alert(e);
+      });
+  };
 
   const changeAnswer = (questionId: number, answer: string) => {
-    setAnswers(prevAnswers => ({
+    setAnswers((prevAnswers) => ({
       ...prevAnswers,
-      [questionId]: answer
+      [questionId]: answer,
     }));
   };
 
@@ -87,12 +98,28 @@ export default function Solve({ params }: { params: { id: string } }) {
     const answeredQuestionIds = Object.keys(answers);
 
     if (answeredQuestionIds.length > 0) {
-      const confirmationMessage = answeredQuestionIds.map(id => {
-        const { summary: partTitle, subSections } = testData?.sections.find(section => section.subSections.some(subSection => subSection.questions.some(question => question.id === Number(id)))) || { summary: "", subSections: [] };
-        const { summary: sectionTitle, questions } = subSections.find(subSection => subSection.questions.some(question => question.id === Number(id))) || { summary: "", questions: [] };
-        const { number, question } = questions.find(question => question.id === Number(id)) || { number: "", question: "" };
-        return `${partTitle} ${sectionTitle} ${number} ${question}: ${answers[id]}`;
-      }).join("\n");
+      const confirmationMessage = answeredQuestionIds
+        .map((id) => {
+          const { summary: partTitle, subSections } = testData?.sections.find(
+            (section) =>
+              section.subSections.some((subSection) =>
+                subSection.questions.some(
+                  (question) => question.id === Number(id),
+                ),
+              ),
+          ) || { summary: "", subSections: [] };
+          const { summary: sectionTitle, questions } = subSections.find(
+            (subSection) =>
+              subSection.questions.some(
+                (question) => question.id === Number(id),
+              ),
+          ) || { summary: "", questions: [] };
+          const { number, question } = questions.find(
+            (question) => question.id === Number(id),
+          ) || { number: "", question: "" };
+          return `${partTitle} ${sectionTitle} ${number} ${question}: ${answers[id]}`;
+        })
+        .join("\n");
 
       if (window.confirm(`送信しますか？\n${confirmationMessage}`)) {
         // 送信処理を追加
@@ -118,8 +145,20 @@ export default function Solve({ params }: { params: { id: string } }) {
     <main>
       {/* ヘッダー部分 */}
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
-        <Box paddingTop={1} paddingRight={1} display="flex" flexWrap="wrap" alignItems="center" justifyContent="flex-end">
-          <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener" marginX={1}>
+        <Box
+          paddingTop={1}
+          paddingRight={1}
+          display="flex"
+          flexWrap="wrap"
+          alignItems="center"
+          justifyContent="flex-end"
+        >
+          <Link
+            href="https://katex.org/docs/supported.html"
+            target="_blank"
+            rel="noopener"
+            marginX={1}
+          >
             KaTeXヘルプ
           </Link>
           <Typography fontFamily="monospace" marginX={1}>
@@ -128,25 +167,40 @@ export default function Solve({ params }: { params: { id: string } }) {
         </Box>
         <Box maxWidth={640} margin="auto">
           <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
-            <Typography variant="h1" fontSize={30}>{testData.title}</Typography>
+            <Typography variant="h1" fontSize={30}>
+              {testData.title}
+            </Typography>
             <Typography>{testData.summary}</Typography>
-            <Typography>Start:{testData.startDate.toString()}　→　Deadline:{testData.endDate.toString()}</Typography>
+            <Typography>
+              Start:{testData.startDate.toString()}　→　Deadline:
+              {testData.endDate.toString()}
+            </Typography>
           </Stack>
         </Box>
       </Paper>
 
       {/* 問題部分 */}
-      <Box maxWidth={640} margin="auto" >
-        <Tabs value={partIndex} onChange={handleChange} aria-label="Tabs of each PART">
+      <Box maxWidth={640} margin="auto">
+        <Tabs
+          value={partIndex}
+          onChange={handleChange}
+          aria-label="Tabs of each PART"
+        >
           {testData.sections.map((section, index) => (
-            <Tab key={section.number} label={`Part ${section.number}`} {...a11yProps(index)} />
+            <Tab
+              key={section.number}
+              label={`Part ${section.number}`}
+              {...a11yProps(index)}
+            />
           ))}
         </Tabs>
         {testData.sections.map((section, index) => (
           <CustomTabPanel key={section.number} value={partIndex} index={index}>
             {section.subSections.map((subSection) => (
               <Paper key={subSection.number} sx={{ marginTop: 2, padding: 2 }}>
-                <Typography variant="h6">Section{subSection.number} {subSection.summary}</Typography>
+                <Typography variant="h6">
+                  Section{subSection.number} {subSection.summary}
+                </Typography>
                 {subSection.questions.map((question) => (
                   <React.Fragment key={question.id}>
                     <Divider sx={{ my: 1 }} />
@@ -155,7 +209,9 @@ export default function Solve({ params }: { params: { id: string } }) {
                       number={question.number.toString()}
                       question={question.question}
                       answer={answers[question.id]}
-                      changeAnswer={(answer) => changeAnswer(question.id, answer)}
+                      changeAnswer={(answer) =>
+                        changeAnswer(question.id, answer)
+                      }
                     />
                   </React.Fragment>
                 ))}
@@ -163,7 +219,12 @@ export default function Solve({ params }: { params: { id: string } }) {
             ))}
           </CustomTabPanel>
         ))}
-        <Box display="flex" justifyContent="flex-end" marginTop={2} paddingRight={2}>
+        <Box
+          display="flex"
+          justifyContent="flex-end"
+          marginTop={2}
+          paddingRight={2}
+        >
           <Button
             variant="contained"
             endIcon={<SendIcon />}
@@ -173,7 +234,6 @@ export default function Solve({ params }: { params: { id: string } }) {
           </Button>
         </Box>
       </Box>
-
-    </main >
+    </main>
   );
 }
