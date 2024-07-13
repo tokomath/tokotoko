@@ -1,34 +1,44 @@
 "use client";
 
-import axios from 'axios'
 import React, {useEffect, useState} from "react";
 import {List, ListItem, Card, CardContent, Typography, Button, Link, Box} from "@mui/material";
 import 'katex/dist/katex.min.css';
-import {Test, Student, Class} from "@prisma/client";
+import {Test, Class, User} from "@prisma/client";
 
 
 import SchoolIcon from '@mui/icons-material/School';
 import Stack from '@mui/material/Stack';
-import {getTestByClass} from "@/app/api/testAPIs";
-import {getClassByStudent} from "@/app/api/class/get/getClass";
+import {getTestByClass} from "@/app/api/test/getTestByClass";
+import {getClassByUser} from "@/app/api/class/getClass";
+import { useSession } from 'next-auth/react';
 
 interface TestInterface {
   test: Test,
   class: Class,
 };
 
-export default function Mypage({params}: { params: { name: string } }) {
-  const student: Student = {name: params.name, id: 1} as Student
+export default function Mypage() {
+  const {data: session, status } = useSession();
+  // when not logining
+  
+  if(session){
+    const userName = session.user.name;
+    if(userName){
+      return <MypageContent userName={userName} />
+    }
+  } 
 
+
+}
+const MypageContent = (props: {userName: string}) => {
   const [testId, setTestId] = useState<number[]>([])
   const [tests, setTests] = useState<TestInterface[]>([]);
 
   useEffect(() => {
     getTests()
   }, [])
-
   const getTests = async () => {
-    const test = await getClassByStudent(student.id)
+    const test = await getClassByUser(props.userName)
       .then(async (classes: Class[]) => {
         const tmp = classes.map(async (c: Class) => {
           const tmpClass = await getTestByClass(c.id)
@@ -88,7 +98,7 @@ export default function Mypage({params}: { params: { name: string } }) {
         </Box>
         <Stack direction={"row"}>
           <Typography textAlign={"center"} variant="h3">
-            {params.name}
+            {props.userName}
           </Typography>
         </Stack>
       </Stack>
