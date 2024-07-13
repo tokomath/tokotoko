@@ -75,7 +75,7 @@ export default function Question({ id, number, question, answer, changeAnswer }:
     <Stack spacing={2}>
       {/* 横に並べる */}
       <Box display="flex" alignItems="center">
-        <Typography variant="h2" fontSize={17}>{number}　</Typography>
+        <Typography variant="h2" fontSize={17}>({number})　</Typography>
         <Latex>{question}</Latex>
       </Box>
       <Box

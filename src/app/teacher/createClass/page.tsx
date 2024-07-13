@@ -17,19 +17,21 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { NumberInput } from "@mui/base/Unstable_NumberInput/NumberInput";
-import { Class, Student, Teacher } from "@prisma/client";
-import { getAllStudent } from "@/app/api/student/get/getStudent";
-import { getAllTeachers } from "@/app/api/teacher/get/getTeacher";
-import { ClassFrame, createClass } from "@/app/api/class/create/createClass";
+import { Class, User} from "@prisma/client";
+
+import { getAllStudent } from "@/app/api/student/getStudent";
+import { getAllTeachers } from "@/app/api/teacher/getTeacher";
+import { ClassFrame,createClass } from "@/app/api/class/createClass";
+
 
 export default function Page() {
   const [teacherId, setTeacherId] = useState<number>(1);
   const [className, setClassName] = useState<string>("");
-  const [assignedStudent, setAssignedStudent] = useState<Student[]>([]);
-  const [studentList, setStudentList] = useState<Student[]>([]);
+  const [assignedStudent, setAssignedStudent] = useState<User[]>([]);
+  const [studentList, setStudentList] = useState<User[]>([]);
 
-  const [assignedTeacher, setAssignedTeacher] = useState<Teacher[]>([]);
-  const [teacherList, setTeacherList] = useState<Teacher[]>([]);
+  const [assignedTeacher, setAssignedTeacher] = useState<User[]>([]);
+  const [teacherList, setTeacherList] = useState<User[]>([]);
   const [isAddMe, setIsAddMe] = useState<boolean>(true);
 
   useEffect(() => {
@@ -133,11 +135,11 @@ export default function Page() {
       id: 1,
       name: className,
     };
+    const users = assignedTeacher.concat(assignedStudent);
 
     const data: ClassFrame = {
       class: newClass,
-      teacher: assignedTeacher,
-      student: assignedStudent,
+      user: users,
     };
 
     console.log(data);

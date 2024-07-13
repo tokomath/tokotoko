@@ -1,13 +1,14 @@
 "use client"
 
 import {Box, Button, IconButton, ListItem, ListItemIcon, ListItemText, Stack, Tooltip, Typography} from "@mui/material";
-import {getAllClass, getClassByTeacher} from "@/app/api/class/get/getClass";
 import {useEffect, useState} from "react";
 import ClassIcon from '@mui/icons-material/Class';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import {Class} from "@prisma/client";
 import {NumberInput} from "@mui/base/Unstable_NumberInput/NumberInput";
 import AddIcon from "@mui/icons-material/Add";
+
+import {getAllClass, getClassByUser} from "@/app/api/class/getClass";
 
 export default function Page() {
   const YourClassList = () => {
@@ -17,7 +18,7 @@ export default function Page() {
     // TODO: get current teacherId
     useEffect(() => {
       const fetchClass = async () => {
-        const tmpClassList = await getClassByTeacher(teacherId)
+        const tmpClassList = await getClassByUser(teacherId)
         // const tmpClassList = await getAllClass()
         setClasses(tmpClassList)
         console.log(tmpClassList)

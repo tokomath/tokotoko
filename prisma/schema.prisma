@@ -17,6 +17,9 @@ model Class {
   tests Test[]
 }
 
+// role
+// 0 -> teacher
+// 1 -> student
 model User {
   id          Int          @id @default(autoincrement())
   name        String       @unique
