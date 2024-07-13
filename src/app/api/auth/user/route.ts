@@ -6,8 +6,8 @@ const prisma = new PrismaClient();
 export async function POST(request: NextRequest) {
   const data = await request.json();
   try {
-    const users = await prisma.student.findFirstOrThrow({ where: { name: data.name } });
-    if (users.pass === data.pass) {
+    const users = await prisma.user.findFirstOrThrow({ where: { name: data.username } });
+    if (users.pass === data.password) {
       return NextResponse.json({ status: 200 });
     } else {
       return NextResponse.json({ message: "wrong password" }, { status: 500 });

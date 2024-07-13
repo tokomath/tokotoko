@@ -2,5 +2,11 @@
 import { prisma } from "../../prisma_client";
 
 export const getAllTeachers = async () => {
-  return prisma.teacher.findMany();
+  return prisma.user.findMany(
+    {
+      where: {
+        role: 0, 
+      },
+    }
+  );
 };
