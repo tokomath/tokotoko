@@ -10,7 +10,7 @@ export const authOptions = {
       id: 'user',
       name: 'User',
       credentials: {
-        username: {label: 'Username', type: 'text', placeholder: 'jsmith'},
+        username: {label: 'Username', type: 'text'},
         password: {label: 'Password', type: 'password'}
       },
       async authorize(credentials: any) {
@@ -26,17 +26,6 @@ export const authOptions = {
 
   /* callbacks */
   callbacks: {
-    authorized({auth, request: {nextUrl}} : any) {
-      const isLoggedIn = !!auth?.user
-      const isOnDashboard = nextUrl.pathname.startsWith('/dashboard')
-      if (isOnDashboard) {
-        if (isLoggedIn) return true
-        return false
-      } else if (isLoggedIn) {
-        return Response.redirect(new URL('/dashboard', nextUrl))
-      }
-      return true
-    },
   },
 
   /* secret */
@@ -47,6 +36,9 @@ export const authOptions = {
     maxAge: 3 * 24 * 60 * 60,       // 3 days 
   },
 
+  pages: {
+  },
+
   /* session */
   session: {
     maxAge: 30 * 24 * 60 * 60,      // 30 days
@@ -55,4 +47,5 @@ export const authOptions = {
       return randomUUID?.() ?? randomBytes(32).toString("hex")
     }
   },
+
 }
