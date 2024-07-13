@@ -11,26 +11,19 @@ datasource db {
 }
 
 model Class {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  students Student[]
-  teachers Teacher[]
-  tests    Test[]
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
+  tests Test[]
 }
 
-model Student {
+model User {
   id          Int          @id @default(autoincrement())
   name        String       @unique
   pass        String
   classes     Class[]
   submittions Submittion[]
-}
-
-model Teacher {
-  id      Int     @id @default(autoincrement())
-  name    String  @unique
-  pass    String
-  classes Class[]
+  role        Int
 }
 
 model Test {
@@ -82,8 +75,8 @@ model Submittion {
   submittionDate DateTime @default(now())
   answers        Answer[]
 
-  test    Test    @relation(fields: [testId], references: [id])
-  student Student @relation(fields: [studentId], references: [id])
+  test Test @relation(fields: [testId], references: [id])
+  user User @relation(fields: [studentId], references: [id])
 }
 
 model Answer {
@@ -94,5 +87,5 @@ model Answer {
   text         String
 
   submittion Submittion @relation(fields: [submittionId], references: [id])
-  question   Question    @relation(fields: [questionId], references: [id])
+  question   Question   @relation(fields: [questionId], references: [id])
 }
