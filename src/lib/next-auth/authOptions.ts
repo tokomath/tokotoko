@@ -14,6 +14,7 @@ export const authOptions = {
         username: {label: 'Username', type: 'text'},
         password: {label: 'Password', type: 'password'}
       },
+      // @ts-ignore TODO
       async authorize(credentials: any) {
         const user = await prisma.user.findUnique({where: {name: credentials.username}})
         if (user && credentials.password === user.pass) {

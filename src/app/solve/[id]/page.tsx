@@ -68,7 +68,7 @@ function Solve({params}: { params: { id: string, username: string } }) {
 
   useEffect(() => {
     const fetchForm = async () => {
-      const res = await getTestById(Number(params.id));
+      const res = await getTestById(Number(params.id), params.username);
       if (res) {
         const test: TestFrame = {
           classes: [], sections: res.sections.map(
