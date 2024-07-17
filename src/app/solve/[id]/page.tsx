@@ -56,13 +56,17 @@ export default function Page({params}: { params: { id: string } }) {
   const {data: session, status} = useSession()
   if (session && session.user.name) {
     return <Solve params={{id: params.id, username: session.user.name}}/>
+  } else if (status == "loading") {
+    return <>Loading session...</>
   } else {
-    return <>no session found</>
+    return <>Cant open page</>
   }
 }
 
 function Solve({params}: { params: { id: string, username: string } }) {
-  const [testData, setTestData] = useState<TestFrame | null>(null);
+  // undefined before init , null when unable to access form TODO
+  const [testData, setTestData] = useState<TestFrame | null | undefined>(undefined);
+
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
 
@@ -78,8 +82,8 @@ function Solve({params}: { params: { id: string, username: string } }) {
                 subSections: s.subSections.map((ss) => {
                   return {
                     subSection: {id: ss.id, sectionId: ss.sectionId, number: ss.number, summary: ss.summary},
-                    questions: ss.questions.map((q)=>{
-                      return{
+                    questions: ss.questions.map((q) => {
+                      return {
                         id: q.id,
                         subSectionId: q.subSectionId,
                         number: q.number,
@@ -100,6 +104,8 @@ function Solve({params}: { params: { id: string, username: string } }) {
           }
         }
         setTestData(test)
+      } else {
+        setTestData(null) // TODO
       }
     };
     fetchForm();
@@ -158,7 +164,10 @@ function Solve({params}: { params: { id: string, username: string } }) {
     window.scrollTo({top: 0, behavior: "smooth"});
   }, [partIndex]);
 
-  if (!testData) {
+  if (testData === null) {
+    return <div>No Test </div>
+  }
+  if (testData === undefined) {
     return <div>Loading...</div>;
   }
 
