@@ -20,9 +20,7 @@ import {TestFrame} from "@/app/api/test/testFrames";
 import {getTestById} from "@/app/api/test/getTestById";
 import {submitProps, submitTest} from "@/app/api/test/submit";
 import {useSession} from "next-auth/react";
-import {getTest} from "@/app/.api/testAPIs";
 import {getClassByUser} from "@/app/api/class/getClass";
-import {checkAssignedUser} from "@/app/api/test/checkAssigned";
 
 interface TabPanelProps {
   children?: React.ReactNode;

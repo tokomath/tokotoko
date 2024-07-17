@@ -1,6 +1,17 @@
 "use client"
 
-import {Box, Button, IconButton, ListItem, ListItemIcon, ListItemText, Stack, Tooltip, Typography} from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography
+} from "@mui/material";
 import {useEffect, useState} from "react";
 import ClassIcon from '@mui/icons-material/Class';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
@@ -12,20 +23,20 @@ import {getAllClass, getClassByUser} from "@/app/api/class/getClass";
 
 export default function Page() {
   const YourClassList = () => {
-    const [teacherId, setTeacherId] = useState<number>(1)
+    const [teacherName, setTeacherName] = useState("")
     const [classes, setClasses] = useState<Class[]>([])
 
     // TODO: get current teacherId
     useEffect(() => {
       const fetchClass = async () => {
-        const tmpClassList = await getClassByUser(teacherId)
+        const tmpClassList = await getClassByUser(teacherName)
         // const tmpClassList = await getAllClass()
         setClasses(tmpClassList)
         console.log(tmpClassList)
       }
 
       fetchClass()
-    }, [teacherId])
+    }, [teacherName])
 
     console.log(classes)
     return (
@@ -33,10 +44,10 @@ export default function Page() {
         <Typography>
           Your Classes
         </Typography>
-        <NumberInput
-          value={teacherId}
-          onChange={(_, e) => {
-            setTeacherId(e === null ? 0 : e)
+        <TextField
+          value={teacherName}
+          onChange={(e: any) => {
+            setTeacherName(e.target.value)
           }}
         />
         {classes.map((c: Class, i: number) => {
