@@ -111,32 +111,71 @@ export default function Question({ id, number, question, answer, changeAnswer }:
           updateSelection()
         }}
       />
-      <Stack direction="row" spacing={1}>
-        <Button variant="outlined" onClick={() => { insertCommand("\\") }}>
+      <Stack display="flex" flexWrap="wrap" direction="row">
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => { insertCommand("\\") }}>
           \
         </Button>
-        <Button variant="outlined" onClick={() => insertCommand("\\frac{a}{b}", 6, 7)}>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("()", 1, 1)}>
+          {"( )"}
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("{}", 1, 1)}>
+          {"{ }"}
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("=")}>
+          <InlineMath math="="></InlineMath>
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("+")}>
+          <InlineMath math="+"></InlineMath>
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("-")}>
+          <InlineMath math="-"></InlineMath>
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\times")}>
+          <InlineMath math="\times"></InlineMath>
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\frac{a}{b}", 6, 7)}>
           <InlineMath math="\frac{a}{b}"></InlineMath>
         </Button>
-        <Button variant="outlined" onClick={() => insertCommand("\\int")}>
-          <InlineMath math="\int"></InlineMath>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\sqrt{a}", 6, 7)}>
+          <InlineMath math="\sqrt{a}"></InlineMath>
         </Button>
-        <Button variant="outlined" onClick={() => insertCommand("\\int_{a}^{b}", 6, 7)}>
-          <InlineMath math="\int_{a}^{b}"></InlineMath>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\vec{a}", 5, 6)}>
+          <InlineMath math="\vec{a}"></InlineMath>
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("^{a}", 2, 3)}>
+          <InlineMath math="□^{a}"></InlineMath>
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\sin{a}", 5, 6)}>
+          <InlineMath math="\sin{a}"></InlineMath>
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\cos{a}", 5, 6)}>
+          <InlineMath math="\cos{a}"></InlineMath>
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\tan{a}", 5, 6)}>
+          <InlineMath math="\tan{a}"></InlineMath>
+        </Button>
+        <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\pi")}>
+          <InlineMath math="\pi"></InlineMath>
         </Button>
       </Stack>
-      <Stack direction="row" spacing={1} display="flex">
-        <Button variant="outlined" onClick={() => insertCommand("\\begin{vmatrix}\n  a & b \\\\\n  c & d\n\\end{vmatrix}", 18, 19)}>
-          <InlineMath math="\begin{vmatrix}a & b \\\\ c & d \end{vmatrix}"></InlineMath>
-        </Button>
-        <Button variant="outlined" onClick={() => insertCommand("\\begin{pmatrix}\n  a & b \\\\\n  c & d\n\\end{pmatrix}", 18, 19)}>
-          <InlineMath math="\begin{pmatrix}a & b \\\\ c & d \end{pmatrix}"></InlineMath>
-        </Button>
-        <Button variant="outlined" onClick={() => insertCommand("\\sum_{i=1}^{n}")}>
-          <InlineMath math="\sum_{i=1}^{n}"></InlineMath>
-        </Button>
-      </Stack>
-    </Stack>
+    </Stack >
 
   )
 }
+
+
+// <Button variant="outlined" onClick={() => insertCommand("\\int")}>
+//           <InlineMath math="\int"></InlineMath>
+//         </Button>
+//         <Button variant="outlined" onClick={() => insertCommand("\\int_{a}^{b}", 6, 7)}>
+//           <InlineMath math="\int_{a}^{b}"></InlineMath>
+//         </Button>
+//         <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\begin{vmatrix}\n  a & b \\\\\n  c & d\n\\end{vmatrix}", 18, 19)}>
+//           <InlineMath math="\begin{vmatrix}a & b \\\\ c & d \end{vmatrix}"></InlineMath>
+//         </Button>
+//         <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\begin{pmatrix}\n  a & b \\\\\n  c & d\n\\end{pmatrix}", 18, 19)}>
+//           <InlineMath math="\begin{pmatrix}a & b \\\\ c & d \end{pmatrix}"></InlineMath>
+//         </Button>
+//         <Button variant="outlined" sx={{ textTransform: 'none' }} onClick={() => insertCommand("\\sum_{i=1}^{n}")}>
+//           <InlineMath math="\sum_{i=1}^{n}"></InlineMath>
+//         </Button>
