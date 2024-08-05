@@ -4,6 +4,8 @@ import { Box, Paper, Tab, Tabs } from "@mui/material";
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import axios, { AxiosResponse } from "axios";
+import { useSession } from 'next-auth/react';
+
 
 //#region APIのデータ用
 interface Question {
@@ -183,7 +185,7 @@ function SectionTabs({sections} : SectionTabProps)
 
 export default function Grading({ params }: { params: { id: number } }) {
     const [testData, setTestData] = useState<TestData | null>(null);
-
+    const { data: session, status } = useSession();
     useEffect(() => {
         axios.post("/api/test/get", { id: Number(params.id) })
             .then(response => {
@@ -191,7 +193,16 @@ export default function Grading({ params }: { params: { id: number } }) {
                 console.log(testData);
             });
         Style();
+
+        
+
     }, []);
+
+    if(session)
+    {
+        console.log(session);
+        console.log(session?.user?.name);   //sessionテスト
+    }
 
     return (
         <Paper>
