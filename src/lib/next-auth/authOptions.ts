@@ -1,0 +1,51 @@
+import CredentialsProvider from 'next-auth/providers/credentials'
+import {randomUUID, randomBytes} from 'crypto'
+import axios from "axios";
+import {prisma} from "@/app/api/prisma_client";
+
+export const authOptions = {
+  providers: [
+    // ユーザ用認証
+    CredentialsProvider({
+      id: 'user',
+      name: 'User',
+      credentials: {
+        username: {label: 'Username', type: 'text'},
+        password: {label: 'Password', type: 'password'}
+      },
+      async authorize(credentials: any) {
+        const user = await prisma.student.findUnique({where: {name: credentials.username}})
+        if (user && credentials.password === user.pass) {
+          return {id: user.id.toString(), name: user.name}
+        } else {
+          return null
+        }
+      },
+    }),
+  ],
+
+  /* callbacks */
+  callbacks: {
+  },
+
+  /* secret */
+  secret: process.env.NEXTAUTH_SECRET,
+
+  /* jwt */
+  jwt: {
+    maxAge: 3 * 24 * 60 * 60,       // 3 days 
+  },
+
+  pages: {
+  },
+
+  /* session */
+  session: {
+    maxAge: 30 * 24 * 60 * 60,      // 30 days
+    updateAge: 24 * 60 * 60,        // 24 hours
+    generateSessionToken: () => {
+      return randomUUID?.() ?? randomBytes(32).toString("hex")
+    }
+  },
+
+}

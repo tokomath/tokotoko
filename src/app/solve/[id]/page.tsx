@@ -1,11 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { Box, Button, Link, Paper, Tab, Tabs, Typography, Divider } from "@mui/material";
 import 'katex/dist/katex.min.css';
 import Stack from '@mui/material/Stack';
 import Question from "@/compornents/Question";
-import SendIcon from '@mui/icons-material/Send';
+import SendIcon from "@mui/icons-material/Send";
 import axios from "axios";
+import Latex from "react-latex-next";
 
 export interface TestType {
   title: string;
@@ -58,8 +59,7 @@ function CustomTabPanel(props: TabPanelProps) {
 
 function a11yProps(index: number) {
   return {
-    id: `tab-${index + 1}`,
-    'aria-controls': `The tab of part-${index + 1}`,
+    "aria-controls": `The tab of part-${index + 1}`,
   };
 }
 
@@ -69,38 +69,57 @@ export default function Solve({ params }: { params: { id: string } }) {
   const [partIndex, setPartIndex] = useState(0);
 
   const loadForm = async (id: string) => {
+    console.log(answers);
     const response = await axios.post("/api/test/get", { id: Number(id) }).then((res) => {
       setTestData(res.data as TestType);
+      console.log(res.data.sections);
     }).catch((e) => {
       alert(e);
     });
   }
 
   const changeAnswer = (questionId: number, answer: string) => {
-    setAnswers(prevAnswers => ({
+    setAnswers((prevAnswers) => ({
       ...prevAnswers,
-      [questionId]: answer
+      [questionId]: answer,
     }));
   };
 
-  const handleSubmit = () => {
-    const answeredQuestionIds = Object.keys(answers);
+  const handleSubmit = async () => {
+    let id = "";
+    let pass = "";
 
-    if (answeredQuestionIds.length > 0) {
-      const confirmationMessage = answeredQuestionIds.map(id => {
-        const { summary: partTitle, subSections } = testData?.sections.find(section => section.subSections.some(subSection => subSection.questions.some(question => question.id === Number(id)))) || { summary: "", subSections: [] };
-        const { summary: sectionTitle, questions } = subSections.find(subSection => subSection.questions.some(question => question.id === Number(id))) || { summary: "", questions: [] };
-        const { number, question } = questions.find(question => question.id === Number(id)) || { number: "", question: "" };
-        return `${partTitle} ${sectionTitle} ${number} ${question}: ${answers[id]}`;
-      }).join("\n");
-
-      if (window.confirm(`送信しますか？\n${confirmationMessage}`)) {
-        // 送信処理を追加
-      }
+    const idPrompt = prompt("Student Name");
+    if (!idPrompt) {
+      return; // 入力キャンセル
     } else {
-      alert("質問に答えを入力してください。");
+      id = idPrompt;
     }
-  };
+
+    const passPrompt = prompt("Password");
+    if (!passPrompt) {
+      return; // 入力キャンセル
+    } else {
+      pass = passPrompt;
+    }
+
+    const answerList: any = []
+    const ans = { ...answers }
+    Object.keys(ans).forEach((key) => {
+      // @ts-ignore
+      answerList.push({ id: Number(key), text: ans[key] })
+    })
+    const response = await axios.post("/api/test/submit", {
+      student_name: String(id),
+      student_pass: String(pass),
+      test_id: Number(params.id),
+      answers: answerList
+    }).then((res) => {
+      alert("Submited")
+    }).catch((e) => {
+      alert(e)
+    })
+  }
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setPartIndex(newValue);
@@ -110,6 +129,24 @@ export default function Solve({ params }: { params: { id: string } }) {
     loadForm(params.id);
   }, []);
 
+  useEffect(() => {
+    if (testData) {
+      const initialAnswers: { [key: string]: string } = {};
+      testData.sections.forEach(section => {
+        section.subSections.forEach(subSection => {
+          subSection.questions.forEach(question => {
+            initialAnswers[question.id] = "";
+          });
+        });
+      });
+      setAnswers(initialAnswers);
+    }
+  }, [testData]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [partIndex]);
+
   if (!testData) {
     return <div>Loading...</div>;
   }
@@ -118,8 +155,20 @@ export default function Solve({ params }: { params: { id: string } }) {
     <main>
       {/* ヘッダー部分 */}
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
-        <Box paddingTop={1} paddingRight={1} display="flex" flexWrap="wrap" alignItems="center" justifyContent="flex-end">
-          <Link href="https://katex.org/docs/supported.html" target="_blank" rel="noopener" marginX={1}>
+        <Box
+          paddingTop={1}
+          paddingRight={1}
+          display="flex"
+          flexWrap="wrap"
+          alignItems="center"
+          justifyContent="flex-end"
+        >
+          <Link
+            href="https://katex.org/docs/supported.html"
+            target="_blank"
+            rel="noopener"
+            marginX={1}
+          >
             KaTeXヘルプ
           </Link>
           <Typography fontFamily="monospace" marginX={1}>
@@ -128,25 +177,39 @@ export default function Solve({ params }: { params: { id: string } }) {
         </Box>
         <Box maxWidth={640} margin="auto">
           <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
-            <Typography variant="h1" fontSize={30}>{testData.title}</Typography>
+            <Typography variant="h1" fontSize={30}>
+              {testData.title}
+            </Typography>
             <Typography>{testData.summary}</Typography>
-            <Typography>Start:{testData.startDate.toString()}　→　Deadline:{testData.endDate.toString()}</Typography>
+            <Typography>
+              Start:{testData.startDate.toString()}　→　Deadline:
+              {testData.endDate.toString()}
+            </Typography>
           </Stack>
         </Box>
       </Paper>
 
       {/* 問題部分 */}
-      <Box maxWidth={640} margin="auto" >
-        <Tabs value={partIndex} onChange={handleChange} aria-label="Tabs of each PART">
+      <Box maxWidth={640} margin="auto">
+        <Tabs
+          value={partIndex}
+          onChange={handleChange}
+          aria-label="Tabs of each PART"
+        >
           {testData.sections.map((section, index) => (
-            <Tab key={section.number} label={`Part ${section.number}`} {...a11yProps(index)} />
+            <Tab
+              key={section.number}
+              label={`Part ${section.number}`}
+              {...a11yProps(index)}
+            />
           ))}
         </Tabs>
         {testData.sections.map((section, index) => (
           <CustomTabPanel key={section.number} value={partIndex} index={index}>
             {section.subSections.map((subSection) => (
               <Paper key={subSection.number} sx={{ marginTop: 2, padding: 2 }}>
-                <Typography variant="h6">Section{subSection.number} {subSection.summary}</Typography>
+                <Typography variant="h6">Section{subSection.number}</Typography>
+                <Latex>{subSection.summary}</Latex>
                 {subSection.questions.map((question) => (
                   <React.Fragment key={question.id}>
                     <Divider sx={{ my: 1 }} />
@@ -155,7 +218,9 @@ export default function Solve({ params }: { params: { id: string } }) {
                       number={question.number.toString()}
                       question={question.question}
                       answer={answers[question.id]}
-                      changeAnswer={(answer) => changeAnswer(question.id, answer)}
+                      changeAnswer={(answer) =>
+                        changeAnswer(question.id, answer)
+                      }
                     />
                   </React.Fragment>
                 ))}
@@ -163,17 +228,59 @@ export default function Solve({ params }: { params: { id: string } }) {
             ))}
           </CustomTabPanel>
         ))}
-        <Box display="flex" justifyContent="flex-end" marginTop={2} paddingRight={2}>
-          <Button
-            variant="contained"
-            endIcon={<SendIcon />}
-            onClick={handleSubmit}
-          >
-            Send
-          </Button>
+
+        <Box display="flex" justifyContent="space-between" marginTop={2} paddingRight={2}>
+          <Privious index={partIndex} setIndex={setPartIndex} />
+          <Next index={partIndex} setIndex={setPartIndex} maxIndex={testData.sections.length} handleSubmit={handleSubmit} />
         </Box>
+
       </Box>
 
     </main >
   );
+}
+
+function Privious({ index, setIndex }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>> }) {
+  if (index === 0) {
+    return (
+      <div></div>
+    )
+  }
+  return (
+    <Button
+      onClick={
+        () => setIndex(index - 1)
+      }
+    >
+      Previous Part
+    </Button>
+  )
+
+}
+
+function Next({ index, setIndex, maxIndex, handleSubmit }: { index: number, setIndex: React.Dispatch<React.SetStateAction<number>>, maxIndex: number, handleSubmit: () => void }) {
+  if (index === maxIndex - 1) {
+    return (
+      <Button
+        variant="contained"
+        endIcon={<SendIcon />}
+        onClick={handleSubmit}
+      >
+        Send
+      </Button>
+    )
+  }
+
+  return (
+    <Button
+      onClick={
+        () => {
+          setIndex(index + 1);
+        }
+      }
+    >
+      Next Part
+    </Button>
+  )
+
 }

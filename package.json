@@ -2,6 +2,7 @@
   "name": "tokotoko",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -20,6 +21,7 @@
     "axios": "^1.7.2",
     "dayjs": "^1.11.11",
     "next": "^14.2.4",
+    "next-auth": "^4.24.7",
     "react": "^18",
     "react-dom": "^18",
     "react-is": "^18.3.1",
