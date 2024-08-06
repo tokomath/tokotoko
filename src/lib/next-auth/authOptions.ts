@@ -1,7 +1,8 @@
 import CredentialsProvider from 'next-auth/providers/credentials'
 import {randomUUID, randomBytes} from 'crypto'
 import axios from "axios";
-import {prisma} from "@/app/api/prisma_client";
+import {prisma} from "@/app/api/prisma_client"
+import { signIn } from 'next-auth/react';
 
 export const authOptions = {
   providers: [
@@ -13,10 +14,11 @@ export const authOptions = {
         username: {label: 'Username', type: 'text'},
         password: {label: 'Password', type: 'password'}
       },
+      // @ts-ignore TODO
       async authorize(credentials: any) {
-        const user = await prisma.student.findUnique({where: {name: credentials.username}})
+        const user = await prisma.user.findUnique({where: {name: credentials.username}})
         if (user && credentials.password === user.pass) {
-          return {id: user.id.toString(), name: user.name}
+          return {id: user.id, name: user.name, role: user.role}
         } else {
           return null
         }
@@ -26,6 +28,17 @@ export const authOptions = {
 
   /* callbacks */
   callbacks: {
+    /*
+    async session(session, user) {
+      session.user = user;
+      return session;
+    },
+
+    async jwt(token: any) {
+      console.log(token)
+      return token;
+    }
+    */
   },
 
   /* secret */
