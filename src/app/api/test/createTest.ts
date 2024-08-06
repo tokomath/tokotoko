@@ -5,7 +5,6 @@ import {
   Prisma,
   Question,
   Section,
-  SubSection,
   Test,
 } from "@prisma/client";
 import { prisma } from "@/app/api/prisma_client";
