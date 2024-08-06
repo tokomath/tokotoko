@@ -23,20 +23,12 @@ export const createTest = async (props: TestFrame) => {
         return {
           summary: section.section.summary,
           number: section.section.number,
-          subSections: {
-            create: section.subSections.map((subSection) => {
+          questions: {
+            create: section.questions.map((question) => {
               return {
-                summary: subSection.subSection.summary,
-                number: subSection.subSection.number,
-                questions: {
-                  create: subSection.questions.map((question) => {
-                    return {
-                      question: question.question,
-                      number: question.number,
-                      answer: question.answer,
-                    };
-                  }),
-                },
+                question: question.question,
+                number: question.number,
+                answer: question.answer,
               };
             }),
           },
