@@ -69,7 +69,7 @@ export default function Page() {
       }
     };
     fetchClasses();
-  }, []);
+  }, [session]);
 
   const handleSectionChange = (item: SectionFrame, index: number) => {
     const newS: SectionFrame[] = sections.map((s: SectionFrame, i: number) => {
