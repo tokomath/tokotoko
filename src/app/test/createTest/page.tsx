@@ -342,7 +342,6 @@ const MetaDataPage = ({
 };
 
 const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
-  console.log(section.subsections)
   const addQuestion = () => {
     const question: Question = {
       id: 1,
@@ -388,20 +387,6 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
     });
     setSection({ ...section, questions: newQ2 });
   };
-  const CallQuestion = () => {
-    console.log(section)
-    return section.questions.map((q: Question, index: number) => (
-      <QuestionPage
-        key={index}
-        index={index}
-        question={q}
-        setQuestion={(q: Question) => {
-          handleQuestionChange(q, index);
-        }}
-        deleteQuestion={() => handleRemove(index)}
-      />
-    ));
-  }
 
   return (
     <Stack
@@ -417,7 +402,19 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           Delete
         </Button>
       </Box>
-      <CallQuestion />
+      {
+        section.questions.map((q: Question, index: number) => (
+          <QuestionPage
+            key={index}
+            index={index}
+            question={q}
+            setQuestion={(q: Question) => {
+              handleQuestionChange(q, index);
+            }}
+            deleteQuestion={() => handleRemove(index)}
+          />
+        ))
+      }
       <Button onClick={addQuestion}>Add Question</Button>
     </Stack>
   );
