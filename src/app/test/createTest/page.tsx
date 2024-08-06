@@ -17,7 +17,6 @@ import {
   FormControl,
   OutlinedInput,
   MenuItem,
-  SelectChangeEvent,
   Chip,
 } from "@mui/material";
 import { InlineMath } from "react-katex";
@@ -31,7 +30,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import {
   TestFrame,
   SectionFrame,
-  SubSectionFrame,
   createTest,
 } from "@/app/api/testAPIs";
 import { Test, Section, Question, Class } from "@prisma/client";
