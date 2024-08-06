@@ -1,3 +1,4 @@
+"use server"
 import { prisma } from "../prisma_client";
 
 // no info about sections ...
