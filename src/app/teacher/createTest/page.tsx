@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
   Alert,
   Box,
@@ -20,7 +20,7 @@ import {
   SelectChangeEvent,
   Chip,
 } from "@mui/material";
-import { InlineMath } from "react-katex";
+import {InlineMath} from "react-katex";
 import "katex/dist/katex.min.css";
 
 import CloseIcon from "@mui/icons-material/Close";
@@ -34,14 +34,15 @@ import {
   SubSectionFrame,
 } from "@/app/api/test/testFrames";
 
-import { createTest } from "@/app/api/test/createTest";
-import { Test, Section, Question, Class } from "@prisma/client";
-import dayjs, { Dayjs } from "dayjs";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import {createTest} from "@/app/api/test/createTest";
+import {Test, Section, Question, Class} from "@prisma/client";
+import dayjs, {Dayjs} from "dayjs";
+import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import Latex from "react-latex-next";
-import { getAllClass } from "@/app/api/class/getClass";
-import { getClassByUser } from "@/app/api/class/getClass";
+import {getAllClass} from "@/app/api/class/getClass";
+import {getClassByUser} from "@/app/api/class/getClass";
+import {useSession} from "next-auth/react";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionFrame[]>([]);
@@ -51,15 +52,21 @@ export default function Page() {
 
   const [endDate, setEndDate] = useState<Dayjs>(dayjs());
   const [startDate, setStartDate] = useState<Dayjs>(dayjs());
-  const [asignedClass, setAsignedClass] = useState<Class[]>([]);
+  const [assignedClass, setAssignedClass] = useState<Class[]>([]);
 
   const [classList, setClassList] = useState<Class[]>([]);
-  console.log(asignedClass);
+
+  const {data: session, status} = useSession();
+
+  console.log(assignedClass);
   useEffect(() => {
     const fetchClasses = async () => {
-      // TODO: teacherIdを取得
-      const classes: Class[] = await getAllClass();
-      setClassList(classes);
+      if (session && session.user.name) {
+        const classes: Class[] = await getClassByUser(session.user.name);
+        setClassList(classes);
+      } else {
+        setClassList([]);
+      }
     };
     fetchClasses();
   }, []);
@@ -69,7 +76,7 @@ export default function Page() {
       if (i === index) {
         return item;
       } else {
-        return { section: s.section, subSections: s.subSections };
+        return {section: s.section, subSections: s.subSections};
       }
     });
     setSections(newS);
@@ -88,7 +95,7 @@ export default function Page() {
         summary: q.section.summary,
         number: index + 1,
       };
-      return { section: section, subSections: q.subSections };
+      return {section: section, subSections: q.subSections};
     });
     setSections(newS2);
   };
@@ -99,7 +106,7 @@ export default function Page() {
       summary: "",
       number: sections.length + 1,
     };
-    setSections([...sections].concat({ section: section, subSections: [] }));
+    setSections([...sections].concat({section: section, subSections: []}));
   };
 
   const createTestButtonFunction = async () => {
@@ -114,7 +121,7 @@ export default function Page() {
     const newTestFrame: TestFrame = {
       test: newTest,
       sections: sections,
-      classes: asignedClass,
+      classes: assignedClass,
     };
     await createTest(newTestFrame);
   };
@@ -139,7 +146,7 @@ export default function Page() {
     };
 
     const isClassError = () => {
-      if (asignedClass.length === 0) {
+      if (assignedClass.length === 0) {
         return <Alert severity="error">クラスが選択されていません</Alert>;
       }
     };
@@ -153,7 +160,7 @@ export default function Page() {
   };
 
   const checkDataError = () => {
-    return startDate.isAfter(endDate) || asignedClass.length === 0;
+    return startDate.isAfter(endDate) || assignedClass.length === 0;
   };
 
   // クラスの割り当て用
@@ -161,7 +168,7 @@ export default function Page() {
     const values = event.target.value as number[];
     const select = classList.filter((item) => values.includes(item.id));
 
-    setAsignedClass(select);
+    setAssignedClass(select);
   };
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
@@ -172,10 +179,10 @@ export default function Page() {
       >
         Create Test
       </Button>
-      <CreateError />
+      <CreateError/>
 
       <Box
-        sx={{ flexGrow: 1, bgcolor: "background.paper", display: "flex" }}
+        sx={{flexGrow: 1, bgcolor: "background.paper", display: "flex"}}
         alignSelf={"center"}
         width={"100%"}
         p={"10px"}
@@ -186,15 +193,15 @@ export default function Page() {
           onChange={handleChange}
           orientation="vertical"
           variant="scrollable"
-          sx={{ borderRight: 1, borderColor: "divider" }}
+          sx={{borderRight: 1, borderColor: "divider"}}
           aria-label="section tabs"
         >
-          <Tab label={"metadata"} />
+          <Tab label={"metadata"}/>
           {sections.map((s: SectionFrame, index: number) => (
-            <Tab label={index} {...a11yProps(index)} key={index} />
+            <Tab label={index} {...a11yProps(index)} key={index}/>
           ))}
           <Tab
-            icon={<AddIcon />}
+            icon={<AddIcon/>}
             onClick={handleAdd}
             {...a11yProps(sections.length)}
           />
@@ -210,7 +217,7 @@ export default function Page() {
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
-            asignedClass={asignedClass}
+            assignedClass={assignedClass}
             handleClassChange={handleClassChange}
             classList={classList}
           />
@@ -236,7 +243,7 @@ export default function Page() {
 // stateが更新されるたびにレンダリングされるのを避ける
 // Page()の中に書かないで
 const TabPanels = (props: any) => {
-  const { children, value, index } = props;
+  const {children, value, index} = props;
   return (
     <Box
       role="tabpanel"
@@ -251,19 +258,19 @@ const TabPanels = (props: any) => {
 };
 
 const MetaDataPage = ({
-  // SectionPage内のstate
-  testTitle,
-  setTestTitle,
-  testSummary,
-  setTestSummary,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
-  asignedClass,
-  handleClassChange,
-  classList,
-}: any) => {
+                        // SectionPage内のstate
+                        testTitle,
+                        setTestTitle,
+                        testSummary,
+                        setTestSummary,
+                        startDate,
+                        setStartDate,
+                        endDate,
+                        setEndDate,
+                        assignedClass,
+                        handleClassChange,
+                        classList,
+                      }: any) => {
   const dateWarning = () => {
     const isBeforeWarning = () => {
       if (startDate.isBefore(dayjs())) {
@@ -282,16 +289,16 @@ const MetaDataPage = ({
           labelId={"ClassAssign"}
           id={"ClassAssign"}
           multiple
-          value={asignedClass.map((option: Class) => option.id)}
-          input={<OutlinedInput label="Class" />}
+          value={assignedClass.map((option: Class) => option.id)}
+          input={<OutlinedInput label="Class"/>}
           onChange={handleClassChange}
           renderValue={(selected) => (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+            <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.5}}>
               {(selected as number[]).map((value: number) => {
                 const item = classList.find(
                   (option: Class) => option.id === value,
                 );
-                return item ? <Chip key={value} label={item.name} /> : null;
+                return item ? <Chip key={value} label={item.name}/> : null;
               })}
             </Box>
           )}
@@ -342,21 +349,21 @@ const MetaDataPage = ({
       </LocalizationProvider>
       {dateWarning()}
       <Typography variant="h6">クラスの割り当て</Typography>
-      <ClassAssign />
+      <ClassAssign/>
     </Stack>
   );
 };
 
-const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
+const SectionPage = ({index, section, setSection, deleteSection}: any) => {
   const handleSubSectionChange = (item: SubSectionFrame, index: number) => {
     const newS = section.subSections.map((s: SubSectionFrame, i: number) => {
       if (i === index) {
         return item;
       } else {
-        return { subSection: s.subSection, questions: s.questions };
+        return {subSection: s.subSection, questions: s.questions};
       }
     });
-    setSection({ ...section, subSections: newS });
+    setSection({...section, subSections: newS});
   };
 
   const handleAdd = () => {
@@ -384,9 +391,9 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       (q: SubSectionFrame, i: number) => i !== index,
     );
     const newS2 = newS.map((q: SubSectionFrame, i: number) => {
-      return { subSection: q.subSection, questions: q.questions };
+      return {subSection: q.subSection, questions: q.questions};
     });
-    setSection({ ...section, subSections: newS2 });
+    setSection({...section, subSections: newS2});
   };
 
   return (
@@ -399,7 +406,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       alignItems={"left"}
     >
       <Box width={"100%"} alignItems={"right"}>
-        <Button startIcon={<DeleteIcon />} onClick={deleteSection}>
+        <Button startIcon={<DeleteIcon/>} onClick={deleteSection}>
           Delete
         </Button>
       </Box>
@@ -420,11 +427,11 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
 };
 
 const SubSectionPage = ({
-  indexProps,
-  subSectionProps,
-  setSubSection,
-  deleteSubSection,
-}: any) => {
+                          indexProps,
+                          subSectionProps,
+                          setSubSection,
+                          deleteSubSection,
+                        }: any) => {
   const [subSectionSummary, setSubSectionSummary] = useState(
     subSectionProps.subSection.summary,
   );
@@ -462,16 +469,16 @@ const SubSectionPage = ({
         return question;
       }
     });
-    setSubSection({ ...subSection, questions: newQ });
+    setSubSection({...subSection, questions: newQ});
   };
   const handleRemove = (index: number) => {
     const newQ = subSection.questions.filter(
       (q: Question, i: number) => i !== index,
     );
     const newQ2 = newQ.map((q: Question, i: number) => {
-      return { question: q.question, answer: q.answer, number: i + 1 };
+      return {question: q.question, answer: q.answer, number: i + 1};
     });
-    setSubSection({ ...subSection, questions: newQ2 });
+    setSubSection({...subSection, questions: newQ2});
   };
   const handleAdd = () => {
     const question: Question = {
@@ -499,7 +506,7 @@ const SubSectionPage = ({
               {subSection.subSection.number + "." + subSectionSummary}
             </Latex>
             <IconButton aria-label="delete" onClick={deleteSubSection}>
-              <CloseIcon />
+              <CloseIcon/>
             </IconButton>
           </Box>
           <TextField
@@ -528,11 +535,11 @@ const SubSectionPage = ({
 };
 
 const QuestionPage = ({
-  index,
-  question,
-  setQuestion,
-  deleteQuestion,
-}: any) => {
+                        index,
+                        question,
+                        setQuestion,
+                        deleteQuestion,
+                      }: any) => {
   const setAns = (newAns: string) => {
     const newQ = question;
     question.answer = newAns;
@@ -552,7 +559,7 @@ const QuestionPage = ({
       <Box display="flex" justifyContent="space-between">
         <Latex>{"(" + question.number + ") " + question.question}</Latex>
         <IconButton aria-label="delete" onClick={deleteQuestion}>
-          <CloseIcon />
+          <CloseIcon/>
         </IconButton>
       </Box>
       <TextField
