@@ -1,29 +1,22 @@
 "use client";
-import React, {use, useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
   Box,
   Button,
-  Link,
   Paper,
   Tab,
   Tabs,
   Typography,
-  Divider, TextField,
+  Divider,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
 import Stack from "@mui/material/Stack";
 import SendIcon from "@mui/icons-material/Send";
-import axios from "axios";
 import Latex from "react-latex-next";
-import {SectionFrame, SubSectionFrame, TestFrame} from "@/app/api/test/testFrames";
-import {getTestById} from "@/app/api/test/getTestById";
-import {isAlreadySubmit, submitProps, submitTest} from "@/app/api/test/submit";
+import {isAlreadySubmit} from "@/app/api/test/submit";
 import {useSession} from "next-auth/react";
-import {getClassByUser} from "@/app/api/class/getClass";
-import {Answer} from "@prisma/client";
-import {useRouter} from "next/navigation";
 import {getSubmission} from "@/app/api/test/result";
-import {BlockMath, InlineMath} from "react-katex";
+import {BlockMath} from "react-katex";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -90,6 +83,7 @@ function Result({params}: { params: { id: string, username: string } }) {
         let i = 0;
         data.test.sections.forEach((sec) => {
           sec.subSections.forEach((ss) => ss.questions.forEach((q) => {
+            //@ts-ignore
             q["ans"] = data.answers[i];
             i += 1
           }))
@@ -142,7 +136,7 @@ function Result({params}: { params: { id: string, username: string } }) {
           value={partIndex}
           aria-label="Tabs of each PART"
         >
-          {data.test.sections.map((section, index) => (
+          {data.test.sections.map((section:any, index:number) => (
             <Tab
               key={section.number}
               label={`Part ${section.number}`}
@@ -150,13 +144,13 @@ function Result({params}: { params: { id: string, username: string } }) {
             />
           ))}
         </Tabs>
-        {data.test.sections.map((section, i1) => (
+        {data.test.sections.map((section:any, i1:number) => (
           <CustomTabPanel
             key={section.number}
             value={partIndex}
             index={i1}
           >
-            {section.subSections.map((subSection, i2) => (
+            {section.subSections.map((subSection:any) => (
               <Paper
                 key={subSection.number}
                 sx={{marginTop: 2, padding: 2}}
@@ -165,7 +159,7 @@ function Result({params}: { params: { id: string, username: string } }) {
                   Section{subSection.number}
                 </Typography>
                 <Latex>{subSection.summary}</Latex>
-                {subSection.questions.map((question, i3) => {
+                {subSection.questions.map((question:any) => {
                   return <React.Fragment key={question.id}>
                     <Divider sx={{my: 1}}/>
                     <Question

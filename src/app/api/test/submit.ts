@@ -1,6 +1,5 @@
 "use server"
 import {prisma} from "../prisma_client";
-
 import {Answer} from "@prisma/client";
 
 export interface submitProps {
@@ -22,9 +21,9 @@ export const submitTest = async (props: submitProps) => {
     },
   });
 
-  const ans = await prisma.answer
+  const _ = await prisma.answer
     .createMany({
-      data: props.answerList.map((ans: Answer, index: number) => ({
+      data: props.answerList.map((ans: Answer, _: number) => ({
         text: ans.text,
         point: 0,
         questionId: ans.id,
