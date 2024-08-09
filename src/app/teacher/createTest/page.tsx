@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -17,32 +17,27 @@ import {
   FormControl,
   OutlinedInput,
   MenuItem,
-  SelectChangeEvent,
   Chip,
 } from "@mui/material";
-import {InlineMath} from "react-katex";
+import { InlineMath } from "react-katex";
 import "katex/dist/katex.min.css";
 
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-// import {LocalizationProvider} from "@mui/x-date-pickers";
 
 import {
   TestFrame,
   SectionFrame,
-  SubSectionFrame,
 } from "@/app/api/test/testFrames";
+import { createTest } from "@/app/api/test/createTest";
 
-import {createTest} from "@/app/api/test/createTest";
-import {Test, Section, Question, Class} from "@prisma/client";
-import dayjs, {Dayjs} from "dayjs";
-import {DateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
-import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import { Test, Section, Question, Class } from "@prisma/client";
+import dayjs, { Dayjs } from "dayjs";
+import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import Latex from "react-latex-next";
-import {getAllClass} from "@/app/api/class/getClass";
-import {getClassByUser} from "@/app/api/class/getClass";
-import {useSession} from "next-auth/react";
+import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
 
 export default function Page() {
   const [sections, setSections] = useState<SectionFrame[]>([]);
@@ -52,31 +47,24 @@ export default function Page() {
 
   const [endDate, setEndDate] = useState<Dayjs>(dayjs());
   const [startDate, setStartDate] = useState<Dayjs>(dayjs());
-  const [assignedClass, setAssignedClass] = useState<Class[]>([]);
+  const [asignedClass, setAsignedClass] = useState<Class[]>([]);
 
   const [classList, setClassList] = useState<Class[]>([]);
-
-  const {data: session, status} = useSession();
-
-  console.log(assignedClass);
   useEffect(() => {
     const fetchClasses = async () => {
-      if (session && session.user.name) {
-        const classes: Class[] = await getClassByUser(session.user.name);
-        setClassList(classes);
-      } else {
-        setClassList([]);
-      }
+      // TODO: teacherIdを取得
+      const classes: Class[] = await getAllClass();
+      setClassList(classes);
     };
     fetchClasses();
-  }, [session]);
+  }, []);
 
   const handleSectionChange = (item: SectionFrame, index: number) => {
     const newS: SectionFrame[] = sections.map((s: SectionFrame, i: number) => {
       if (i === index) {
         return item;
       } else {
-        return {section: s.section, subSections: s.subSections};
+        return { section: s.section, questions: s.questions };
       }
     });
     setSections(newS);
@@ -95,7 +83,7 @@ export default function Page() {
         summary: q.section.summary,
         number: index + 1,
       };
-      return {section: section, subSections: q.subSections};
+      return { section: section, questions: q.questions };
     });
     setSections(newS2);
   };
@@ -106,7 +94,7 @@ export default function Page() {
       summary: "",
       number: sections.length + 1,
     };
-    setSections([...sections].concat({section: section, subSections: []}));
+    setSections([...sections].concat({ section: section, questions: [] }));
   };
 
   const createTestButtonFunction = async () => {
@@ -121,7 +109,7 @@ export default function Page() {
     const newTestFrame: TestFrame = {
       test: newTest,
       sections: sections,
-      classes: assignedClass,
+      classes: asignedClass,
     };
     await createTest(newTestFrame);
   };
@@ -146,7 +134,7 @@ export default function Page() {
     };
 
     const isClassError = () => {
-      if (assignedClass.length === 0) {
+      if (asignedClass.length === 0) {
         return <Alert severity="error">クラスが選択されていません</Alert>;
       }
     };
@@ -160,7 +148,7 @@ export default function Page() {
   };
 
   const checkDataError = () => {
-    return startDate.isAfter(endDate) || assignedClass.length === 0;
+    return startDate.isAfter(endDate) || asignedClass.length === 0;
   };
 
   // クラスの割り当て用
@@ -168,7 +156,7 @@ export default function Page() {
     const values = event.target.value as number[];
     const select = classList.filter((item) => values.includes(item.id));
 
-    setAssignedClass(select);
+    setAsignedClass(select);
   };
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
@@ -179,10 +167,10 @@ export default function Page() {
       >
         Create Test
       </Button>
-      <CreateError/>
+      <CreateError />
 
       <Box
-        sx={{flexGrow: 1, bgcolor: "background.paper", display: "flex"}}
+        sx={{ flexGrow: 1, bgcolor: "background.paper", display: "flex" }}
         alignSelf={"center"}
         width={"100%"}
         p={"10px"}
@@ -193,15 +181,15 @@ export default function Page() {
           onChange={handleChange}
           orientation="vertical"
           variant="scrollable"
-          sx={{borderRight: 1, borderColor: "divider"}}
+          sx={{ borderRight: 1, borderColor: "divider" }}
           aria-label="section tabs"
         >
-          <Tab label={"metadata"}/>
+          <Tab label={"metadata"} />
           {sections.map((s: SectionFrame, index: number) => (
-            <Tab label={index} {...a11yProps(index)} key={index}/>
+            <Tab label={index} {...a11yProps(index)} key={index} />
           ))}
           <Tab
-            icon={<AddIcon/>}
+            icon={<AddIcon />}
             onClick={handleAdd}
             {...a11yProps(sections.length)}
           />
@@ -217,7 +205,7 @@ export default function Page() {
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
-            assignedClass={assignedClass}
+            asignedClass={asignedClass}
             handleClassChange={handleClassChange}
             classList={classList}
           />
@@ -243,7 +231,7 @@ export default function Page() {
 // stateが更新されるたびにレンダリングされるのを避ける
 // Page()の中に書かないで
 const TabPanels = (props: any) => {
-  const {children, value, index} = props;
+  const { children, value, index } = props;
   return (
     <Box
       role="tabpanel"
@@ -258,19 +246,19 @@ const TabPanels = (props: any) => {
 };
 
 const MetaDataPage = ({
-                        // SectionPage内のstate
-                        testTitle,
-                        setTestTitle,
-                        testSummary,
-                        setTestSummary,
-                        startDate,
-                        setStartDate,
-                        endDate,
-                        setEndDate,
-                        assignedClass,
-                        handleClassChange,
-                        classList,
-                      }: any) => {
+  // SectionPage内のstate
+  testTitle,
+  setTestTitle,
+  testSummary,
+  setTestSummary,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+  asignedClass,
+  handleClassChange,
+  classList,
+}: any) => {
   const dateWarning = () => {
     const isBeforeWarning = () => {
       if (startDate.isBefore(dayjs())) {
@@ -289,16 +277,16 @@ const MetaDataPage = ({
           labelId={"ClassAssign"}
           id={"ClassAssign"}
           multiple
-          value={assignedClass.map((option: Class) => option.id)}
-          input={<OutlinedInput label="Class"/>}
+          value={asignedClass.map((option: Class) => option.id)}
+          input={<OutlinedInput label="Class" />}
           onChange={handleClassChange}
           renderValue={(selected) => (
-            <Box sx={{display: "flex", flexWrap: "wrap", gap: 0.5}}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
               {(selected as number[]).map((value: number) => {
                 const item = classList.find(
                   (option: Class) => option.id === value,
                 );
-                return item ? <Chip key={value} label={item.name}/> : null;
+                return item ? <Chip key={value} label={item.name} /> : null;
               })}
             </Box>
           )}
@@ -349,51 +337,56 @@ const MetaDataPage = ({
       </LocalizationProvider>
       {dateWarning()}
       <Typography variant="h6">クラスの割り当て</Typography>
-      <ClassAssign/>
+      <ClassAssign />
     </Stack>
   );
 };
 
-const SectionPage = ({index, section, setSection, deleteSection}: any) => {
-  const handleSubSectionChange = (item: SubSectionFrame, index: number) => {
-    const newS = section.subSections.map((s: SubSectionFrame, i: number) => {
+const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
+  const addQuestion = () => {
+    const question: Question = {
+      id: 1,
+      sectionId: 1,
+      question: "",
+      number: section.questions.length + 1,
+      answer: "",
+    };
+
+    const questions: Question[] = [...section.questions].concat(question);
+    const newSection: SectionFrame = {
+      section: section.section,
+      questions: questions,
+    };
+
+    setSection(newSection);
+  }
+
+  const handleQuestionChange = (item: Question, index: number) => {
+    const newQ = section.questions.map((q: Question, i: number) => {
       if (i === index) {
         return item;
       } else {
-        return {subSection: s.subSection, questions: s.questions};
+        const question: Question = {
+          id: 1,
+          sectionId: 1,
+          question: q.question,
+          number: i + 1,
+          answer: q.answer,
+        };
+        return question;
       }
     });
-    setSection({...section, subSections: newS});
+    setSection({ ...section, questions: newQ });
   };
 
-  const handleAdd = () => {
-    const newSubSection: SubSectionFrame = {
-      subSection: {
-        id: 1,
-        sectionId: 1,
-        summary: "",
-        number: section.subSections.length + 1,
-      },
-      questions: [],
-    };
-    const subSections: SubSectionFrame[] = [...section.subSections].concat(
-      newSubSection,
+  const handleRemove = (index: number) => {
+    const newQ = section.questions.filter(
+      (q: Question, i: number) => i !== index,
     );
-    const newSection: SectionFrame = {
-      section: section.section,
-      subSections: subSections,
-    };
-    setSection(newSection);
-  };
-
-  const handleRemoveSubSection = (index: number) => {
-    const newS = section.subSections.filter(
-      (q: SubSectionFrame, i: number) => i !== index,
-    );
-    const newS2 = newS.map((q: SubSectionFrame, i: number) => {
-      return {subSection: q.subSection, questions: q.questions};
+    const newQ2 = newQ.map((q: Question, i: number) => {
+      return { question: q.question, answer: q.answer, number: i + 1 };
     });
-    setSection({...section, subSections: newS2});
+    setSection({ ...section, questions: newQ2 });
   };
 
   return (
@@ -406,140 +399,34 @@ const SectionPage = ({index, section, setSection, deleteSection}: any) => {
       alignItems={"left"}
     >
       <Box width={"100%"} alignItems={"right"}>
-        <Button startIcon={<DeleteIcon/>} onClick={deleteSection}>
+        <Button startIcon={<DeleteIcon />} onClick={deleteSection}>
           Delete
         </Button>
       </Box>
-      {section.subSections.map((s: SubSectionFrame, index: number) => (
-        <SubSectionPage
-          key={index}
-          indexProps={index}
-          subSectionProps={s}
-          setSubSection={(s: SubSectionFrame) => {
-            handleSubSectionChange(s, index);
-          }}
-          deleteSubSection={() => handleRemoveSubSection(index)}
-        />
-      ))}
-      <Button onClick={handleAdd}>Add SubSec</Button>
+      {
+        section.questions.map((q: Question, index: number) => (
+          <QuestionPage
+            key={index}
+            index={index}
+            question={q}
+            setQuestion={(q: Question) => {
+              handleQuestionChange(q, index);
+            }}
+            deleteQuestion={() => handleRemove(index)}
+          />
+        ))
+      }
+      <Button onClick={addQuestion}>Add Question</Button>
     </Stack>
   );
 };
 
-const SubSectionPage = ({
-                          indexProps,
-                          subSectionProps,
-                          setSubSection,
-                          deleteSubSection,
-                        }: any) => {
-  const [subSectionSummary, setSubSectionSummary] = useState(
-    subSectionProps.subSection.summary,
-  );
-  const subSection: SubSectionFrame = subSectionProps;
-
-  const changeSubSectionSummary = (newSummary: string) => {
-    const newSubSection: SubSectionFrame = {
-      subSection: {
-        id: 1,
-        sectionId: 1,
-        summary: newSummary,
-        number: subSection.subSection.number,
-      },
-      questions: subSection.questions,
-    };
-    setSubSection(newSubSection);
-  };
-
-  useEffect(() => {
-    changeSubSectionSummary(subSectionSummary);
-  }, [subSectionSummary]);
-
-  const handleQuestionChange = (item: Question, index: number) => {
-    const newQ = subSection.questions.map((q: Question, i: number) => {
-      if (i === index) {
-        return item;
-      } else {
-        const question: Question = {
-          id: 1,
-          subSectionId: 1,
-          question: q.question,
-          number: i + 1,
-          answer: q.answer,
-        };
-        return question;
-      }
-    });
-    setSubSection({...subSection, questions: newQ});
-  };
-  const handleRemove = (index: number) => {
-    const newQ = subSection.questions.filter(
-      (q: Question, i: number) => i !== index,
-    );
-    const newQ2 = newQ.map((q: Question, i: number) => {
-      return {question: q.question, answer: q.answer, number: i + 1};
-    });
-    setSubSection({...subSection, questions: newQ2});
-  };
-  const handleAdd = () => {
-    const question: Question = {
-      id: 1,
-      subSectionId: 1,
-      question: "",
-      number: subSection.questions.length + 1,
-      answer: "",
-    };
-
-    const questions: Question[] = [...subSection.questions].concat(question);
-    const newSubSection: SubSectionFrame = {
-      subSection: subSection.subSection,
-      questions: questions,
-    };
-    setSubSection(newSubSection);
-  };
-
-  return (
-    <Card>
-      <Box alignSelf={"left"} width={"auto"} display="flex">
-        <Stack gap={1} width={"100%"} margin={2}>
-          <Box display="flex" justifyContent="space-between">
-            <Latex>
-              {subSection.subSection.number + "." + subSectionSummary}
-            </Latex>
-            <IconButton aria-label="delete" onClick={deleteSubSection}>
-              <CloseIcon/>
-            </IconButton>
-          </Box>
-          <TextField
-            label={"SubSection"}
-            value={subSectionSummary}
-            onChange={(e) => {
-              setSubSectionSummary(e.target.value);
-            }}
-          />
-          {subSection.questions.map((q: Question, index: number) => (
-            <QuestionPage
-              key={index}
-              index={index}
-              question={q}
-              setQuestion={(q: Question) => {
-                handleQuestionChange(q, index);
-              }}
-              deleteQuestion={() => handleRemove(index)}
-            />
-          ))}
-          <Button onClick={handleAdd}>Add Question</Button>
-        </Stack>
-      </Box>
-    </Card>
-  );
-};
-
 const QuestionPage = ({
-                        index,
-                        question,
-                        setQuestion,
-                        deleteQuestion,
-                      }: any) => {
+  index,
+  question,
+  setQuestion,
+  deleteQuestion,
+}: any) => {
   const setAns = (newAns: string) => {
     const newQ = question;
     question.answer = newAns;
@@ -559,7 +446,7 @@ const QuestionPage = ({
       <Box display="flex" justifyContent="space-between">
         <Latex>{"(" + question.number + ") " + question.question}</Latex>
         <IconButton aria-label="delete" onClick={deleteQuestion}>
-          <CloseIcon/>
+          <CloseIcon />
         </IconButton>
       </Box>
       <TextField
@@ -567,7 +454,10 @@ const QuestionPage = ({
         value={question.question}
         onChange={(e) => setQues(e.target.value)}
       />
-      <InlineMath>{"A.\\quad" + question.answer}</InlineMath>
+      <Stack direction={"row"} gap={1}>
+        <Typography>{"Answer: "}</Typography>
+        <InlineMath>{question.answer}</InlineMath>
+      </Stack>
       <TextField
         label={"answer"}
         value={question.answer}

@@ -5,7 +5,6 @@ import {
   Prisma,
   Question,
   Section,
-  SubSection,
   Test,
 } from "@prisma/client";
 import { prisma } from "@/app/api/prisma_client";
@@ -25,60 +24,28 @@ export const removeTest = async (props: DeleteTestProps) => {
         id: true,
       },
     })
-    .then((section) => {
-      section
-        .map((s) => {
-          return prisma.subSection.findMany({
+    .then(async (section) => {
+      section.map(async () => {
+        return await prisma.question
+          .deleteMany({
             where: {
-              sectionId: s.id,
+              sectionId: {
+                in: section.map((j) => {
+                  return j.id;
+                }),
+              },
             },
-            select: {
-              id: true,
-            },
-          });
-        })
-        .map(async (subsection) => {
-          subsection.then((i) => {
-            return i.map(async (_) => {
-              subsection.then((i) => {
-                prisma.question
-                  .deleteMany({
-                    where: {
-                      subSectionId: {
-                        in: i.map((j) => {
-                          return j.id;
-                        }),
-                      },
-                    },
-                  })
-                  .then(async (_) => {
-                    await prisma.subSection
-                      .deleteMany({
-                        where: {
-                          sectionId: {
-                            in: section.map((i) => {
-                              return i.id;
-                            }),
-                          },
-                        },
-                      })
-                      .then(async (_) => {
-                        await prisma.section
-                          .deleteMany({
-                            where: {
-                              testId: props.id,
-                            },
-                          })
-                          .then(async (_) => {
-                            await prisma.test.deleteMany({
-                              where: { id: props.id },
-                            });
-                          });
-                      });
-                  });
+          }).then(async () => {
+            prisma.section.deleteMany({
+              where: {
+                testId: props.id,
+              },
+            }).then(async () => {
+              prisma.test.deleteMany({
+                where: { id: props.id },
               });
             });
-          });
-        });
-    });
-};
+          })
+      })
+    })
+}
