@@ -1,8 +1,8 @@
 "use server"
-import { NextResponse, NextRequest } from "next/server";
-import { prisma } from "../prisma_client";
+import {NextResponse, NextRequest} from "next/server";
+import {prisma} from "../prisma_client";
 
-import { Answer } from "@prisma/client";
+import {Answer} from "@prisma/client";
 
 export interface submitProps {
   userName: string;
@@ -12,7 +12,7 @@ export interface submitProps {
 
 export const submitTest = async (props: submitProps) => {
   const user = await prisma.user.findUniqueOrThrow({
-    where: { name: props.userName },
+    where: {name: props.userName},
   });
 
   const sub = await prisma.submittion.create({
@@ -36,3 +36,9 @@ export const submitTest = async (props: submitProps) => {
       console.log(e);
     });
 };
+
+export const isAlreadySubmit = async (props: { testId: number, username: string }) => {
+  const a = await prisma.submittion.findFirst({where: {user: {name: props.username}, testId: props.testId}})
+  if(a) return true;
+  else return false;
+}

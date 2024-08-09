@@ -18,10 +18,11 @@ import axios from "axios";
 import Latex from "react-latex-next";
 import {SectionFrame, SubSectionFrame, TestFrame} from "@/app/api/test/testFrames";
 import {getTestById} from "@/app/api/test/getTestById";
-import {submitProps, submitTest} from "@/app/api/test/submit";
+import {isAlreadySubmit, submitProps, submitTest} from "@/app/api/test/submit";
 import {useSession} from "next-auth/react";
 import {getClassByUser} from "@/app/api/class/getClass";
 import {Answer} from "@prisma/client";
+import {useRouter} from "next/navigation";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -52,9 +53,27 @@ function a11yProps(index: number) {
 }
 
 export default function Page({params}: { params: { id: string } }) {
+  const [loading, setLoading] = useState(true);
+  const [alreadySubmit, setAlreadySubmit] = useState(true);
   const {data: session, status} = useSession()
-  if (session && session.user.name) {
-    return <Solve params={{id: params.id, username: session.user.name}}/>
+  const router = useRouter();
+
+  useEffect(() => {
+    const a = async () => {
+      if(session && session.user.name){
+        setAlreadySubmit(await isAlreadySubmit({username: session.user.name, testId: Number(params.id)}))
+        setLoading(false);
+      }
+    }
+    a()
+  }, [session])
+
+  if (!loading && session && session.user.name) {
+    if (alreadySubmit) {
+      return router.push("/solve/complete")
+    } else {
+      return <Solve params={{id: params.id, username: session.user.name}}/>
+    }
   } else if (status == "loading") {
     return <>Loading session...</>
   } else {
@@ -137,7 +156,7 @@ function Solve({params}: { params: { id: string, username: string } }) {
     }).flat()
     //const answerList: any = [];
     //Object.keys(ans).forEach((key) => {
-      // @ts-ignore
+    // @ts-ignore
     //  answerList.push({id: Number(key), text: ans[key]});
     //});
 
