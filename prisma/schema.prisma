@@ -25,7 +25,7 @@ model User {
   name        String       @unique
   pass        String
   classes     Class[]
-  submittions Submittion[]
+  submissions Submission[]
   role        Int
 }
 
@@ -36,7 +36,7 @@ model Test {
   sections    Section[]
   startDate   DateTime     @default(now())
   endDate     DateTime     @default(now())
-  submittions Submittion[]
+  submissions Submission[]
   classes     Class[]
 }
 
@@ -66,16 +66,16 @@ model Question {
   number            Int
   question          String
   answer            String
-  submittionAnswers Answer[]
+  submissionAnswers Answer[]
 
   SubSection SubSection @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
-model Submittion {
+model Submission {
   id             Int      @id @default(autoincrement())
   testId         Int
   studentId      Int
-  submittionDate DateTime @default(now())
+  submissionDate DateTime @default(now())
   answers        Answer[]
 
   test Test @relation(fields: [testId], references: [id])
@@ -84,11 +84,11 @@ model Submittion {
 
 model Answer {
   id           Int    @id @default(autoincrement())
-  submittionId Int
+  submissionId Int
   questionId   Int
   point        Int
   text         String
 
-  submittion Submittion @relation(fields: [submittionId], references: [id])
+  submission Submission @relation(fields: [submissionId], references: [id])
   question   Question   @relation(fields: [questionId], references: [id])
 }

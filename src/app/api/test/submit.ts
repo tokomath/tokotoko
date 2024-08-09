@@ -1,5 +1,4 @@
 "use server"
-import {NextResponse, NextRequest} from "next/server";
 import {prisma} from "../prisma_client";
 
 import {Answer} from "@prisma/client";
@@ -15,7 +14,7 @@ export const submitTest = async (props: submitProps) => {
     where: {name: props.userName},
   });
 
-  const sub = await prisma.submittion.create({
+  const sub = await prisma.submission.create({
     data: {
       testId: props.testId,
       studentId: user.id,
@@ -29,7 +28,7 @@ export const submitTest = async (props: submitProps) => {
         text: ans.text,
         point: 0,
         questionId: ans.id,
-        submittionId: sub.id,
+        submissionId: sub.id,
       })),
     })
     .catch((e: any) => {
@@ -38,7 +37,7 @@ export const submitTest = async (props: submitProps) => {
 };
 
 export const isAlreadySubmit = async (props: { testId: number, username: string }) => {
-  const a = await prisma.submittion.findFirst({where: {user: {name: props.username}, testId: props.testId}})
+  const a = await prisma.submission.findFirst({where: {user: {name: props.username}, testId: props.testId}})
   if(a) return true;
   else return false;
 }
