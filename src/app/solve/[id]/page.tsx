@@ -16,11 +16,12 @@ import Question from "@/compornents/Question";
 import SendIcon from "@mui/icons-material/Send";
 import axios from "axios";
 import Latex from "react-latex-next";
-import {TestFrame} from "@/app/api/test/testFrames";
+import {SectionFrame, SubSectionFrame, TestFrame} from "@/app/api/test/testFrames";
 import {getTestById} from "@/app/api/test/getTestById";
 import {submitProps, submitTest} from "@/app/api/test/submit";
 import {useSession} from "next-auth/react";
 import {getClassByUser} from "@/app/api/class/getClass";
+import {Answer} from "@prisma/client";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -117,18 +118,36 @@ function Solve({params}: { params: { id: string, username: string } }) {
   };
 
   const handleSubmit = async () => {
-    const answerList: any = [];
+    if (!testData) {
+      alert("Error")
+      return
+    }
+
     const ans = {...answers};
-    Object.keys(ans).forEach((key) => {
+    const answerList = testData.sections.map((section: SectionFrame) => {
+      return section.subSections.map((subsec: SubSectionFrame) => {
+        return subsec.questions.map((question: any) => {
+          if (ans[question.id.toString()]) {
+            return {id: Number(question.id), text: ans[question.id.toString()]}
+          } else {
+            return {id: Number(question.id), text: ""}
+          }
+        })
+      }).flat()
+    }).flat()
+    //const answerList: any = [];
+    //Object.keys(ans).forEach((key) => {
       // @ts-ignore
-      answerList.push({id: Number(key), text: ans[key]});
-    });
+    //  answerList.push({id: Number(key), text: ans[key]});
+    //});
 
     let submitdata: submitProps = {
       userName: params.username,
       testId: Number(params.id),
-      answerList: answerList,
+      answerList: answerList as Answer[],
     };
+
+    console.log(answerList)
 
     const res = await submitTest(submitdata)
       .then((res) => {
