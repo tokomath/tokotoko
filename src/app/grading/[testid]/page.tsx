@@ -5,6 +5,7 @@ import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import { useSession } from 'next-auth/react';
 import { getTestById } from "@/app/api/test/getTestById";
+import { fetchData } from "next-auth/client/_utils";
 
 
 
@@ -149,17 +150,21 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     useEffect(() => {
         if(session)
         {
+            console.log("Session");
+            console.log(session);
             const fetchdata = async() => {
                 const response = await getTestById(Number(params.testid),String(session.user.name));
                 if(response)
                 {
+                    console.log("getTestById");
+                    console.log(response);
                     setTestData(response);
                 }
             }
             fetchdata();
         }
         Style();
-    }, [session]);
+    }, [status]);
 
 
     return (
