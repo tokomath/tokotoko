@@ -10,17 +10,22 @@ import {
   Stack,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  Dialog,
+  DialogTitle,
+  Paper,
 } from "@mui/material";
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import ClassIcon from '@mui/icons-material/Class';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
-import { Class } from "@prisma/client";
+import { Class, User } from "@prisma/client";
 import { NumberInput } from "@mui/base/Unstable_NumberInput/NumberInput";
 import AddIcon from "@mui/icons-material/Add";
 
 import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
+import { getAllStudent } from "@/app/api/student/getStudent";
 
 export default function Page() {
   return (
@@ -44,15 +49,56 @@ const YourClassList = () => {
       const tmpClassList = await getClassByUser(teacherName)
       // const tmpClassList = await getAllClass()
       setClasses(tmpClassList)
-      console.log(tmpClassList)
     }
 
     fetchClass()
   }, [teacherName])
 
-  console.log(classes)
   const moveToCreateClass = () => {
     location.href = "createClass"
+  }
+
+  const AddStudentDialog = () => {
+    const [studentList, setStudentList] = useState<User[]>([]);
+    useEffect(() => {
+      // fetch api list
+      const fetchStudent = async () => {
+        const res = await getAllStudent();
+        setStudentList(res);
+      };
+      //function call
+      fetchStudent();
+    }, []);
+    const StudentTable = () => {
+      const [selectedStudent, setSelectedStudent] = useState<User[]>([]);
+      const columns: GridColDef<(typeof studentList)[number]>[] = [
+        { field: 'id', headerName: 'ID', width: 90 },
+        { field: 'name', headerName: "Name", width: 150 },
+        {
+          field: "role",
+          headerName: "Role",
+          type: "number",
+          width: 110,
+        },
+      ]
+      return (
+        <DataGrid
+          rows={studentList}
+          columns={columns}
+          pageSizeOptions={[5]}
+          checkboxSelection
+          disableRowSelectionOnClick
+          onRowSelectionModelChange={(RowId) => {
+            const selectedUser = studentList.filter((s) => RowId.includes(s.id))
+            setSelectedStudent(selectedUser)
+          }}
+        />
+      )
+
+    }
+    return (
+      <StudentTable />
+    )
   }
 
   return (
@@ -87,6 +133,7 @@ const YourClassList = () => {
           </Tooltip>
         </Box>
       </ListItem>
+      <AddStudentDialog />
     </Stack>
   )
 }
