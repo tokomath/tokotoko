@@ -7,28 +7,21 @@ import { useSession } from 'next-auth/react';
 import { getTestById } from "@/app/api/test/getTestById";
 
 
+
 //#region APIのデータ用
 interface Question {
     id: number;
-    subSectionId: number;
+    SectionId: number;
     number: number;
     question: string;
     answer: string;
-}
-
-interface SubSection {
-    id: number;
-    number: number;
-    sectionId: number;
-    summary: string;
-    questions: Question[];
 }
 
 interface Section {
     id: number;
     number: number;
     summary: string;
-    subSections: SubSection[];
+    questions: Question[];
 }
 
 interface TestData {
@@ -87,19 +80,14 @@ function a11yProps(index0: number, index1?: number,index2?: number) {
 //#region Section,SubSection,Questionのタブ
 interface QuestionTabProps {
     questions: Question[];
-    sectionIndex: number;
-    subSectionIndex: number;
-}
-interface SubSectionTabProps {
-    subSections: SubSection[];
-    sectionIndex: number;
+    SectionIndex: number;
 }
 
 interface SectionTabProps {
     sections: Section[];
 }
 
-function QuestionTabs({ questions, sectionIndex,subSectionIndex }: QuestionTabProps) {
+function QuestionTabs({ questions, SectionIndex}: QuestionTabProps) {
     const [questionValue, questionSetValue] = useState(0);
 
     const questionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -111,7 +99,7 @@ function QuestionTabs({ questions, sectionIndex,subSectionIndex }: QuestionTabPr
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={questionValue} onChange={questionHandleChange} aria-label="subsection tabs" variant="fullWidth">
                     {questions.map((question, index) => (
-                        <Tab label={"Q" + question.number} key={index} {...a11yProps(sectionIndex,subSectionIndex,index)} />
+                        <Tab label={"Q" + question.number} key={index} {...a11yProps(SectionIndex)} />
                     ))}
                 </Tabs>
             </Box>
@@ -120,35 +108,6 @@ function QuestionTabs({ questions, sectionIndex,subSectionIndex }: QuestionTabPr
                     <InlineMath math={question.question}/>
                 </CustomTabPanel>
             ))}
-        </Box>
-    );
-}
-
-function SubSectionTabs({ subSections, sectionIndex }: SubSectionTabProps) {
-    const [subsectionValue, subsectionSetValue] = useState(0);
-    const subsectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
-        subsectionSetValue(newValue);
-    };
-
-    return (
-        <Box sx={{ width: '100%' }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={subsectionValue} onChange={subsectionHandleChange} aria-label="subsection tabs" variant="fullWidth">
-                    {
-                        subSections.map((subsection, index) => (
-                            <Tab label={"§§" + subsection.number} key={index} {...a11yProps(sectionIndex, index)} />
-                        ))
-                    }
-                </Tabs>
-            </Box>
-            {
-                subSections.map((subsection, index) => (
-                    <CustomTabPanel value={subsectionValue} index={index} key={index}>
-                        <InlineMath math={subsection.summary} />
-                        <QuestionTabs questions={subsection.questions} sectionIndex={sectionIndex} subSectionIndex={index}/>
-                    </CustomTabPanel>
-                ))
-            }
         </Box>
     );
 }
@@ -173,7 +132,7 @@ function SectionTabs({sections} : SectionTabProps)
                 sections.map((section,index)=>(
                     <CustomTabPanel value={sectionValue} index={index} key={index}>
                         <InlineMath math = {section.summary} />
-                        <SubSectionTabs subSections={section.subSections} sectionIndex={index} />
+                        <QuestionTabs questions={section.questions} SectionIndex={index} />
                     </CustomTabPanel>
                 ))
             }
@@ -183,28 +142,25 @@ function SectionTabs({sections} : SectionTabProps)
 //#endregion
 
 
-export default function Grading({ params }: { params: { testid: number } }) {
+export default function GradingPage({ params }: { params: { testid: number } }) {
     const [testData, setTestData] = useState<TestData | null>(null);
     const { data: session, status } = useSession();
+    
     useEffect(() => {
-        const fetchdata = async() => {
-            const response = await getTestById(Number(params.testid),String(session?.user?.name));
-            if(response)
-            {
-                console.log("TEST")
-                console.log(response);
+        if(session)
+        {
+            const fetchdata = async() => {
+                const response = await getTestById(Number(params.testid),String(session.user.name));
+                if(response)
+                {
+                    setTestData(response);
+                }
             }
+            fetchdata();
         }
-
-        fetchdata();
         Style();
-    }, []);
+    }, [session]);
 
-    if(session)
-    {
-        console.log(session);
-        console.log(session?.user?.name);   //sessionテスト
-    }
 
     return (
         <Paper>
