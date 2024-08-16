@@ -5,7 +5,6 @@ import {
   Prisma,
   Question,
   Section,
-  SubSection,
   Test,
 } from "@prisma/client";
 
@@ -19,10 +18,5 @@ export interface TestFrame {
 
 export interface SectionFrame {
   section: Section;
-  subSections: SubSectionFrame[];
-}
-
-export interface SubSectionFrame {
-  subSection: SubSection;
   questions: Question[];
 }

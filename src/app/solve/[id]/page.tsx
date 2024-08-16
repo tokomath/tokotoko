@@ -1,5 +1,5 @@
 "use client";
-import React, {use, useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -14,7 +14,6 @@ import "katex/dist/katex.min.css";
 import Stack from "@mui/material/Stack";
 import Question from "@/compornents/Question";
 import SendIcon from "@mui/icons-material/Send";
-import axios from "axios";
 import Latex from "react-latex-next";
 import {SectionFrame, SubSectionFrame, TestFrame} from "@/app/api/test/testFrames";
 import {getTestById} from "@/app/api/test/getTestById";
@@ -31,7 +30,7 @@ interface TabPanelProps {
 }
 
 function CustomTabPanel(props: TabPanelProps) {
-  const {children, value, index, ...other} = props;
+  const { children, value, index, ...other } = props;
 
   return (
     <div
@@ -81,7 +80,7 @@ export default function Page({params}: { params: { id: string } }) {
   }
 }
 
-function Solve({params}: { params: { id: string, username: string } }) {
+function Solve({ params }: { params: { id: string, username: string } }) {
   // undefined before init , null when unable to access form TODO
   const [testData, setTestData] = useState<TestFrame | null | undefined>(undefined);
 
@@ -93,39 +92,37 @@ function Solve({params}: { params: { id: string, username: string } }) {
       const res = await getTestById(Number(params.id), params.username);
       if (res) {
         const test: TestFrame = {
-          classes: [], sections: res.sections.map(
-            (s) => {
-              return {
-                section: {id: s.id, testId: s.testId, number: s.number, summary: s.summary},
-                subSections: s.subSections.map((ss) => {
-                  return {
-                    subSection: {id: ss.id, sectionId: ss.sectionId, number: ss.number, summary: ss.summary},
-                    questions: ss.questions.map((q) => {
-                      return {
-                        id: q.id,
-                        subSectionId: q.subSectionId,
-                        number: q.number,
-                        question: q.question,
-                        answer: q.answer,
-                      }
-                    })
-                  }
-                })
-              }
-            }
-          ), test: {
+          test: {
             id: res.id,
             title: res.title,
             summary: res.summary,
             startDate: res.startDate,
             endDate: res.endDate
-          }
+          },
+          sections: res.sections.map(
+            (s) => {
+              return {
+                section: { id: s.id, testId: s.testId, number: s.number, summary: s.summary },
+                questions: s.questions.map((q) => {
+                  return {
+                    id: q.id,
+                    sectionId: q.sectionId,
+                    number: q.number,
+                    question: q.question,
+                    answer: q.answer,
+                  }
+                })
+              }
+            }
+          ),
+          classes: res.classes,
         }
         setTestData(test)
       } else {
-        setTestData(null) // TODO
+        setTestData(null) // データが取得できなかったとき
       }
     };
+
     fetchForm();
   }, []);
 
@@ -154,11 +151,6 @@ function Solve({params}: { params: { id: string, username: string } }) {
         })
       }).flat()
     }).flat()
-    //const answerList: any = [];
-    //Object.keys(ans).forEach((key) => {
-    // @ts-ignore
-    //  answerList.push({id: Number(key), text: ans[key]});
-    //});
 
     let submitdata: submitProps = {
       userName: params.username,
@@ -186,10 +178,8 @@ function Solve({params}: { params: { id: string, username: string } }) {
     if (testData) {
       const initialAnswers: { [key: string]: string } = {};
       testData.sections.forEach((section) => {
-        section.subSections.forEach((subSection) => {
-          subSection.questions.forEach((question) => {
-            initialAnswers[question.id] = "";
-          });
+        section.questions.forEach((question) => {
+          initialAnswers[question.id] = "";
         });
       });
       setAnswers(initialAnswers);
@@ -197,7 +187,7 @@ function Solve({params}: { params: { id: string, username: string } }) {
   }, [testData]);
 
   useEffect(() => {
-    window.scrollTo({top: 0, behavior: "smooth"});
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [partIndex]);
 
   if (testData === null) {
@@ -210,7 +200,7 @@ function Solve({params}: { params: { id: string, username: string } }) {
   return (
     <main>
       {/* ヘッダー部分 */}
-      <Paper sx={{borderRadius: 0, width: "100%"}}>
+      <Paper sx={{ borderRadius: 0, width: "100%" }}>
         <Box
           paddingTop={1}
           paddingRight={1}
@@ -247,50 +237,52 @@ function Solve({params}: { params: { id: string, username: string } }) {
 
       {/* 問題部分 */}
       <Box maxWidth={640} margin="auto">
+
+        {/* タブ部分 Part */}
         <Tabs
           value={partIndex}
           onChange={handleChange}
           aria-label="Tabs of each PART"
         >
-          {testData.sections.map((section, index) => (
+          {testData.sections.map((s, index) => (
             <Tab
-              key={section.section.number}
-              label={`Part ${section.section.number}`}
+              key={s.section.number}
+              label={`Part ${s.section.number}`}
               {...a11yProps(index)}
             />
           ))}
         </Tabs>
-        {testData.sections.map((section, index) => (
+
+        {/* Question部分 */}
+        {testData.sections.map((s, index) => (
           <CustomTabPanel
-            key={section.section.number}
+            key={s.section.number}
             value={partIndex}
             index={index}
           >
-            {section.subSections.map((subSection) => (
-              <Paper
-                key={subSection.subSection.number}
-                sx={{marginTop: 2, padding: 2}}
-              >
-                <Typography variant="h6">
-                  Section{subSection.subSection.number}
-                </Typography>
-                <Latex>{subSection.subSection.summary}</Latex>
-                {subSection.questions.map((question) => (
-                  <React.Fragment key={question.id}>
-                    <Divider sx={{my: 1}}/>
-                    <Question
-                      id={question.id.toString()}
-                      number={question.number.toString()}
-                      question={question.question}
-                      answer={answers[question.id]}
-                      changeAnswer={(answer) =>
-                        changeAnswer(question.id, answer)
-                      }
-                    />
-                  </React.Fragment>
-                ))}
-              </Paper>
-            ))}
+            <Paper
+              key={s.section.number}
+              sx={{ marginTop: 2, padding: 2 }}
+            >
+              <Typography variant="h6">
+                PART {s.section.number}
+              </Typography>
+              <Latex>{s.section.summary}</Latex>
+              {s.questions.map((question) => (
+                <React.Fragment key={question.id}>
+                  <Divider sx={{ my: 1 }} />
+                  <Question
+                    id={question.id.toString()}
+                    number={question.number.toString()}
+                    question={question.question}
+                    answer={answers[question.id]}
+                    changeAnswer={(answer) =>
+                      changeAnswer(question.id, answer)
+                    }
+                  />
+                </React.Fragment>
+              ))}
+            </Paper>
           </CustomTabPanel>
         ))}
 
@@ -300,7 +292,7 @@ function Solve({params}: { params: { id: string, username: string } }) {
           marginTop={2}
           paddingRight={2}
         >
-          <Privious index={partIndex} setIndex={setPartIndex}/>
+          <Privious index={partIndex} setIndex={setPartIndex} />
           <Next
             index={partIndex}
             setIndex={setPartIndex}
@@ -314,9 +306,9 @@ function Solve({params}: { params: { id: string, username: string } }) {
 }
 
 function Privious({
-                    index,
-                    setIndex,
-                  }: {
+  index,
+  setIndex,
+}: {
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
 }) {
@@ -327,11 +319,11 @@ function Privious({
 }
 
 function Next({
-                index,
-                setIndex,
-                maxIndex,
-                handleSubmit,
-              }: {
+  index,
+  setIndex,
+  maxIndex,
+  handleSubmit,
+}: {
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
   maxIndex: number;
@@ -339,7 +331,7 @@ function Next({
 }) {
   if (index === maxIndex - 1) {
     return (
-      <Button variant="contained" endIcon={<SendIcon/>} onClick={handleSubmit}>
+      <Button variant="contained" endIcon={<SendIcon />} onClick={handleSubmit}>
         Send
       </Button>
     );

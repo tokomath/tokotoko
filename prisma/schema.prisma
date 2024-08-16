@@ -45,30 +45,19 @@ model Section {
   testId      Int
   number      Int
   summary     String
-  subSections SubSection[]
-
+  questions   Question[]
   test Test @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-}
-
-model SubSection {
-  id        Int        @id @default(autoincrement())
-  sectionId Int
-  number    Int
-  summary   String
-  questions Question[]
-
-  section Section @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
 model Question {
   id                Int      @id @default(autoincrement())
-  subSectionId      Int
+  sectionId      Int
   number            Int
   question          String
   answer            String
   submissionAnswers Answer[]
 
-  SubSection SubSection @relation(fields: [subSectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  section Section @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
 }
 
 model Submission {
