@@ -15,6 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <meta name="google" content="notranslate" />
       <body className={inter.className}>
         <SessionProvider>
           <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
