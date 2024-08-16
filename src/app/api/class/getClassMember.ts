@@ -5,16 +5,12 @@ import {prisma} from "@/app/api/prisma_client"
 export const getClassMemberById = async(classID : Number) => {
     const response = await prisma.user.findMany({
         where: {
-            users: {
-              some: {
-                classes: {
-                    some: {
-                        id : classID
-                    }
+            classes: {
+                some: {
+                    id: classID
                 }
-              }
             }
-          }
+        }
     });
 
     if(response)
