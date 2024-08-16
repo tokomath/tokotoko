@@ -1,5 +1,5 @@
 "use client";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -13,10 +13,10 @@ import "katex/dist/katex.min.css";
 import Stack from "@mui/material/Stack";
 import SendIcon from "@mui/icons-material/Send";
 import Latex from "react-latex-next";
-import {isAlreadySubmit} from "@/app/api/test/submit";
-import {useSession} from "next-auth/react";
-import {getSubmission} from "@/app/api/test/result";
-import {BlockMath} from "react-katex";
+import { isAlreadySubmit } from "@/app/api/test/submit";
+import { useSession } from "next-auth/react";
+import { getSubmission } from "@/app/api/test/result";
+import { BlockMath } from "react-katex";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -25,7 +25,7 @@ interface TabPanelProps {
 }
 
 function CustomTabPanel(props: TabPanelProps) {
-  const {children, value, index, ...other} = props;
+  const { children, value, index, ...other } = props;
 
   return (
     <div
@@ -46,15 +46,15 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Page({params}: { params: { id: string } }) {
+export default function Page({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
-  const {data: session, status} = useSession()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
     const a = async () => {
       if (session && session.user.name) {
-        setAlreadySubmit(await isAlreadySubmit({username: session.user.name, testId: Number(params.id)}))
+        setAlreadySubmit(await isAlreadySubmit({ username: session.user.name, testId: Number(params.id) }))
         setLoading(false);
       }
     }
@@ -62,7 +62,7 @@ export default function Page({params}: { params: { id: string } }) {
   }, [session])
 
   if (!loading && session && session.user.name && alreadySubmit) {
-    return <Result params={{id: params.id, username: session.user.name}}/>
+    return <Result params={{ id: params.id, username: session.user.name }} />
   } else if (status == "loading") {
     return <>Loading session...</>
   } else {
@@ -70,14 +70,14 @@ export default function Page({params}: { params: { id: string } }) {
   }
 }
 
-function Result({params}: { params: { id: string, username: string } }) {
+function Result({ params }: { params: { id: string, username: string } }) {
   // undefined before init , null when unable to access form TODO
   const [data, setData] = useState<any | null | undefined>(undefined);
   const [partIndex, setPartIndex] = useState(0);
 
   useEffect(() => {
     const fetch = async () => {
-      const data = await getSubmission({testId: Number(params.id), username: params.username})
+      const data = await getSubmission({ testId: Number(params.id), username: params.username })
       if (data) {
         setData(data)
         let i = 0;
@@ -103,7 +103,7 @@ function Result({params}: { params: { id: string, username: string } }) {
   return (
     <main>
       {/* ヘッダー部分 */}
-      <Paper sx={{borderRadius: 0, width: "100%"}}>
+      <Paper sx={{ borderRadius: 0, width: "100%" }}>
         <Box
           paddingTop={1}
           paddingRight={1}
@@ -136,7 +136,7 @@ function Result({params}: { params: { id: string, username: string } }) {
           value={partIndex}
           aria-label="Tabs of each PART"
         >
-          {data.test.sections.map((section:any, index:number) => (
+          {data.test.sections.map((section: any, index: number) => (
             <Tab
               key={section.number}
               label={`Part ${section.number}`}
@@ -144,36 +144,25 @@ function Result({params}: { params: { id: string, username: string } }) {
             />
           ))}
         </Tabs>
-        {data.test.sections.map((section:any, i1:number) => (
+        {data.test.sections.map((section: any, i1: number) => (
           <CustomTabPanel
             key={section.number}
             value={partIndex}
             index={i1}
           >
-            {section.subSections.map((subSection:any) => (
-              <Paper
-                key={subSection.number}
-                sx={{marginTop: 2, padding: 2}}
-              >
-                <Typography variant="h6">
-                  Section{subSection.number}
-                </Typography>
-                <Latex>{subSection.summary}</Latex>
-                {subSection.questions.map((question:any) => {
-                  return <React.Fragment key={question.id}>
-                    <Divider sx={{my: 1}}/>
-                    <Question
-                      id={question.id.toString()}
-                      number={question.number.toString()}
-                      question={question.question}
-                      myAns={question.ans.text}
-                      trueAns={question.answer}
-                      point={question.ans.point}
-                    />
-                  </React.Fragment>
-                })}
+            {section.questions.map((question: any) => {
+              return <Paper key={question.id} sx={{ marginTop: 2, padding: 2 }}><React.Fragment key={question.id}>
+                <Question
+                  id={question.id.toString()}
+                  number={question.number.toString()}
+                  question={question.question}
+                  myAns={question.ans.text}
+                  trueAns={question.answer}
+                  point={question.ans.point}
+                />
+              </React.Fragment>
               </Paper>
-            ))}
+            })}
           </CustomTabPanel>
         ))}
 
@@ -183,7 +172,7 @@ function Result({params}: { params: { id: string, username: string } }) {
           marginTop={2}
           paddingRight={2}
         >
-          <Previous index={partIndex} setIndex={setPartIndex}/>
+          <Previous index={partIndex} setIndex={setPartIndex} />
           <Next
             index={partIndex}
             setIndex={setPartIndex}
@@ -198,9 +187,9 @@ function Result({params}: { params: { id: string, username: string } }) {
 }
 
 function Previous({
-                    index,
-                    setIndex,
-                  }: {
+  index,
+  setIndex,
+}: {
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
 }) {
@@ -211,11 +200,11 @@ function Previous({
 }
 
 function Next({
-                index,
-                setIndex,
-                maxIndex,
-                handleSubmit,
-              }: {
+  index,
+  setIndex,
+  maxIndex,
+  handleSubmit,
+}: {
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
   maxIndex: number;
@@ -223,7 +212,7 @@ function Next({
 }) {
   if (index === maxIndex - 1) {
     return (
-      <Button variant="contained" endIcon={<SendIcon/>} onClick={handleSubmit}>
+      <Button variant="contained" endIcon={<SendIcon />} onClick={handleSubmit}>
         Send
       </Button>
     );
@@ -240,7 +229,7 @@ function Next({
   );
 }
 
-function Question({id, number, question, myAns, trueAns, point}: any) {
+function Question({ id, number, question, myAns, trueAns, point }: any) {
   return (
     <Stack spacing={2}>
       {/* 横に並べる */}
@@ -250,16 +239,21 @@ function Question({id, number, question, myAns, trueAns, point}: any) {
       </Box>
       <Box
         display="flex"
-        minHeight={80}
+        minHeight={40}
         alignItems="center"
+        paddingX={2}
       >
         <BlockMath>{myAns}</BlockMath>
       </Box>
+      <Divider/>
       <Box
         display="flex"
-        minHeight={80}
+        minHeight={40}
         alignItems="center"
+        paddingX={2}
       >
+        <Typography>答え</Typography>
+        <Box minWidth={20}/>
         <BlockMath>{trueAns}</BlockMath>
       </Box>
       <div>{point} point</div>
@@ -267,4 +261,3 @@ function Question({id, number, question, myAns, trueAns, point}: any) {
 
   )
 }
-
