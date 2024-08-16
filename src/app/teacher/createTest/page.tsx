@@ -389,6 +389,17 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
     setSection({ ...section, questions: newQ2 });
   };
 
+  const handleSectionSummaryChange = (newSummary: string) => {
+    const newS: Section = {
+      id: 1,
+      testId: 1,
+      summary: newSummary,
+      number: section.section.number,
+    };
+    setSection({ section: newS, questions: section.questions });
+  }
+
+
   return (
     <Stack
       justifyContent="center"
@@ -403,6 +414,19 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           Delete
         </Button>
       </Box>
+      <Stack direction={"row"} gap={1}>
+        <Typography>{"Summary: "}</Typography>
+        <Latex >{section.section.summary}</Latex>
+      </Stack>
+      <TextField
+        label={"section summary"}
+        value={section.section.summary}
+        onChange={(e) => handleSectionSummaryChange(e.target.value)}
+
+
+      //value={question.answer}
+      //onChange={(e) => setAns(e.target.value)}
+      />
       {
         section.questions.map((q: Question, index: number) => (
           <QuestionPage
