@@ -16,15 +16,18 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { NumberInput } from "@mui/base/Unstable_NumberInput/NumberInput";
-import { Class, User} from "@prisma/client";
+import { Class, User } from "@prisma/client";
 
 import { getAllStudent } from "@/app/api/student/getStudent";
 import { getAllTeachers } from "@/app/api/teacher/getTeacher";
-import { ClassFrame,createClass } from "@/app/api/class/createClass";
+import { ClassFrame, createClass } from "@/app/api/class/createClass";
+import { useSession } from "next-auth/react";
+import { nameToUser } from "@/app/api/teacher/nameToUser";
 
 
 export default function Page() {
+  const { data: session } = useSession();
+  const userName = session!.user!.name;
   const [teacherId, setTeacherId] = useState<number>(1);
   const [className, setClassName] = useState<string>("");
   const [assignedStudent, setAssignedStudent] = useState<User[]>([]);
@@ -46,10 +49,18 @@ export default function Page() {
       setTeacherList(res);
     };
 
+    const fetchTeacherId = async () => {
+      if (userName) {
+        const res = await nameToUser(userName);
+        setTeacherId(res!.id);
+      }
+
+    }
     //function call
     fetchStudent();
     fetchTeacher();
-  }, [teacherId]);
+    fetchTeacherId();
+  }, [teacherId, userName]);
 
   const handleStudentChange = (event: SelectChangeEvent<number[]>) => {
     const values = event.target.value as number[];
@@ -60,10 +71,6 @@ export default function Page() {
 
   const handleTeacherChange = (event: SelectChangeEvent<number[]>) => {
     const values = event.target.value as number[];
-    if (isAddMe && !values.includes(teacherId)) {
-      values.push(teacherId);
-    }
-    console.log(values);
     const select = teacherList.filter((item) => values.includes(item.id));
     setAssignedTeacher(select);
   };
@@ -136,25 +143,22 @@ export default function Page() {
       name: className,
     };
     const users = assignedTeacher.concat(assignedStudent);
+    if (isAddMe) {
+      const me: User = teacherList.find((t) => t.id === teacherId) as User;
+      users.push(me);
+    }
 
     const data: ClassFrame = {
       class: newClass,
       user: users,
     };
 
-    console.log(data);
     createClass(data);
     alert("Class Created");
   };
 
   return (
     <Stack m={"10px"} gap={"20px"}>
-      <NumberInput
-        value={teacherId}
-        onChange={(_, e) => {
-          setTeacherId(e === null ? 0 : e);
-        }}
-      />
       <Button variant={"contained"} onClick={createClassButtonFunction}>
         create class
       </Button>
