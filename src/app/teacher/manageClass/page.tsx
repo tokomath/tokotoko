@@ -14,6 +14,7 @@ import {
   Dialog,
   DialogTitle,
   Paper,
+  DialogContent,
 } from "@mui/material";
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { useSession } from "next-auth/react";
@@ -26,6 +27,8 @@ import AddIcon from "@mui/icons-material/Add";
 
 import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
 import { getAllStudent } from "@/app/api/student/getStudent";
+import { addUserToClass } from "@/app/api/class/addUserToClass";
+import { ClassFrame } from "@/app/api/class/createClass";
 
 export default function Page() {
   return (
@@ -43,6 +46,23 @@ const YourClassList = () => {
 
   const [teacherName, setTeacherName] = useState<string>(session?.user.name || "")
   const [classes, setClasses] = useState<Class[]>([])
+  const [open, setOpen] = useState<boolean>(false)
+  const [modifiedClass, setModifiedClass] = useState<Class | null>(null)
+
+  const handleClickOpen = (c: Class) => {
+    setModifiedClass(c)
+    setOpen(true);
+  }
+  const handleClose = () => {
+    setOpen(false);
+  }
+
+  const addStudentHandler = (user: User[]) => {
+    if (modifiedClass != null && user != null) {
+      const tmp: ClassFrame = { class: modifiedClass, user: user }
+      addUserToClass(tmp)
+    }
+  }
 
   useEffect(() => {
     const fetchClass = async () => {
@@ -74,12 +94,12 @@ const YourClassList = () => {
       const columns: GridColDef<(typeof studentList)[number]>[] = [
         { field: 'id', headerName: 'ID', width: 90 },
         { field: 'name', headerName: "Name", width: 150 },
-        {
-          field: "role",
-          headerName: "Role",
-          type: "number",
-          width: 110,
-        },
+        //{
+        //  field: "role",
+        //  headerName: "Role",
+        //  type: "number",
+        //  width: 110,
+        //},
       ]
       return (
         <DataGrid
@@ -97,7 +117,26 @@ const YourClassList = () => {
 
     }
     return (
-      <StudentTable />
+      <Dialog
+        open={open}
+        onClose={handleClose}
+      >
+        <DialogTitle>
+          Add student
+        </DialogTitle>
+        <DialogContent>
+          <StudentTable />
+          <Button
+            variant={"contained"}
+            onClick={() => {
+              console.log("add student")
+              addStudentHandler(selectedStudent)
+            }}
+          >
+            Add
+          </Button>
+        </DialogContent>
+      </Dialog>
     )
   }
 
@@ -116,7 +155,7 @@ const YourClassList = () => {
               primary={c.name}
             />
             <Tooltip title={"add student"}>
-              <IconButton >
+              <IconButton onClick={() => { handleClickOpen(c) }}>
                 <PersonAddAlt1Icon />
               </IconButton>
             </Tooltip>
