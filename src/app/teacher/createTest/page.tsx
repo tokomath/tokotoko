@@ -416,7 +416,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       </Box>
       <Stack direction={"row"} gap={1}>
         <Typography>{"Summary: "}</Typography>
-        <InlineMath >{section.section.summary}</InlineMath>
+        <Latex >{section.section.summary}</Latex>
       </Stack>
       <TextField
         label={"section summary"}
