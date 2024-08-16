@@ -4,9 +4,10 @@ import { Box, Paper, Tab, Tabs } from "@mui/material";
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import { useSession } from 'next-auth/react';
-import { getTestById } from "@/app/api/test/getTestById";
-import { fetchData } from "next-auth/client/_utils";
 
+import { getTestById } from "@/app/api/test/getTestById";
+import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
+import { secureHeapUsed } from "crypto";
 
 
 //#region APIのデータ用
@@ -78,7 +79,7 @@ function a11yProps(index0: number, index1?: number,index2?: number) {
 //======================================
 //#endregion
 
-//#region Section,SubSection,Questionのタブ
+//#region Section,Questionのタブ
 interface QuestionTabProps {
     questions: Question[];
     SectionIndex: number;
@@ -144,30 +145,46 @@ function SectionTabs({sections} : SectionTabProps)
 
 
 export default function GradingPage({ params }: { params: { testid: number } }) {
-    const [testData, setTestData] = useState<TestData | null>(null);
+    const [ testData, setTestData ] = useState<TestData | null>(null);
     const { data: session, status } = useSession();
+    const [ classID, setClassID ] = useState(0);
+
+    
     
     useEffect(() => {
         if(session)
         {
             console.log("Session");
             console.log(session);
-            const fetchdata = async() => {
+            const fetchTest = async() => {
                 const response = await getTestById(Number(params.testid),String(session.user.name));
                 if(response)
                 {
                     console.log("getTestById");
                     console.log(response);
-                    setTestData(response);
+                    setTestData(response);  //なんかエラー出てるけど動く
+                    setClassID(response.classes[0].id);
+                    console.log("Class ID : " + classID);
                 }
             }
-            fetchdata();
+
+
+
+            const fetchClass = async() => {
+                
+            }
+            
+            fetchTest();
+            fetchClass();
         }
         Style();
     }, [status]);
 
 
     return (
+        <>
+        <span>Class ID : {classID}</span>
+        <span>Test ID : { params.testid }</span>
         <Paper>
             <Box sx={{ width: '100%' }}>
                 {
@@ -175,5 +192,6 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                 }
             </Box>
         </Paper>
+        </>
     );
 }
