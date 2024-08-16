@@ -2,7 +2,7 @@
 
 import {prisma} from "@/app/api/prisma_client"
 
-export const getClassMemberById = async(classID : Number) => {
+export const getClassMemberById = async(classID : number) => {
     const response = await prisma.user.findMany({
         where: {
             classes: {
