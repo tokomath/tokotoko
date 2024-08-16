@@ -6,6 +6,7 @@ import 'katex/dist/katex.min.css';
 import { useSession } from 'next-auth/react';
 
 import { getTestById } from "@/app/api/test/getTestById";
+import { getClassMemberById } from "@/app/api/class/getClassMember"
 import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
 import { secureHeapUsed } from "crypto";
 
@@ -172,6 +173,12 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
 
             const fetchClass = async() => {
                 
+                const response = await getClassMemberById(classID);
+                if(response)
+                {
+                    console.log("Class Member");
+                    console.log(response);
+                }
             }
             
             fetchTest();
