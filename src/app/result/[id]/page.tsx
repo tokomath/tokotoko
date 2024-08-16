@@ -177,8 +177,6 @@ function Result({ params }: { params: { id: string, username: string } }) {
             index={partIndex}
             setIndex={setPartIndex}
             maxIndex={data.test.sections.length}
-            handleSubmit={() => {
-            }}
           />
         </Box>
       </Box>
@@ -203,18 +201,14 @@ function Next({
   index,
   setIndex,
   maxIndex,
-  handleSubmit,
 }: {
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
   maxIndex: number;
-  handleSubmit: () => void;
 }) {
   if (index === maxIndex - 1) {
     return (
-      <Button variant="contained" endIcon={<SendIcon />} onClick={handleSubmit}>
-        Send
-      </Button>
+      <></>
     );
   }
 
