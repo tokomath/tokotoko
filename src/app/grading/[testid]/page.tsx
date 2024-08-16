@@ -148,7 +148,7 @@ function SectionTabs({sections} : SectionTabProps)
 export default function GradingPage({ params }: { params: { testid: number } }) {
     const [ testData, setTestData ] = useState<TestData | null>(null);
     const { data: session, status } = useSession();
-    const [ classID, setClassID ] = useState(0);
+    const[ classID, setClassID ] = useState(0);
 
     
     
@@ -164,29 +164,26 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                     console.log("getTestById");
                     console.log(response);
                     setTestData(response);  //なんかエラー出てるけど動く
-                    setClassID(response.classes[0].id);
-                    console.log("Class ID : " + classID);
+                    setClassID(Number(response.classes.at(0)?.id));
                 }
             }
-
-
-
-            const fetchClass = async() => {
-                
-                const response = await getClassMemberById(classID);
-                if(response)
-                {
-                    console.log("Class Member");
-                    console.log(response);
-                }
-            }
-            
             fetchTest();
-            fetchClass();
         }
         Style();
     }, [status]);
 
+    useEffect(() => {
+        const fetchClass = async() => {
+                
+            const response = await getClassMemberById(classID);
+            if(response)
+            {
+                console.log("Class Member");
+                console.log(response);
+            }
+        }
+        fetchClass();
+    },[classID])
 
     return (
         <>
