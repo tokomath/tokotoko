@@ -86,8 +86,8 @@ function Result({ params }: { params: { id: string, username: string } }) {
           sec.questions.forEach((q) => {
             //@ts-ignore
             q["ans"] = data.answers[i];
-            i += 1
             setPoint(point + data.answers[i].point)
+            i += 1
           })
         })
         console.log(data)
