@@ -82,11 +82,11 @@ function Result({params}: { params: { id: string, username: string } }) {
         setData(data)
         let i = 0;
         data.test.sections.forEach((sec) => {
-          sec.subSections.forEach((ss) => ss.questions.forEach((q) => {
+          sec.questions.forEach((q) => {
             //@ts-ignore
             q["ans"] = data.answers[i];
             i += 1
-          }))
+          })
         })
         console.log(data)
       } else {
@@ -183,7 +183,7 @@ function Result({params}: { params: { id: string, username: string } }) {
           marginTop={2}
           paddingRight={2}
         >
-          <Privious index={partIndex} setIndex={setPartIndex}/>
+          <Previous index={partIndex} setIndex={setPartIndex}/>
           <Next
             index={partIndex}
             setIndex={setPartIndex}
@@ -197,7 +197,7 @@ function Result({params}: { params: { id: string, username: string } }) {
   );
 }
 
-function Privious({
+function Previous({
                     index,
                     setIndex,
                   }: {

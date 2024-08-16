@@ -15,7 +15,7 @@ import Stack from "@mui/material/Stack";
 import Question from "@/compornents/Question";
 import SendIcon from "@mui/icons-material/Send";
 import Latex from "react-latex-next";
-import {SectionFrame, SubSectionFrame, TestFrame} from "@/app/api/test/testFrames";
+import {SectionFrame, TestFrame} from "@/app/api/test/testFrames";
 import {getTestById} from "@/app/api/test/getTestById";
 import {isAlreadySubmit, submitProps, submitTest} from "@/app/api/test/submit";
 import {useSession} from "next-auth/react";
@@ -141,15 +141,13 @@ function Solve({ params }: { params: { id: string, username: string } }) {
 
     const ans = {...answers};
     const answerList = testData.sections.map((section: SectionFrame) => {
-      return section.subSections.map((subsec: SubSectionFrame) => {
-        return subsec.questions.map((question: any) => {
+        return section.questions.map((question: any) => {
           if (ans[question.id.toString()]) {
             return {id: Number(question.id), text: ans[question.id.toString()]}
           } else {
             return {id: Number(question.id), text: ""}
           }
         })
-      }).flat()
     }).flat()
 
     let submitdata: submitProps = {
@@ -292,7 +290,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
           marginTop={2}
           paddingRight={2}
         >
-          <Privious index={partIndex} setIndex={setPartIndex} />
+          <Previous index={partIndex} setIndex={setPartIndex} />
           <Next
             index={partIndex}
             setIndex={setPartIndex}
@@ -305,7 +303,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
   );
 }
 
-function Privious({
+function Previous({
   index,
   setIndex,
 }: {
