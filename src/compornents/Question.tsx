@@ -1,12 +1,13 @@
 "use client";
-import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
-import { InlineMath, BlockMath } from "react-katex";
+import { Box, IconButton, TextField, Typography } from "@mui/material";
+import { BlockMath } from "react-katex";
 import Stack from '@mui/material/Stack';
 import Latex from "react-latex-next";
 import React, { useEffect } from "react";
 import 'katex/dist/katex.min.css';
-import { ArrowBack, ArrowForward, Clear } from "@mui/icons-material";
+import { Clear } from "@mui/icons-material";
 import { red } from "@mui/material/colors";
+import AuxiliaryButtons from "./AuxiliaryButtons";
 
 interface QuestionProps {
   id: string;
@@ -19,11 +20,16 @@ interface QuestionProps {
 export default function Question({ id, number, question, answer, changeAnswer }: QuestionProps) {
   const inputRef = React.useRef<HTMLInputElement>();
 
+  // カーソルを移動させるときは、　setSelectionStart, setSelectionEnd で場所を指定後、 setCur(!cur) でトリガーを発火する
+  // テキストフィールドの選択範囲
   const [selectionStart, setSelectionStart] = React.useState(0);
   const [selectionEnd, setSelectionEnd] = React.useState(0);
-
+  // カーソルを移動させるためのトリガー
   const [cur, setCur] = React.useState(true);
   const [isFirstRender, setIsFirstRender] = React.useState(true);
+
+  // テキストフィールドにフォーカスがあるかどうか
+  const [isFocused, setIsFocused] = React.useState(false);
 
   useEffect(() => {
     if (isFirstRender) {
@@ -34,19 +40,6 @@ export default function Question({ id, number, question, answer, changeAnswer }:
       updateSelection();
     }
   }, [cur]);
-
-  const insertCommand = (
-    command: string,
-    start: number = command.length,
-    end: number = command.length) => {
-
-    const before = answer.slice(0, selectionStart);
-    const after = answer.slice(selectionEnd);
-    changeAnswer(before + command + after);
-    setSelectionStart(selectionStart + start);
-    setSelectionEnd(selectionStart + end);
-    setCur(!cur);
-  }
 
   const updateSelection = () => {
     if (inputRef.current) {
@@ -105,6 +98,7 @@ export default function Question({ id, number, question, answer, changeAnswer }:
           updateSelection()
         }}
         onSelect={() => {
+          setIsFocused(true);
           updateSelection()
         }}
         onClick={() => {
@@ -113,138 +107,30 @@ export default function Question({ id, number, question, answer, changeAnswer }:
         onTouchEnd={() => {
           updateSelection()
         }}
+        onBlur={() => {
+          setIsFocused(false);
+        }}
       />
 
-      <Box sx={{ paddingTop: 0.5, paddingBottom: 0.5, width: "100%" }}>
-        <Box display="flex" justifyContent="space-between" width="100%">
-          <IconButton aria-label="move left" onClick={
-            () => {
-              if (selectionStart != selectionEnd) {
-                setSelectionStart(selectionStart);
-                setSelectionEnd(selectionStart);
-              } else if (selectionStart == 0) {
-              } else {
-                setSelectionStart(selectionStart - 1);
-                setSelectionEnd(selectionStart - 1);
-              }
-              setCur(!cur);
-            }}>
-            <ArrowBack />
-          </IconButton>
-          <Box display="flex">
-            <Button variant="outlined" sx={{ textTransform: 'none', width: 10, whiteSpace: 'nowrap' }} onClick={() => { insertCommand("\\") }}>
-              \
-            </Button>
-            <Button variant="outlined" sx={{ textTransform: 'none', width: 10, whiteSpace: 'nowrap' }} onClick={() => insertCommand("{}", 1, 1)}>
-              {"{ }"}
-            </Button>
-            <Button variant="outlined" sx={{ textTransform: 'none', width: 10, whiteSpace: 'nowrap' }} onClick={() => insertCommand("()", 1, 1)}>
-              {"( )"}
-            </Button>
-            <Button variant="outlined" sx={{ textTransform: 'none', width: 10, whiteSpace: 'nowrap' }} onClick={() => insertCommand(",")}>
-              {","}
-            </Button>
-          </Box>
-          <IconButton aria-label="move right" onClick={
-            () => {
-              if (selectionStart != selectionEnd) {
-                setSelectionStart(selectionEnd);
-                setSelectionEnd(selectionEnd);
-              } else if (selectionStart == answer.length) {
-              } else {
-                setSelectionStart(selectionStart + 1);
-                setSelectionEnd(selectionStart + 1);
-              }
-              setCur(!cur);
-            }}>
-            <ArrowForward />
-          </IconButton>
-        </Box>
-      </Box>
-      <Box sx={{ overflowX: "scroll" }}>
-        <Box sx={{ display: 'flex', paddingBottom: 1.5 }}>
-          <Box display="flex">
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("+")}>
-                <InlineMath math="+"></InlineMath>
-              </Button>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("=")}>
-                <InlineMath math="="></InlineMath>
-              </Button>
-            </Stack>
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\geqq")}>
-                <InlineMath math="\geqq"></InlineMath>
-              </Button>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\leqq")}>
-                <InlineMath math="\leqq"></InlineMath>
-              </Button>
-            </Stack>
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("-")}>
-                <InlineMath math="-"></InlineMath>
-              </Button>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\times")}>
-                <InlineMath math="\times"></InlineMath>
-              </Button>
-            </Stack>
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\pm ")}>
-                <InlineMath math="\pm"></InlineMath>
-              </Button>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\pi")}>
-                <InlineMath math="\pi"></InlineMath>
-              </Button>
-            </Stack>
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\frac{a}{b}", 6, 7)}>
-                <InlineMath math="\frac{a}{b}"></InlineMath>
-              </Button>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\sqrt{a}", 6, 7)}>
-                <InlineMath math="\sqrt{a}"></InlineMath>
-              </Button>
-            </Stack>
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\vec{a}", 5, 6)}>
-                <InlineMath math="\vec{a}"></InlineMath>
-              </Button>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("^{a}", 2, 3)}>
-                <InlineMath math="□^{a}"></InlineMath>
-              </Button>
-            </Stack>
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\log{a}", 5, 6)}>
-                <InlineMath math="\log{a}"></InlineMath>
-              </Button>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\log_{a}{b}", 6, 7)}>
-                <InlineMath math="\log_{a}{b}"></InlineMath>
-              </Button>
-            </Stack>
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\sin{a}", 5, 6)}>
-                <InlineMath math="\sin{a}"></InlineMath>
-              </Button>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\cos{a}", 5, 6)}>
-                <InlineMath math="\cos{a}"></InlineMath>
-              </Button>
-            </Stack>
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\tan{a}", 5, 6)}>
-                <InlineMath math="\tan{a}"></InlineMath>
-              </Button>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\sum_{i=1}^{n}")}>
-                <InlineMath math="\sum_{i=1}^{n}"></InlineMath>
-              </Button>
-            </Stack>
-            <Stack>
-              <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\begin{pmatrix}\n  a & b \\\\\n  c & d\n\\end{pmatrix}", 18, 19)}>
-                <InlineMath math="\begin{pmatrix}a & b \\\\ c & d \end{pmatrix}"></InlineMath>
-              </Button>
-            </Stack>
-          </Box>
-        </Box>
-      </Box>
+      <Buttons />
+
     </Stack >
 
   )
+
+  function Buttons() {
+    if (isFocused) {
+      return (
+        <AuxiliaryButtons
+          answer={answer}
+          changeAnswer={changeAnswer}
+          selectionStart={selectionStart}
+          setSelectionStart={setSelectionStart}
+          selectionEnd={selectionEnd}
+          setSelectionEnd={setSelectionEnd}
+          cur={cur}
+          setCur={setCur} />
+      )
+    }
+  }
 }
