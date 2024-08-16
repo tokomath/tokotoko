@@ -74,6 +74,7 @@ function Result({ params }: { params: { id: string, username: string } }) {
   // undefined before init , null when unable to access form TODO
   const [data, setData] = useState<any | null | undefined>(undefined);
   const [partIndex, setPartIndex] = useState(0);
+  const [point, setPoint] = useState(0);
 
   useEffect(() => {
     const fetch = async () => {
@@ -86,6 +87,7 @@ function Result({ params }: { params: { id: string, username: string } }) {
             //@ts-ignore
             q["ans"] = data.answers[i];
             i += 1
+            setPoint(point + data.answers[i].point)
           })
         })
         console.log(data)
@@ -132,6 +134,9 @@ function Result({ params }: { params: { id: string, username: string } }) {
 
       {/* 問題部分 */}
       <Box maxWidth={640} margin="auto">
+        <Box alignContent="center" padding={2}>
+          <div>{"点数: " + point + "point"}</div>
+        </Box>
         <Tabs
           value={partIndex}
           aria-label="Tabs of each PART"
@@ -239,7 +244,7 @@ function Question({ id, number, question, myAns, trueAns, point }: any) {
       >
         <BlockMath>{myAns}</BlockMath>
       </Box>
-      <Divider/>
+      <Divider />
       <Box
         display="flex"
         minHeight={40}
@@ -247,7 +252,7 @@ function Question({ id, number, question, myAns, trueAns, point }: any) {
         paddingX={2}
       >
         <Typography>答え</Typography>
-        <Box minWidth={20}/>
+        <Box minWidth={20} />
         <BlockMath>{trueAns}</BlockMath>
       </Box>
       <div>{point} point</div>
