@@ -18,7 +18,7 @@
     "@mui/material-nextjs": "^5.15.11",
     "@mui/x-date-pickers": "^7.7.1",
     "@prisma/client": "^5.12.1",
-    "axios": "^1.7.2",
+    "axios": "^1.7.4",
     "dayjs": "^1.11.11",
     "next": "^14.2.4",
     "next-auth": "^4.24.7",
