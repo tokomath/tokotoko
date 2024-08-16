@@ -187,7 +187,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
             FormID:{params.id}
           </Typography>
         </Box>
-        <Box maxWidth={640} margin="auto">
+        <Box maxWidth={800} margin="auto">
           <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
             <Typography variant="h1" fontSize={30}>
               {testData.test.title}
@@ -202,7 +202,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
       </Paper>
 
       {/* 問題部分 */}
-      <Box maxWidth={640} margin="auto">
+      <Box maxWidth={800} margin="auto">
 
         {/* タブ部分 Part */}
         <Tabs

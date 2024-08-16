@@ -161,8 +161,8 @@ export default function Question({ id, number, question, answer, changeAnswer }:
           </IconButton>
         </Box>
       </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'center', width: "100%" }}>
-        <Box sx={{ overflowX: "scroll", paddingBottom: 1.5 }}>
+      <Box sx={{ overflowX: "scroll" }}>
+        <Box sx={{ display: 'flex', paddingBottom: 1.5 }}>
           <Box display="flex">
             <Stack>
               <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("+")}>
@@ -244,7 +244,7 @@ export default function Question({ id, number, question, answer, changeAnswer }:
           </Box>
         </Box>
       </Box>
-    </Stack>
+    </Stack >
 
   )
 }
