@@ -6,15 +6,25 @@ import 'katex/dist/katex.min.css';
 import { useSession } from 'next-auth/react';
 
 import { getTestById } from "@/app/api/test/getTestById";
-import { getClassMemberById } from "@/app/api/class/getClassMember"
-import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
-import { secureHeapUsed } from "crypto";
+
 
 
 //#region APIのデータ用
+interface User {
+    id: Number;
+    name: String;
+    pass: String;
+    role: Number;
+}
+
+interface Class {
+    id : Number;
+    users : User[];
+}
+
 interface Question {
     id: number;
-    SectionId: number;
+    sectionId: number;
     number: number;
     question: string;
     answer: string;
@@ -34,6 +44,7 @@ interface TestData {
     startDate: Date;
     endDate: Date;
     sections: Section[];
+    classes: Class[];
 }
 //#endregion
 
@@ -163,7 +174,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                 {
                     console.log("getTestById");
                     console.log(response);
-                    setTestData(response);  //なんかエラー出てるけど動く
+                    setTestData(response);
                     setClassID(Number(response.classes.at(0)?.id));
                 }
             }
@@ -171,19 +182,6 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         }
         Style();
     }, [status]);
-
-    useEffect(() => {
-        const fetchClass = async() => {
-                
-            const response = await getClassMemberById(classID);
-            if(response)
-            {
-                console.log("Class Member");
-                console.log(response);
-            }
-        }
-        fetchClass();
-    },[classID])
 
     return (
         <>
