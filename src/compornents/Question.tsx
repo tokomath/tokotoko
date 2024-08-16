@@ -1,4 +1,3 @@
-"use client";
 import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
 import { InlineMath, BlockMath } from "react-katex";
 import Stack from '@mui/material/Stack';

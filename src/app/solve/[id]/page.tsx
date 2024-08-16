@@ -15,10 +15,13 @@ import Stack from "@mui/material/Stack";
 import Question from "@/compornents/Question";
 import SendIcon from "@mui/icons-material/Send";
 import Latex from "react-latex-next";
-import { TestFrame } from "@/app/api/test/testFrames";
-import { getTestById } from "@/app/api/test/getTestById";
-import { submitProps, submitTest } from "@/app/api/test/submit";
-import { useSession } from "next-auth/react";
+import {SectionFrame, TestFrame} from "@/app/api/test/testFrames";
+import {getTestById} from "@/app/api/test/getTestById";
+import {isAlreadySubmit, submitProps, submitTest} from "@/app/api/test/submit";
+import {useSession} from "next-auth/react";
+import {getClassByUser} from "@/app/api/class/getClass";
+import {Answer} from "@prisma/client";
+import {useRouter} from "next/navigation";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -48,10 +51,28 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Page({ params }: { params: { id: string } }) {
-  const { data: session, status } = useSession()
-  if (session && session.user.name) {
-    return <Solve params={{ id: params.id, username: session.user.name }} />
+export default function Page({params}: { params: { id: string } }) {
+  const [loading, setLoading] = useState(true);
+  const [alreadySubmit, setAlreadySubmit] = useState(true);
+  const {data: session, status} = useSession()
+  const router = useRouter();
+
+  useEffect(() => {
+    const a = async () => {
+      if(session && session.user.name){
+        setAlreadySubmit(await isAlreadySubmit({username: session.user.name, testId: Number(params.id)}))
+        setLoading(false);
+      }
+    }
+    a()
+  }, [session])
+
+  if (!loading && session && session.user.name) {
+    if (alreadySubmit) {
+      return router.push("/solve/complete")
+    } else {
+      return <Solve params={{id: params.id, username: session.user.name}}/>
+    }
   } else if (status == "loading") {
     return <>Loading session...</>
   } else {
@@ -113,18 +134,29 @@ function Solve({ params }: { params: { id: string, username: string } }) {
   };
 
   const handleSubmit = async () => {
-    const answerList: any = [];
-    const ans = { ...answers };
-    Object.keys(ans).forEach((key) => {
-      // @ts-ignore
-      answerList.push({ id: Number(key), text: ans[key] });
-    });
+    if (!testData) {
+      alert("Error")
+      return
+    }
+
+    const ans = {...answers};
+    const answerList = testData.sections.map((section: SectionFrame) => {
+        return section.questions.map((question: any) => {
+          if (ans[question.id.toString()]) {
+            return {id: Number(question.id), text: ans[question.id.toString()]}
+          } else {
+            return {id: Number(question.id), text: ""}
+          }
+        })
+    }).flat()
 
     let submitdata: submitProps = {
       userName: params.username,
       testId: Number(params.id),
-      answerList: answerList,
+      answerList: answerList as Answer[],
     };
+
+    console.log(answerList)
 
     const res = await submitTest(submitdata)
       .then((res) => {
@@ -258,7 +290,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
           marginTop={2}
           paddingRight={2}
         >
-          <Privious index={partIndex} setIndex={setPartIndex} />
+          <Previous index={partIndex} setIndex={setPartIndex} />
           <Next
             index={partIndex}
             setIndex={setPartIndex}
@@ -271,7 +303,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
   );
 }
 
-function Privious({
+function Previous({
   index,
   setIndex,
 }: {
