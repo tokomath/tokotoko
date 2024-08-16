@@ -48,6 +48,7 @@ const YourClassList = () => {
   const [classes, setClasses] = useState<Class[]>([])
   const [open, setOpen] = useState<boolean>(false)
   const [modifiedClass, setModifiedClass] = useState<Class | null>(null)
+  const [studentList, setStudentList] = useState<User[]>([]);
 
   const handleClickOpen = (c: Class) => {
     setModifiedClass(c)
@@ -57,12 +58,6 @@ const YourClassList = () => {
     setOpen(false);
   }
 
-  const addStudentHandler = (user: User[]) => {
-    if (modifiedClass != null && user != null) {
-      const tmp: ClassFrame = { class: modifiedClass, user: user }
-      addUserToClass(tmp)
-    }
-  }
 
   useEffect(() => {
     const fetchClass = async () => {
@@ -71,7 +66,12 @@ const YourClassList = () => {
       setClasses(tmpClassList)
     }
 
+    const fetchStudent = async () => {
+      const res = await getAllStudent();
+      setStudentList(res);
+    };
     fetchClass()
+    fetchStudent();
   }, [teacherName])
 
   const moveToCreateClass = () => {
@@ -79,16 +79,6 @@ const YourClassList = () => {
   }
 
   const AddStudentDialog = () => {
-    const [studentList, setStudentList] = useState<User[]>([]);
-    useEffect(() => {
-      // fetch api list
-      const fetchStudent = async () => {
-        const res = await getAllStudent();
-        setStudentList(res);
-      };
-      //function call
-      fetchStudent();
-    }, []);
     const StudentTable = () => {
       const [selectedStudent, setSelectedStudent] = useState<User[]>([]);
       const columns: GridColDef<(typeof studentList)[number]>[] = [
@@ -101,18 +91,34 @@ const YourClassList = () => {
         //  width: 110,
         //},
       ]
+      const addStudentHandler = () => {
+        if (modifiedClass != null) {
+          const tmp: ClassFrame = { class: modifiedClass, user: selectedStudent }
+          addUserToClass(tmp)
+          console.log(tmp)
+        }
+      }
       return (
-        <DataGrid
-          rows={studentList}
-          columns={columns}
-          pageSizeOptions={[5]}
-          checkboxSelection
-          disableRowSelectionOnClick
-          onRowSelectionModelChange={(RowId) => {
-            const selectedUser = studentList.filter((s) => RowId.includes(s.id))
-            setSelectedStudent(selectedUser)
-          }}
-        />
+        <Stack>
+
+          <DataGrid
+            rows={studentList}
+            columns={columns}
+            pageSizeOptions={[5]}
+            checkboxSelection
+            disableRowSelectionOnClick
+            onRowSelectionModelChange={(RowId) => {
+              const selectedUser = studentList.filter((s) => RowId.includes(s.id))
+              setSelectedStudent(selectedUser)
+            }}
+          />
+          <Button
+            variant={"contained"}
+            onClick={addStudentHandler}
+          >
+            Add
+          </Button>
+        </Stack>
       )
 
     }
@@ -126,15 +132,6 @@ const YourClassList = () => {
         </DialogTitle>
         <DialogContent>
           <StudentTable />
-          <Button
-            variant={"contained"}
-            onClick={() => {
-              console.log("add student")
-              addStudentHandler(selectedStudent)
-            }}
-          >
-            Add
-          </Button>
         </DialogContent>
       </Dialog>
     )
