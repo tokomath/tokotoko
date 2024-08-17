@@ -8,6 +8,8 @@ import { useSession } from 'next-auth/react';
 import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmission } from "@/app/api/test/result"
 
+import styles from "./styles.module.css"
+
 
 
 //#region APIのデータ用
@@ -62,6 +64,10 @@ interface Submission {
 }
 //#endregion
 
+const style: React.CSSProperties = {
+
+};
+
 function Style() {
     document.getElementsByTagName("body")[0].style.height = "100vh";
     document.getElementsByTagName("body")[0].style.display = "flex";
@@ -106,7 +112,13 @@ function a11yProps(index0: number, index1?: number,index2?: number) {
 //#endregion
 
 //#region Sectionのタブ
-
+interface AnswerCellProps {
+    point: number;
+    userIndex: number;
+    questionIndex: number;
+    answer: String;
+    answerCellHandle: (point: number,userIndex: number, questionIndex: number) => void;
+}
 
 interface SectionTabProps {
     sections: Section[];
@@ -137,18 +149,43 @@ function SectionTabs({sections, sectionValue, sectionHandleChange} : SectionTabP
 }
 //#endregion
 
+function AnswerCell({answer,point,userIndex,questionIndex,answerCellHandle}:AnswerCellProps)
+{
+    const cell_handle = () => {
+        const new_point = (point === 0 ? 1 : 0);
+        answerCellHandle(new_point,userIndex,questionIndex);
+    }
+    return(<>
+        <TableCell onClick={cell_handle} className={styles.answer_cell}>
+            <div className={(point > 0) ? styles.correct_cell : styles.wrong_cell}></div>
+            <div className={styles.matharea}><InlineMath math = {String(answer)}/></div>
+        </TableCell>
+    </>)
+}
 
 export default function GradingPage({ params }: { params: { testid: number } }) {
     const [ testData, setTestData ] = useState<TestData | null>(null);
     const [ submissionData, setSubmissionData ] = useState<Submission[]>([]);
+    const submissionData_buf: Array<Submission> = [];
     const { data: session, status } = useSession();
     const [ classID, setClassID ] = useState(0);
     const [sectionValue, setSectionValue] = useState(0);  // Sectionの状態を管理
+    const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
 
     const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
         setSectionValue(newValue);
     };
 
+    const answerCellHandle = (newPoint:number, userIndex:number,questionIndex: number) => {
+        setPoints(prevPoints => ({
+            ...prevPoints,
+            [userIndex]: {
+                ...prevPoints[userIndex],
+                [questionIndex]: newPoint
+            }
+        }));
+
+    }
     useEffect(() => {
         if(session)
         {
@@ -164,18 +201,17 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                     setClassID(Number(test_res.classes.at(0)?.id));
 
                     console.log("Submissions")
-                    let submissions_buf : Array<Submission> = [];
                     test_res.classes.at(0)?.users.map(async(user,index) => {
                         const submission_res = await getSubmission({testId: Number(params.testid),username: user.name});
                         console.log(index + ":" + user.name);
                         console.log(submission_res);
                         if(submission_res)
                         {
-                            submissions_buf.push({id:Number(submission_res?.id),studentId:Number(submission_res?.studentId),answers:submission_res.answers});
+                            submissionData_buf.push({id:Number(submission_res?.id),studentId:Number(submission_res?.studentId),answers:submission_res.answers});
                         }
                         if(index+1 == test_res.classes.at(0)?.users.length)
                         {
-                            setSubmissionData(submissions_buf);
+                            setSubmissionData(submissionData_buf);
                         }
                     });
                 }
@@ -215,31 +251,37 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                     {/*=================================================*/}
                     <TableBody>
                         {
-                            testData?.classes.at(0)?.users.map((user : User,index) => 
-                                <TableRow key={"ROW"+index}>
-                                    <TableCell key={"username" + index}>{user.name}</TableCell>
+                            testData?.classes.at(0)?.users.map((user : User,user_index) => 
+                                <TableRow key={"ROW"+user_index}>
+                                    <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
                                     {
                                         (function () {
                                             let start = 0;
-                                            const list = [];
-                                            for(let i = 0; i < sectionValue;i++)
+                                            const cells = [];
+                                            for(let i = 0; i < sectionValue;i++) //現在のセクションの前にある問題数を数える
                                             {
                                                 start += Number(testData.sections.at(i)?.questions.length);
                                             }
-                                            console.log(start);
-                                            for(let i = start;i < start + Number(testData.sections.at(sectionValue)?.questions.length);i++)
+
+                                            //現在のセクションの問題を表示する
+                                            for(let question_index = start;question_index < start + Number(testData.sections.at(sectionValue)?.questions.length);question_index++)
                                             {
-                                                let answer  = submissionData.at(index)?.answers.at(i);
+                                                let answer  = submissionData.at(user_index)?.answers.at(question_index);
                                                 if(answer != undefined)
                                                 {
-                                                    list.push(
-                                                        <TableCell key={"Cell-"+user.id + "-" + answer.questionId}>
-                                                            <InlineMath math = {answer.text} key = {user.id + "-" + answer.questionId}/>
-                                                        </TableCell>
+                                                    const currentPoint = points[user_index]?.[question_index] || 0;
+                                                    cells.push(
+                                                        <AnswerCell answer={answer.text}
+                                                                    point={currentPoint}
+                                                                    answerCellHandle={answerCellHandle}
+                                                                    key={user.id + "-" + answer.questionId}
+                                                                    userIndex={user_index}
+                                                                    questionIndex={question_index}>
+                                                        </AnswerCell>
                                                     )
                                                 }
                                             }
-                                            return list;
+                                            return cells;
                                         }())
                                     }
                                 </TableRow>
