@@ -1,6 +1,6 @@
 "use client";
 import React, { Component, ReactElement, ReactNode, useEffect, useState } from "react";
-import { Box, Paper, Tab, Tabs } from "@mui/material";
+import { Box, Paper, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import { useSession } from 'next-auth/react';
@@ -14,7 +14,6 @@ import { getSubmission } from "@/app/api/test/result"
 interface User {
     id: Number;
     name: String;
-    pass: String;
     role: Number;
 }
 
@@ -92,48 +91,17 @@ function a11yProps(index0: number, index1?: number,index2?: number) {
 //======================================
 //#endregion
 
-//#region Section,Questionのタブ
-interface QuestionTabProps {
-    questions: Question[];
-    SectionIndex: number;
-}
+//#region Sectionのタブ
+
 
 interface SectionTabProps {
     sections: Section[];
+    sectionValue: number;
+    sectionHandleChange: (event: React.SyntheticEvent, newValue: number) => void;
 }
 
-function QuestionTabs({ questions, SectionIndex}: QuestionTabProps) {
-    const [questionValue, questionSetValue] = useState(0);
-
-    const questionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
-        questionSetValue(newValue);
-    };
-
-    return (
-        <Box sx={{ width: '100%' }}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={questionValue} onChange={questionHandleChange} aria-label="subsection tabs" variant="fullWidth">
-                    {questions.map((question, index) => (
-                        <Tab label={"Q" + question.number} key={index} {...a11yProps(SectionIndex)} />
-                    ))}
-                </Tabs>
-            </Box>
-            {questions.map((question, index) => (
-                <CustomTabPanel value={questionValue} index={index} key={index}>
-                    ンァー<InlineMath math={question.question}/>
-                </CustomTabPanel>
-            ))}
-        </Box>
-    );
-}
-
-function SectionTabs({sections} : SectionTabProps)
+function SectionTabs({sections, sectionValue, sectionHandleChange} : SectionTabProps)
 {
-    const [sectionValue, sectionSetValue] = useState(0);
-    const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
-         sectionSetValue(newValue);
-    };
-
     return (
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs value={sectionValue} onChange={sectionHandleChange} aria-label="section tabs" variant="fullWidth">
@@ -147,7 +115,6 @@ function SectionTabs({sections} : SectionTabProps)
                 sections.map((section,index)=>(
                     <CustomTabPanel value={sectionValue} index={index} key={index}>
                         <InlineMath math = {section.summary} />
-                        <QuestionTabs questions={section.questions} SectionIndex={index} />
                     </CustomTabPanel>
                 ))
             }
@@ -160,7 +127,12 @@ function SectionTabs({sections} : SectionTabProps)
 export default function GradingPage({ params }: { params: { testid: number } }) {
     const [ testData, setTestData ] = useState<TestData | null>(null);
     const { data: session, status } = useSession();
-    const[ classID, setClassID ] = useState(0);
+    const [ classID, setClassID ] = useState(0);
+    const [sectionValue, setSectionValue] = useState(0);  // Sectionの状態を管理
+
+    const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
+        setSectionValue(newValue);
+    };
 
     useEffect(() => {
         if(session)
@@ -183,7 +155,6 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                         console.log(submission_res);
                     });
                     
-
                 }
             }
             fetchTest();
@@ -198,9 +169,30 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         <Paper>
             <Box sx={{ width: '100%' }}>
                 {
-                    (testData != null) ?  (<SectionTabs sections={testData.sections}/>) : (<p>Loading...</p>)
+                    (testData != null) ?  (<SectionTabs sections={testData.sections} sectionValue={sectionValue} sectionHandleChange = {sectionHandleChange}/>) : (<p>Loading...</p>)
                 }
             </Box>
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Name</TableCell>
+                            {
+                                testData?.sections.at(sectionValue)?.questions.map((question)=>
+                                    <>
+                                    <TableCell>{question.question}</TableCell>
+                                    </>
+                                )
+                            }
+
+                        </TableRow>
+                    </TableHead>
+                    {/*=================================================*/}
+                    <TableBody>
+                            
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </Paper>
         </>
     );
