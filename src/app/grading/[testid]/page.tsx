@@ -6,6 +6,7 @@ import 'katex/dist/katex.min.css';
 import { useSession } from 'next-auth/react';
 
 import { getTestById } from "@/app/api/test/getTestById";
+import { getSubmission } from "@/app/api/test/result"
 
 
 
@@ -169,13 +170,23 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
             console.log("Session");
             console.log(session);
             const fetchTest = async() => {
-                const response = await getTestById(Number(params.testid),String(session.user.name));
-                if(response)
+                const test_res = await getTestById(Number(params.testid),String(session.user.name));
+                if(test_res)
                 {
                     console.log("getTestById");
-                    console.log(response);
-                    setTestData(response);
-                    setClassID(Number(response.classes.at(0)?.id));
+                    console.log(test_res);
+                    setTestData(test_res);
+                    setClassID(Number(test_res.classes.at(0)?.id));
+
+                    console.log("SUBMISSION")
+                    const res = await getSubmission({testId: Number(params.testid), username: String(test_res.classes.at(0)?.users.at(0)?.name)});
+                    if(res)
+                    {
+                        console.log(1);
+                        console.log(res)
+                    }
+                    
+
                 }
             }
             fetchTest();
