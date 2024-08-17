@@ -46,6 +46,20 @@ interface TestData {
     sections: Section[];
     classes: Class[];
 }
+
+interface Answer  {
+    id: Number;
+    point: Number;
+    questionId: Number;
+    submissionId: Number;
+    text: string;
+}
+
+interface Submission {
+    id : Number;
+    studentId : Number;
+    answers : Answer[];
+}
 //#endregion
 
 function Style() {
@@ -126,6 +140,7 @@ function SectionTabs({sections, sectionValue, sectionHandleChange} : SectionTabP
 
 export default function GradingPage({ params }: { params: { testid: number } }) {
     const [ testData, setTestData ] = useState<TestData | null>(null);
+    const [ submissionData, setSubmissionData ] = useState<Submission[]>([]);
     const { data: session, status } = useSession();
     const [ classID, setClassID ] = useState(0);
     const [sectionValue, setSectionValue] = useState(0);  // Sectionの状態を管理
@@ -149,12 +164,20 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                     setClassID(Number(test_res.classes.at(0)?.id));
 
                     console.log("Submissions")
+                    let submissions_buf : Array<Submission> = [];
                     test_res.classes.at(0)?.users.map(async(user,index) => {
                         const submission_res = await getSubmission({testId: Number(params.testid),username: user.name});
                         console.log(index + ":" + user.name);
                         console.log(submission_res);
+                        if(submission_res)
+                        {
+                            submissions_buf.push({id:Number(submission_res?.id),studentId:Number(submission_res?.studentId),answers:submission_res.answers});
+                        }
+                        if(index+1 == test_res.classes.at(0)?.users.length)
+                        {
+                            setSubmissionData(submissions_buf);
+                        }
                     });
-                    
                 }
             }
             fetchTest();
@@ -177,19 +200,51 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                     <TableHead>
                         <TableRow>
                             <TableCell>Name</TableCell>
-                            {
-                                testData?.sections.at(sectionValue)?.questions.map((question)=>
-                                    <>
-                                    <TableCell>{question.question}</TableCell>
-                                    </>
+                            { //表のヘッダ Questionの問題と解を表示する
+                            
+                                testData?.sections.at(sectionValue)?.questions.map((question : Question,index)=>
+                                    <TableCell key={"question"+index}>
+                                        { question.question }
+                                        <hr/>
+                                        { question.answer }
+                                    </TableCell>
                                 )
                             }
-
                         </TableRow>
                     </TableHead>
                     {/*=================================================*/}
                     <TableBody>
-                            
+                        {
+                            testData?.classes.at(0)?.users.map((user : User,index) => 
+                                <TableRow key={"ROW"+index}>
+                                    <TableCell key={"username" + index}>{user.name}</TableCell>
+                                    {
+                                        (function () {
+                                            let start = 0;
+                                            const list = [];
+                                            for(let i = 0; i < sectionValue;i++)
+                                            {
+                                                start += Number(testData.sections.at(i)?.questions.length);
+                                            }
+                                            console.log(start);
+                                            for(let i = start;i < start + Number(testData.sections.at(sectionValue)?.questions.length);i++)
+                                            {
+                                                let answer  = submissionData.at(index)?.answers.at(i);
+                                                if(answer != undefined)
+                                                {
+                                                    list.push(
+                                                        <TableCell key={"Cell-"+user.id + "-" + answer.questionId}>
+                                                            <InlineMath math = {answer.text} key = {user.id + "-" + answer.questionId}/>
+                                                        </TableCell>
+                                                    )
+                                                }
+                                            }
+                                            return list;
+                                        }())
+                                    }
+                                </TableRow>
+                            )
+                        }
                     </TableBody>
                 </Table>
             </TableContainer>
