@@ -120,7 +120,7 @@ function QuestionTabs({ questions, SectionIndex}: QuestionTabProps) {
             </Box>
             {questions.map((question, index) => (
                 <CustomTabPanel value={questionValue} index={index} key={index}>
-                    <InlineMath math={question.question}/>
+                    ンァー<InlineMath math={question.question}/>
                 </CustomTabPanel>
             ))}
         </Box>
@@ -162,8 +162,6 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     const { data: session, status } = useSession();
     const[ classID, setClassID ] = useState(0);
 
-    
-    
     useEffect(() => {
         if(session)
         {
@@ -178,13 +176,12 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                     setTestData(test_res);
                     setClassID(Number(test_res.classes.at(0)?.id));
 
-                    console.log("SUBMISSION")
-                    const res = await getSubmission({testId: Number(params.testid), username: String(test_res.classes.at(0)?.users.at(0)?.name)});
-                    if(res)
-                    {
-                        console.log(1);
-                        console.log(res)
-                    }
+                    console.log("Submissions")
+                    test_res.classes.at(0)?.users.map(async(user,index) => {
+                        const submission_res = await getSubmission({testId: Number(params.testid),username: user.name});
+                        console.log(index + ":" + user.name);
+                        console.log(submission_res);
+                    });
                     
 
                 }
