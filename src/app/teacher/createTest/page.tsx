@@ -47,7 +47,7 @@ export default function Page() {
 
   const [endDate, setEndDate] = useState<Dayjs>(dayjs());
   const [startDate, setStartDate] = useState<Dayjs>(dayjs());
-  const [asignedClass, setAsignedClass] = useState<Class[]>([]);
+  const [assignedClass, setAssignedClass] = useState<Class[]>([]);
 
   const [classList, setClassList] = useState<Class[]>([]);
   useEffect(() => {
@@ -109,7 +109,7 @@ export default function Page() {
     const newTestFrame: TestFrame = {
       test: newTest,
       sections: sections,
-      classes: asignedClass,
+      classes: assignedClass,
     };
     await createTest(newTestFrame);
   };
@@ -134,7 +134,7 @@ export default function Page() {
     };
 
     const isClassError = () => {
-      if (asignedClass.length === 0) {
+      if (assignedClass.length === 0) {
         return <Alert severity="error">クラスが選択されていません</Alert>;
       }
     };
@@ -148,7 +148,7 @@ export default function Page() {
   };
 
   const checkDataError = () => {
-    return startDate.isAfter(endDate) || asignedClass.length === 0;
+    return startDate.isAfter(endDate) || assignedClass.length === 0;
   };
 
   // クラスの割り当て用
@@ -156,7 +156,7 @@ export default function Page() {
     const values = event.target.value as number[];
     const select = classList.filter((item) => values.includes(item.id));
 
-    setAsignedClass(select);
+    setAssignedClass(select);
   };
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
@@ -205,7 +205,7 @@ export default function Page() {
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
-            asignedClass={asignedClass}
+            asignedClass={assignedClass}
             handleClassChange={handleClassChange}
             classList={classList}
           />
@@ -389,6 +389,17 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
     setSection({ ...section, questions: newQ2 });
   };
 
+  const handleSectionSummaryChange = (newSummary: string) => {
+    const newS: Section = {
+      id: 1,
+      testId: 1,
+      summary: newSummary,
+      number: section.section.number,
+    };
+    setSection({ section: newS, questions: section.questions });
+  }
+
+
   return (
     <Stack
       justifyContent="center"
@@ -403,6 +414,19 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           Delete
         </Button>
       </Box>
+      <Stack direction={"row"} gap={1}>
+        <Typography>{"Summary: "}</Typography>
+        <Latex >{section.section.summary}</Latex>
+      </Stack>
+      <TextField
+        label={"section summary"}
+        value={section.section.summary}
+        onChange={(e) => handleSectionSummaryChange(e.target.value)}
+
+
+      //value={question.answer}
+      //onChange={(e) => setAns(e.target.value)}
+      />
       {
         section.questions.map((q: Question, index: number) => (
           <QuestionPage
