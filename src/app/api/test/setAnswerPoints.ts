@@ -7,7 +7,7 @@ interface Point {
     point: number;
 }
 
-export const setPoints = async(points:Point[]) => {
+export const setAnswerPoints = async(points:Point[]) => {
     points.map((point) => {
         prisma.answer.update({
             where: {
