@@ -62,6 +62,11 @@ interface Submission {
     studentId : Number;
     answers : Answer[];
 }
+
+interface Point {
+    answerId: number;
+    point: number;
+}
 //#endregion
 
 function Style() {
@@ -168,6 +173,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     const [sectionValue, setSectionValue] = useState(0);
     const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
 
+//#region イベントハンドラ
     const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
         setSectionValue(newValue);
     };
@@ -181,6 +187,22 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
             }
         }));
     }
+
+    const savebuttonHandle = async(e:any) => {
+        let send_data: Array<Point> = [];
+        submissionData.map((submission,userIndex) => {
+            submission.answers.map((answer,answerIndex) => {
+                const userPoints = points[userIndex];
+                const newPoint = userPoints ? userPoints[answerIndex] || 0 : 0;
+                send_data.push({answerId:Number(answer.id),point:newPoint});
+            });
+        });
+        console.log("SEND DATA")
+        console.log(send_data);
+    }
+
+//#endregion
+    
     useEffect(() => {
         if(session)
         {
@@ -218,6 +240,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
 
     return (
     <>
+        {/*==========ヘッダエリア==========*/}
         <Paper sx={{ borderRadius: 0, width: "100%"}}>
             <Box sx={{pt:2,pr:2,pb:1}}>
                 <Box display="flex">
@@ -234,19 +257,22 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                     </Box>
 
                 </Box>
-                <hr className="title_line"/>
+                <hr/>
                 <Typography variant="h6" sx={{ml:2}}>
                         {testData?.summary}
                 </Typography> 
             </Box>
         </Paper>
+        
         <Container maxWidth={false} sx={{mb:1}}>
+            {/*==========ここからTableエリア==========*/}
             <Paper sx={{m:1, mr:0, ml:0}}>
                 {
                     (testData != null) ?  (<SectionTabs sections={testData.sections} sectionValue={sectionValue} sectionHandleChange = {sectionHandleChange}/>) : (<p>Loading...</p>)
                 }
                 <TableContainer component={Paper}>
                     <Table>
+                        {/*==========Tableヘッダセル==========*/}
                         <TableHead>
                             <TableRow>
                                 <TableCell>Name</TableCell>
@@ -262,7 +288,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                                 }
                             </TableRow>
                         </TableHead>
-                        {/*=================================================*/}
+                        {/*==========以下データセル==========*/}
                         <TableBody>
                             {
                                 testData?.classes.at(0)?.users.map((user : User,user_index) => 
@@ -283,7 +309,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                                                     let answer  = submissionData.at(user_index)?.answers.at(question_index);
                                                     if(answer != undefined)
                                                     {
-                                                        const currentPoint = points[user_index]?.[question_index] || 0;
+                                                        const currentPoint = points[user_index]?.[question_index] || Number(answer.point);
                                                         cells.push(
                                                             <AnswerCell answer={answer.text}
                                                                         point={currentPoint}
@@ -305,8 +331,9 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                     </Table>
                 </TableContainer>
             </Paper>
+            {/*==========Table終わり==========*/}
             {
-                testData ? <Button variant="contained" sx={{mb:1, mt:0}} className={styles.save_button}>Save</Button>: <></>
+                testData ? <Button variant="contained" sx={{mb:1, mt:0}} className={styles.save_button} onClick={savebuttonHandle}>Save</Button>: <></>
             }                
         </Container>
     </>
