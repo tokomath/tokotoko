@@ -22,6 +22,7 @@ interface User {
 
 interface Class {
     id : Number;
+    name: String;
     users : User[];
 }
 
@@ -257,10 +258,13 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         <Paper sx={{ borderRadius: 0, width: "100%"}}>
             <Box sx={{pt:2,pr:2,pb:1}}>
                 <Box display="flex"  justifyContent="right">
-                    <Typography variant="h4" sx={{ml:2}} width="100%">
+                    <Typography variant="h4" sx={{ml:2,mt:2}} width="100%">
                         {testData?.title}
                     </Typography>
                     <Box width="20em">
+                        <Typography  textAlign="right">
+                            Class Name: {testData?.classes.at(0)?.name}
+                        </Typography>
                         <Typography  textAlign="right">
                             Class ID: {classID}
                         </Typography>
