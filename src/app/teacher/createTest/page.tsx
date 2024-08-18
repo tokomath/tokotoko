@@ -81,7 +81,7 @@ export default function Page() {
         id: 1,
         testId: 1,
         summary: q.section.summary,
-        number: index + 1,
+        number: i + 1,
       };
       return { section: section, questions: q.questions };
     });
@@ -186,7 +186,7 @@ export default function Page() {
         >
           <Tab label={"metadata"} />
           {sections.map((s: SectionFrame, index: number) => (
-            <Tab label={index} {...a11yProps(index)} key={index} />
+            <Tab label={index + 1} {...a11yProps(index)} key={index} />
           ))}
           <Tab
             icon={<AddIcon />}
