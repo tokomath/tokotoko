@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 
 import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmission } from "@/app/api/test/result"
+import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
 
 import styles from "./styles.module.css"
 Button
@@ -68,15 +69,6 @@ interface Point {
     point: number;
 }
 //#endregion
-
-function Style() {
-    document.getElementsByTagName("body")[0].style.height = "100vh";
-    document.getElementsByTagName("body")[0].style.display = "flex";
-    document.getElementsByTagName("body")[0].style.flexFlow = "column"
-    document.getElementsByTagName("footer")[0].style.position = "absolute";
-    document.getElementsByTagName("footer")[0].style.bottom = "0";
-    document.getElementsByTagName("footer")[0].style.width = "100%";
-}
 
 //======================================
 //#region TabPanel等のプロパティ
@@ -141,7 +133,9 @@ function SectionTabs({sections, sectionValue, sectionHandleChange} : SectionTabP
             {
                 sections.map((section,index)=>(
                     <CustomTabPanel value={sectionValue} index={index} key={index}>
-                        <InlineMath math = {section.summary} />
+                        <Typography sx={{m:1}}>
+                            <InlineMath math = {section.summary} />
+                        </Typography>
                     </CustomTabPanel>
                 ))
             }
@@ -199,6 +193,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         });
         console.log("SEND DATA")
         console.log(send_data);
+        setAnswerPoints(send_data)
     }
 
 //#endregion
@@ -228,6 +223,17 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                         }
                         if(index+1 == test_res.classes.at(0)?.users.length)
                         {
+                            submissionData_buf.map((submissionDatum_buf,index_submission) => {
+                                submissionDatum_buf.answers.map((answer,index_answer) => {
+                                    setPoints(prevPoints => ({
+                                        ...prevPoints,
+                                        [index_submission]: {
+                                            ...prevPoints[index_submission],
+                                            [index_answer]: Number(answer.point)
+                                        }
+                                    }));
+                                })
+                            })
                             setSubmissionData(submissionData_buf);
                         }
                     });
@@ -235,7 +241,6 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
             }
             fetchTest();
         }
-        Style();
     }, [status]);
 
     return (
@@ -268,18 +273,23 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
             {/*==========ここからTableエリア==========*/}
             <Paper sx={{m:1, mr:0, ml:0}}>
                 {
-                    (testData != null) ?  (<SectionTabs sections={testData.sections} sectionValue={sectionValue} sectionHandleChange = {sectionHandleChange}/>) : (<p>Loading...</p>)
+                    (testData != null) ?  
+                        (<SectionTabs sections={testData.sections} sectionValue={sectionValue} sectionHandleChange = {sectionHandleChange}/>)
+                        :   (<>
+                                <p>Submission Data not found. </p>
+                                <p>The test has not been submitted yet or the test does not exist.</p>
+                            </>)
                 }
                 <TableContainer component={Paper}>
                     <Table>
                         {/*==========Tableヘッダセル==========*/}
                         <TableHead>
                             <TableRow>
-                                <TableCell>Name</TableCell>
+                                <TableCell sx={{textAlign:"center"}}></TableCell>
                                 { //表のヘッダ Questionの問題と解を表示する
                                 
                                     testData?.sections.at(sectionValue)?.questions.map((question : Question,index)=>
-                                        <TableCell key={"question"+index}>
+                                        <TableCell key={"question"+index} sx={{textAlign:"center"}}>
                                             { question.question }
                                             <hr/>
                                             { question.answer }
@@ -309,7 +319,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                                                     let answer  = submissionData.at(user_index)?.answers.at(question_index);
                                                     if(answer != undefined)
                                                     {
-                                                        const currentPoint = points[user_index]?.[question_index] || Number(answer.point);
+                                                        const currentPoint = points[user_index]?.[question_index];
                                                         cells.push(
                                                             <AnswerCell answer={answer.text}
                                                                         point={currentPoint}
