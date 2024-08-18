@@ -1,5 +1,5 @@
 "use client";
-import React, { Component, ReactElement, ReactNode, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box,Container, Paper,Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, colors} from "@mui/material";
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
@@ -10,11 +10,6 @@ import { getSubmission } from "@/app/api/test/result"
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
 
 import styles from "./styles.module.css"
-import exp from "constants";
-import { Replay30TwoTone } from "@mui/icons-material";
-import test from "node:test";
-Button
-
 
 //#region APIのデータ用
 interface User {
@@ -236,8 +231,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
             rn = rn.slice(0,rn.length - 1) + "\n"
             exportdata_csv += rn + "";
         })
-        console.log(exportdata_csv);
-        
+
         const blob = new Blob([exportdata_csv+""], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a_buf = document.createElement('a');
