@@ -182,7 +182,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         }));
     }
 
-    const savebuttonHandle = async(e:any) => {
+    const savebuttonHandle = async() => {
         let send_data: Array<Point> = [];
         submissionData.map((submission,userIndex) => {
             submission.answers.map((answer,answerIndex) => {
@@ -193,7 +193,15 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         });
         console.log("SEND DATA")
         console.log(send_data);
-        setAnswerPoints(send_data)
+        const send_res = await setAnswerPoints(send_data);
+        if(send_res == 0)
+        {
+            alert("Saved grading data successfully.")
+        }
+        else if(send_res == -1)
+        {
+            alert("An Error has occurred.")
+        }
     }
 
 //#endregion
