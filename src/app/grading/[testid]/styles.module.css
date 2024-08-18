@@ -3,6 +3,18 @@
     user-select: none;
 }
 
+.totalpoint_cell
+{
+    user-select: none;
+    width:2em;
+}
+
+.username_cell
+{
+    user-select: none;
+    width:10em;
+}
+
 .answer_cell
 {
     position: relative;
@@ -62,6 +74,12 @@
 }
 
 .save_button
+{
+    user-select: none;
+    width: 100%;
+}
+
+.export_button
 {
     user-select: none;
     width: 100%;

@@ -10,6 +10,9 @@ import { getSubmission } from "@/app/api/test/result"
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
 
 import styles from "./styles.module.css"
+import exp from "constants";
+import { Replay30TwoTone } from "@mui/icons-material";
+import test from "node:test";
 Button
 
 
@@ -127,7 +130,7 @@ function SectionTabs({sections, sectionValue, sectionHandleChange} : SectionTabP
             <Tabs value={sectionValue} onChange={sectionHandleChange} aria-label="section tabs" variant="fullWidth">
                 {
                     sections.map((section,index)=>(
-                        <Tab label={"§" + section.number} key={index} {...a11yProps(index)} />
+                        <Tab label={"Part" + section.number} key={index} {...a11yProps(index)} />
                     ))
                 }
             </Tabs>
@@ -206,6 +209,44 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         {
             alert("An Error has occurred.")
         }
+    }
+
+    const exportbutonHandle  = () => {
+        let exportdata_csv : String = "";
+        let r1 : String = "Part-QNumber,";
+        let r2 : String = "Question,";
+        let r3 : String = "Answer,";
+        testData?.sections.map((section,section_index) => {
+            section.questions.map((question,question_index) => {
+                r1 += "Part" + section_index + "-" + question_index + ",,";
+                r2 += question.question + ",,";
+                r3 += question.answer + ",,";
+            })
+        })
+        r1 = r1.slice(0,r1.length - 1) + "\n";
+        r2 = r2.slice(0,r2.length - 1) + "\n";
+        r3 = r3.slice(0,r3.length - 1) + "\n";
+        exportdata_csv = r1 +""+ r2 +""+ r3;        
+        submissionData.map((submissionDatum,index) => {
+            let rn : String = "";
+            rn += String(testData?.classes.at(0)?.users.at(index)?.name) + ",";
+            submissionDatum.answers.map((answer,answer_index) => {
+                rn += answer.text + "," + points[index][answer_index] + ",";
+            })
+            rn = rn.slice(0,rn.length - 1) + "\n"
+            exportdata_csv += rn + "";
+        })
+        console.log(exportdata_csv);
+        
+        const blob = new Blob([exportdata_csv+""], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a_buf = document.createElement('a');
+        a_buf.href = url;
+        a_buf.download = testData?.title +"_"+testData?.classes.at(0)?.name+ ".csv"
+        document.body.appendChild(a_buf);
+        a_buf.click();
+        document.body.removeChild(a_buf);
+        URL.revokeObjectURL(url);
     }
 
 //#endregion
@@ -314,9 +355,9 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                         {/*==========Tableヘッダセル==========*/}
                         <TableHead>
                             <TableRow>
-                                <TableCell sx={{textAlign:"center"}}></TableCell>
+                                <TableCell sx={{textAlign:"center"}} className={styles.username_cell}></TableCell>
                                 {/* 合計ポイント表示用のヘッダセル */}
-                                <TableCell sx={{textAlign:"center"}}>
+                                <TableCell sx={{textAlign:"center"}}  className={styles.totalpoint_cell}>
                                     {totalpoint_label}
                                 </TableCell>
                                 { //表のヘッダ Questionの問題と解を表示する
@@ -381,7 +422,14 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
             </Paper>
             {/*==========Table終わり==========*/}
             {
-                testData ? <Button variant="contained" sx={{mb:1, mt:0}} className={styles.save_button} onClick={savebuttonHandle}>Save</Button>: <></>
+                <>
+                    {testData ? 
+                    <>
+                        <Button variant="contained" sx={{mb:1, mt:0}} className={styles.save_button} onClick={savebuttonHandle}>Save</Button>
+                        <Button sx={{mb:1, mt:0}} className={styles.export_button} onClick={exportbutonHandle}>Export as CSV</Button>
+                    </>
+                    : <></>}
+                </>
             }                
         </Container>
     </>
