@@ -168,6 +168,8 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     const [sectionValue, setSectionValue] = useState(0);
     const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
 
+    const [ totalpoint_label, set_totalpoint_label ] = useState("");
+
 //#region イベントハンドラ
     const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
         setSectionValue(newValue);
@@ -181,6 +183,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                 [questionIndex]: newPoint
             }
         }));
+        console.log(-1*Number(newPoint))
     }
 
     const savebuttonHandle = async() => {
@@ -206,6 +209,19 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     }
 
 //#endregion
+
+    const calculateUserTotalPoints = (userIndex: number): number => {
+        let totalPoints = 0;
+        const userPoints = points[userIndex];
+        
+        if (userPoints) {
+            Object.values(userPoints).forEach(point => {
+                totalPoints += point;
+            });
+        }
+
+        return totalPoints;
+    };
     
     useEffect(() => {
         if(session)
@@ -244,6 +260,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                                 })
                             })
                             setSubmissionData(submissionData_buf);
+                            set_totalpoint_label("Total Point");
                         }
                     });
                 }
@@ -298,6 +315,10 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                         <TableHead>
                             <TableRow>
                                 <TableCell sx={{textAlign:"center"}}></TableCell>
+                                {/* 合計ポイント表示用のヘッダセル */}
+                                <TableCell sx={{textAlign:"center"}}>
+                                    {totalpoint_label}
+                                </TableCell>
                                 { //表のヘッダ Questionの問題と解を表示する
                                 
                                     testData?.sections.at(sectionValue)?.questions.map((question : Question,index)=>
@@ -315,7 +336,12 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                             {
                                 testData?.classes.at(0)?.users.map((user : User,user_index) => 
                                     <TableRow key={"ROW"+user_index}>
+                                        {/*ユーザー名を表示するセル*/ }
                                         <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
+                                        {/* 合計ポイントを表示するセル */}
+                                        <TableCell key={"totalPoints" + user_index} sx={{textAlign:"center"}}>
+                                            {calculateUserTotalPoints(user_index)}
+                                        </TableCell>
                                         {
                                             (function () {
                                                 let start = 0;
