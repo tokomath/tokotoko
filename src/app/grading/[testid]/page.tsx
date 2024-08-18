@@ -191,8 +191,8 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                 send_data.push({answerId:Number(answer.id),point:newPoint});
             });
         });
-        console.log("SEND DATA")
-        console.log(send_data);
+        //console.log("SEND DATA")
+        //console.log(send_data);
         const send_res = await setAnswerPoints(send_data);
         if(send_res == 0)
         {
@@ -209,22 +209,22 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     useEffect(() => {
         if(session)
         {
-            console.log("Session");
-            console.log(session);
+            //console.log("Session");
+            //console.log(session);
             const fetchTest = async() => {
                 const test_res = await getTestById(Number(params.testid),String(session.user.name));
                 if(test_res)
                 {
-                    console.log("getTestById");
-                    console.log(test_res);
+                    //console.log("getTestById");
+                    //console.log(test_res);
                     setTestData(test_res);
                     setClassID(Number(test_res.classes.at(0)?.id));
 
-                    console.log("Submissions")
+                    //console.log("Submissions")
                     test_res.classes.at(0)?.users.map(async(user,index) => {
                         const submission_res = await getSubmission({testId: Number(params.testid),username: user.name});
-                        console.log(index + ":" + user.name);
-                        console.log(submission_res);
+                        //console.log(index + ":" + user.name);
+                        //console.log(submission_res);
                         if(submission_res)
                         {
                             submissionData_buf.push({id:Number(submission_res?.id),studentId:Number(submission_res?.studentId),answers:submission_res.answers});
@@ -256,11 +256,11 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         {/*==========ヘッダエリア==========*/}
         <Paper sx={{ borderRadius: 0, width: "100%"}}>
             <Box sx={{pt:2,pr:2,pb:1}}>
-                <Box display="flex">
-                    <Typography variant="h4" sx={{ml:2}}>
+                <Box display="flex"  justifyContent="right">
+                    <Typography variant="h4" sx={{ml:2}} width="100%">
                         {testData?.title}
                     </Typography>
-                    <Box width="100%" justifyContent="right">
+                    <Box width="20em">
                         <Typography  textAlign="right">
                             Class ID: {classID}
                         </Typography>
