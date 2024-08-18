@@ -1,6 +1,6 @@
 "use client";
 import React, { Component, ReactElement, ReactNode, useEffect, useState } from "react";
-import { Box, Paper, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
+import { Box,Container, Paper,Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, colors} from "@mui/material";
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import { useSession } from 'next-auth/react';
@@ -9,7 +9,7 @@ import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmission } from "@/app/api/test/result"
 
 import styles from "./styles.module.css"
-
+Button
 
 
 //#region APIのデータ用
@@ -64,10 +64,6 @@ interface Submission {
 }
 //#endregion
 
-const style: React.CSSProperties = {
-
-};
-
 function Style() {
     document.getElementsByTagName("body")[0].style.height = "100vh";
     document.getElementsByTagName("body")[0].style.display = "flex";
@@ -97,7 +93,7 @@ function CustomTabPanel(props: TabPanelProps) {
             aria-labelledby={`simple-tab-${index}`}
             {...other}
         >
-            {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+            {value === index && <Box sx={{ p: 0 }}>{children}</Box>}
         </div>
     );
 }
@@ -169,7 +165,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     const submissionData_buf: Array<Submission> = [];
     const { data: session, status } = useSession();
     const [ classID, setClassID ] = useState(0);
-    const [sectionValue, setSectionValue] = useState(0);  // Sectionの状態を管理
+    const [sectionValue, setSectionValue] = useState(0);
     const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
 
     const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -184,7 +180,6 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                 [questionIndex]: newPoint
             }
         }));
-
     }
     useEffect(() => {
         if(session)
@@ -222,75 +217,98 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     }, [status]);
 
     return (
-        <>
-        <span>Class ID : {classID}</span>
-        <span>Test ID : { params.testid }</span>
-        <Paper>
-            <Box sx={{ width: '100%' }}>
+    <>
+        <Paper sx={{ borderRadius: 0, width: "100%"}}>
+            <Box sx={{pt:2,pr:2,pb:1}}>
+                <Box display="flex">
+                    <Typography variant="h4" sx={{ml:2}}>
+                        {testData?.title}
+                    </Typography>
+                    <Box width="100%" justifyContent="right">
+                        <Typography  textAlign="right">
+                            Class ID: {classID}
+                        </Typography>
+                        <Typography  textAlign="right">
+                            Test ID: {params.testid}
+                        </Typography>
+                    </Box>
+
+                </Box>
+                <hr className="title_line"/>
+                <Typography variant="h6" sx={{ml:2}}>
+                        {testData?.summary}
+                </Typography> 
+            </Box>
+        </Paper>
+        <Container maxWidth={false} sx={{mb:1}}>
+            <Paper sx={{m:1, mr:0, ml:0}}>
                 {
                     (testData != null) ?  (<SectionTabs sections={testData.sections} sectionValue={sectionValue} sectionHandleChange = {sectionHandleChange}/>) : (<p>Loading...</p>)
                 }
-            </Box>
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Name</TableCell>
-                            { //表のヘッダ Questionの問題と解を表示する
-                            
-                                testData?.sections.at(sectionValue)?.questions.map((question : Question,index)=>
-                                    <TableCell key={"question"+index}>
-                                        { question.question }
-                                        <hr/>
-                                        { question.answer }
-                                    </TableCell>
+                <TableContainer component={Paper}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Name</TableCell>
+                                { //表のヘッダ Questionの問題と解を表示する
+                                
+                                    testData?.sections.at(sectionValue)?.questions.map((question : Question,index)=>
+                                        <TableCell key={"question"+index}>
+                                            { question.question }
+                                            <hr/>
+                                            { question.answer }
+                                        </TableCell>
+                                    )
+                                }
+                            </TableRow>
+                        </TableHead>
+                        {/*=================================================*/}
+                        <TableBody>
+                            {
+                                testData?.classes.at(0)?.users.map((user : User,user_index) => 
+                                    <TableRow key={"ROW"+user_index}>
+                                        <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
+                                        {
+                                            (function () {
+                                                let start = 0;
+                                                const cells = [];
+                                                for(let i = 0; i < sectionValue;i++) //現在のセクションの前にある問題数を数える
+                                                {
+                                                    start += Number(testData.sections.at(i)?.questions.length);
+                                                }
+
+                                                //現在のセクションの問題を表示する
+                                                for(let question_index = start;question_index < start + Number(testData.sections.at(sectionValue)?.questions.length);question_index++)
+                                                {
+                                                    let answer  = submissionData.at(user_index)?.answers.at(question_index);
+                                                    if(answer != undefined)
+                                                    {
+                                                        const currentPoint = points[user_index]?.[question_index] || 0;
+                                                        cells.push(
+                                                            <AnswerCell answer={answer.text}
+                                                                        point={currentPoint}
+                                                                        answerCellHandle={answerCellHandle}
+                                                                        key={user.id + "-" + answer.questionId}
+                                                                        userIndex={user_index}
+                                                                        questionIndex={question_index}>
+                                                            </AnswerCell>
+                                                        )
+                                                    }
+                                                }
+                                                return cells;
+                                            }())
+                                        }
+                                    </TableRow>
                                 )
                             }
-                        </TableRow>
-                    </TableHead>
-                    {/*=================================================*/}
-                    <TableBody>
-                        {
-                            testData?.classes.at(0)?.users.map((user : User,user_index) => 
-                                <TableRow key={"ROW"+user_index}>
-                                    <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
-                                    {
-                                        (function () {
-                                            let start = 0;
-                                            const cells = [];
-                                            for(let i = 0; i < sectionValue;i++) //現在のセクションの前にある問題数を数える
-                                            {
-                                                start += Number(testData.sections.at(i)?.questions.length);
-                                            }
-
-                                            //現在のセクションの問題を表示する
-                                            for(let question_index = start;question_index < start + Number(testData.sections.at(sectionValue)?.questions.length);question_index++)
-                                            {
-                                                let answer  = submissionData.at(user_index)?.answers.at(question_index);
-                                                if(answer != undefined)
-                                                {
-                                                    const currentPoint = points[user_index]?.[question_index] || 0;
-                                                    cells.push(
-                                                        <AnswerCell answer={answer.text}
-                                                                    point={currentPoint}
-                                                                    answerCellHandle={answerCellHandle}
-                                                                    key={user.id + "-" + answer.questionId}
-                                                                    userIndex={user_index}
-                                                                    questionIndex={question_index}>
-                                                        </AnswerCell>
-                                                    )
-                                                }
-                                            }
-                                            return cells;
-                                        }())
-                                    }
-                                </TableRow>
-                            )
-                        }
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Paper>
-        </>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+            {
+                testData ? <Button variant="contained" sx={{mb:1, mt:0}} className={styles.save_button}>Save</Button>: <></>
+            }                
+        </Container>
+    </>
     );
 }
