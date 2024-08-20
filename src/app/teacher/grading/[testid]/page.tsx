@@ -194,7 +194,7 @@ function generateCursor() : String{
     ctx.stroke(path);
 
     const ImageUrl = canvas.toDataURL("image/png");
-
+    canvas.remove();
     return ImageUrl;
   }
   return "";
