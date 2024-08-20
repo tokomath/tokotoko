@@ -3,7 +3,7 @@
     user-select: none;
 }
 
-.totalpoint_cell
+.point_cell
 {
     user-select: none;
     width:2em;
@@ -21,6 +21,28 @@
     text-align: center;
     min-width: 100px;
 }
+
+.ungraded_cell
+{
+
+    position:absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.ungraded_true
+{
+    color:#ff4141 !important;
+    font-weight: bold;
+}
+
+.ungraded_false
+{
+    color: green !important;
+    font-weight: bold;
+}
+
 
 .correct_cell
 {

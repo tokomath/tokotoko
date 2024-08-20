@@ -113,6 +113,11 @@ interface AnswerCellProps {
   answerCellHandle: (point: number, userIndex: number, questionIndex: number) => void;
 }
 
+interface UngradedCountCellProps {
+  user_index: number;
+  ungraded_count: number;
+}
+
 interface SectionTabProps {
   sections: Section[];
   sectionValue: number;
@@ -144,28 +149,42 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
 //#endregion
 
 function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle }: AnswerCellProps) {
+  if(!answer)
+  {
+    return null
+  }
+  
   const cell_handle = () => {
     const new_point = (point === 0 ? 1 : 0);
     answerCellHandle(new_point, userIndex, questionIndex);
   }
   return (<>
     <TableCell onClick={cell_handle} className={styles.answer_cell}>
-      <div className={(point > 0) ? styles.correct_cell : styles.wrong_cell}></div>
+      <div className={(point == -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell}></div>
       <div className={styles.matharea}><InlineMath math={String(answer)} /></div>
     </TableCell>
   </>)
 }
 
+function UngradedCountCell({user_index, ungraded_count }: UngradedCountCellProps) {
+  let style = (ungraded_count === 0) ? styles.ungraded_false : styles.ungraded_true;
+  return (
+    <TableCell key={"ungraded-" + user_index} sx={{ textAlign: "center" }} className={styles.point_cell+" "+((ungraded_count === 0) ? styles.ungraded_false : styles.ungraded_true)}>
+    {ungraded_count}
+  </TableCell>
+  );
+}
+
 export default function GradingPage({ params }: { params: { testid: number } }) {
   const [testData, setTestData] = useState<TestData | null>(null);
   const [submissionData, setSubmissionData] = useState<Submission[]>([]);
-  const submissionData_buf: Array<Submission> = [];
   const { data: session, status } = useSession();
   const [classID, setClassID] = useState(0);
   const [sectionValue, setSectionValue] = useState(0);
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
 
   const [totalpoint_label, set_totalpoint_label] = useState("");
+  const [ungraded_label,set_ungraded_label] = useState("");
 
   //#region イベントハンドラ
   const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -248,30 +267,45 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
 
     if (userPoints) {
       Object.values(userPoints).forEach(point => {
-        totalPoints += point;
+        totalPoints += (point != -1) ? point : 0;
       });
     }
 
     return totalPoints;
   };
 
+  const countUngraded = (userIndex: number) : number => {
+    let ungraded = 0;
+    const userPoints = points[userIndex];
+
+    if(userPoints)
+    {
+      Object.values(userPoints).forEach(point => {
+        ungraded += (point === -1) ? 1 : 0;
+      });
+    }
+
+    return ungraded;
+  }
   useEffect(() => {
     if (session) {
       //console.log("Session");
       //console.log(session);
+      const submissionData_buf: Array<Submission> = [];
       const fetchTest = async () => {
         const test_res = await getTestById(Number(params.testid), String(session.user.name));
         if (test_res) {
-          //console.log("getTestById");
-          //console.log(test_res);
+          console.log("getTestById");
+          console.log(test_res);
           setTestData(test_res);
           setClassID(Number(test_res.classes.at(0)?.id));
 
           //console.log("Submissions")
           test_res.classes.at(0)?.users.map(async (user, index) => {
+            console.log(Number(params.testid))
             const submission_res = await getSubmission({ testId: Number(params.testid), username: user.name });
-            //console.log(index + ":" + user.name);
-            //console.log(submission_res);
+            console.log(index + ":" + user.name);
+            console.log(submission_res);
             if (submission_res) {
               submissionData_buf.push({ id: Number(submission_res?.id), studentId: Number(submission_res?.studentId), answers: submission_res.answers });
             }
@@ -289,6 +323,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               })
               setSubmissionData(submissionData_buf);
               set_totalpoint_label("Total Point");
+              set_ungraded_label("Ungraded");
             }
           });
         }
@@ -344,9 +379,15 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                 <TableRow>
                   <TableCell sx={{ textAlign: "center" }} className={styles.username_cell}></TableCell>
                   {/* 合計ポイント表示用のヘッダセル */}
-                  <TableCell sx={{ textAlign: "center" }} className={styles.totalpoint_cell}>
+                  <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>
                     {totalpoint_label}
                   </TableCell>
+
+                  {/*未採点問題数表示用のヘッダセル*/}
+                  <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>
+                    {ungraded_label}
+                  </TableCell>
+
                   { //表のヘッダ Questionの問題と解を表示する
 
                     testData?.sections.at(sectionValue)?.questions.map((question: Question, index) =>
@@ -366,10 +407,15 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                     <TableRow key={"ROW" + user_index}>
                       {/*ユーザー名を表示するセル*/}
                       <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
+                      
                       {/* 合計ポイントを表示するセル */}
-                      <TableCell key={"totalPoints" + user_index} sx={{ textAlign: "center" }}>
+                      <TableCell key={"totalPoints-" + user_index} sx={{ textAlign: "center" }} className={styles.point_cell}>
                         {calculateUserTotalPoints(user_index)}
                       </TableCell>
+
+                      {/*未採点問題数を表示するセル*/}
+                      <UngradedCountCell user_index={user_index} ungraded_count={countUngraded(user_index)}/>
+                      
                       {
                         (function () {
                           let start = 0;
