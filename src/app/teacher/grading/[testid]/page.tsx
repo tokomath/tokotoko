@@ -150,18 +150,28 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
 }
 //#endregion
 
-function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle ,cursorImage}: AnswerCellProps) {
+function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle,cursorImage}: AnswerCellProps) {
   if(!answer)
   {
     return null
   }
   
-  const cell_handle = () => {
+  const click_handle = () => {
     const new_point = (point === 0 ? 1 : 0);
     answerCellHandle(new_point, userIndex, questionIndex);
   }
+
+  const keydown_handle = (event: React.KeyboardEvent<HTMLTableCellElement>) => {
+    switch(event.key)
+    {
+      case "Enter":
+      case " ":
+        click_handle();
+    }
+  }
+  
   return (<>
-    <TableCell onClick={cell_handle} className={styles.answer_cell} style={{ cursor: `url(${cursorImage}), auto` }}>
+    <TableCell onClick={click_handle}  onKeyDown={keydown_handle} tabIndex={0} className={styles.answer_cell} style={{ cursor: `url(${cursorImage}), auto` }}>
       <div className={((point == -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
       <div className={styles.matharea}><InlineMath math={String(answer)} /></div>
     </TableCell>
@@ -217,7 +227,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     setSectionValue(newValue);
   };
 
-  const answerCellHandle = (newPoint: number, userIndex: number, questionIndex: number) => {
+  const answerCellClickHandle = (newPoint: number, userIndex: number, questionIndex: number) => {
     setPoints(prevPoints => ({
       ...prevPoints,
       [userIndex]: {
@@ -460,11 +470,12 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                               cells.push(
                                 <AnswerCell answer={answer.text}
                                   point={currentPoint}
-                                  answerCellHandle={answerCellHandle}
+                                  answerCellHandle={answerCellClickHandle}
                                   key={user.id + "-" + answer.questionId}
                                   userIndex={user_index}
                                   questionIndex={question_index}
-                                  cursorImage={cursorImage}>
+                                  cursorImage={cursorImage}
+                                  >
                                 </AnswerCell>
                               )
                             }
