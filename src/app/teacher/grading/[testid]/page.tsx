@@ -111,6 +111,8 @@ interface AnswerCellProps {
   questionIndex: number;
   answer: String;
   answerCellHandle: (point: number, userIndex: number, questionIndex: number) => void;
+
+  cursorImage: String;
 }
 
 interface UngradedCountCellProps {
@@ -148,7 +150,7 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
 }
 //#endregion
 
-function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle }: AnswerCellProps) {
+function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle ,cursorImage}: AnswerCellProps) {
   if(!answer)
   {
     return null
@@ -159,8 +161,8 @@ function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle 
     answerCellHandle(new_point, userIndex, questionIndex);
   }
   return (<>
-    <TableCell onClick={cell_handle} className={styles.answer_cell}>
-      <div className={(point == -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell}></div>
+    <TableCell onClick={cell_handle} className={styles.answer_cell} style={{ cursor: `url(${cursorImage}), auto` }}>
+      <div className={((point == -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
       <div className={styles.matharea}><InlineMath math={String(answer)} /></div>
     </TableCell>
   </>)
@@ -175,6 +177,29 @@ function UngradedCountCell({user_index, ungraded_count }: UngradedCountCellProps
   );
 }
 
+
+function generateCursor() : String{
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.height = 64;
+  canvas.width = 64;
+  if(ctx != null)
+  {
+    ctx.clearRect(0,0, canvas.width,canvas.height);
+
+    //@mui/icons-material/ModeEditOutline のpathデータ
+    const path = new Path2D("M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z");
+    ctx.strokeStyle = "#1976d2";
+    ctx.lineWidth = 2;
+    ctx.stroke(path);
+
+    const ImageUrl = canvas.toDataURL("image/png");
+
+    return ImageUrl;
+  }
+  return "";
+}
+
 export default function GradingPage({ params }: { params: { testid: number } }) {
   const [testData, setTestData] = useState<TestData | null>(null);
   const [submissionData, setSubmissionData] = useState<Submission[]>([]);
@@ -183,6 +208,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
   const [sectionValue, setSectionValue] = useState(0);
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
 
+  const [cursorImage,setCursorImage] = useState("");
   const [totalpoint_label, set_totalpoint_label] = useState("");
   const [ungraded_label,set_ungraded_label] = useState("");
 
@@ -295,17 +321,16 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
       const fetchTest = async () => {
         const test_res = await getTestById(Number(params.testid), String(session.user.name));
         if (test_res) {
-          console.log("getTestById");
-          console.log(test_res);
+          //console.log("getTestById");
+          //console.log(test_res);
           setTestData(test_res);
           setClassID(Number(test_res.classes.at(0)?.id));
 
           //console.log("Submissions")
           test_res.classes.at(0)?.users.map(async (user, index) => {
-            console.log(Number(params.testid))
             const submission_res = await getSubmission({ testId: Number(params.testid), username: user.name });
-            console.log(index + ":" + user.name);
-            console.log(submission_res);
+            //console.log(index + ":" + user.name);
+            //console.log(submission_res);
             if (submission_res) {
               submissionData_buf.push({ id: Number(submission_res?.id), studentId: Number(submission_res?.studentId), answers: submission_res.answers });
             }
@@ -324,6 +349,8 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               setSubmissionData(submissionData_buf);
               set_totalpoint_label("Total Point");
               set_ungraded_label("Ungraded");
+
+              setCursorImage(String(generateCursor()));
             }
           });
         }
@@ -436,7 +463,8 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                                   answerCellHandle={answerCellHandle}
                                   key={user.id + "-" + answer.questionId}
                                   userIndex={user_index}
-                                  questionIndex={question_index}>
+                                  questionIndex={question_index}
+                                  cursorImage={cursorImage}>
                                 </AnswerCell>
                               )
                             }
