@@ -76,6 +76,10 @@ function Result({ params }: { params: { id: string, username: string } }) {
   const [partIndex, setPartIndex] = useState(0);
   const [point, setPoint] = useState(0);
 
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    setPartIndex(newValue);
+  };
+
   useEffect(() => {
     const fetch = async () => {
       const data = await getSubmission({ testId: Number(params.id), username: params.username })
@@ -139,6 +143,7 @@ function Result({ params }: { params: { id: string, username: string } }) {
         </Box>
         <Tabs
           value={partIndex}
+          onChange={handleChange}
           aria-label="Tabs of each PART"
         >
           {data.test.sections.map((section: any, index: number) => (
