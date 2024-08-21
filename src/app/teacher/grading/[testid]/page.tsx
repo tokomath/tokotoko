@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react';
 import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmission } from "@/app/api/test/result"
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
+import { useSearchParams } from "next/navigation"
 
 import styles from "./styles.module.css"
 
@@ -211,10 +212,12 @@ function generateCursor() : String{
 }
 
 export default function GradingPage({ params }: { params: { testid: number } }) {
+  const searchParams = useSearchParams();
   const [testData, setTestData] = useState<TestData | null>(null);
   const [submissionData, setSubmissionData] = useState<Submission[]>([]);
   const { data: session, status } = useSession();
-  const [classID, setClassID] = useState(0);
+  const testID = Number(params.testid);
+  const classID = Number(searchParams.get("classid"));
   const [sectionValue, setSectionValue] = useState(0);
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
 
@@ -276,7 +279,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     exportdata_csv = r1 + "" + r2 + "" + r3;
     submissionData.map((submissionDatum, index) => {
       let rn: String = "";
-      rn += String(testData?.classes.at(0)?.users.at(index)?.name) + ",";
+      rn += String(testData?.classes.at(classID-1)?.users.at(index)?.name) + ",";
       submissionDatum.answers.map((answer, answer_index) => {
         rn += answer.text + "," + points[index][answer_index] + ",";
       })
@@ -288,7 +291,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     const url = URL.createObjectURL(blob);
     const a_buf = document.createElement('a');
     a_buf.href = url;
-    a_buf.download = testData?.title + "_" + testData?.classes.at(0)?.name + ".csv"
+    a_buf.download = testData?.title + "_" + testData?.classes.at(classID-1)?.name + ".csv"
     document.body.appendChild(a_buf);
     a_buf.click();
     document.body.removeChild(a_buf);
@@ -324,27 +327,27 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     return ungraded;
   }
   useEffect(() => {
-    if (session) {
+    if (session && classID != 0) {
       //console.log("Session");
       //console.log(session);
+
       const submissionData_buf: Array<Submission> = [];
       const fetchTest = async () => {
-        const test_res = await getTestById(Number(params.testid), String(session.user.name));
+        const test_res = await getTestById(Number(testID), String(session.user.name));
         if (test_res) {
           //console.log("getTestById");
           //console.log(test_res);
           setTestData(test_res);
-          setClassID(Number(test_res.classes.at(0)?.id));
 
           //console.log("Submissions")
-          test_res.classes.at(0)?.users.map(async (user, index) => {
-            const submission_res = await getSubmission({ testId: Number(params.testid), username: user.name });
+          test_res.classes.at(classID-1)?.users.map(async (user, index) => {
+            const submission_res = await getSubmission({ testId: Number(testID), username: user.name });
             //console.log(index + ":" + user.name);
             //console.log(submission_res);
             if (submission_res) {
               submissionData_buf.push({ id: Number(submission_res?.id), studentId: Number(submission_res?.studentId), answers: submission_res.answers });
             }
-            if (index + 1 == test_res.classes.at(0)?.users.length) {
+            if (index + 1 == test_res.classes.at(classID-1)?.users.length) {
               submissionData_buf.map((submissionDatum_buf, index_submission) => {
                 submissionDatum_buf.answers.map((answer, index_answer) => {
                   setPoints(prevPoints => ({
@@ -380,13 +383,13 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
             </Typography>
             <Box width="20em">
               <Typography textAlign="right">
-                Class Name: {testData?.classes.at(0)?.name}
+                Class Name: {testData?.classes.at(classID-1)?.name}
               </Typography>
               <Typography textAlign="right">
                 Class ID: {classID}
               </Typography>
               <Typography textAlign="right">
-                Test ID: {params.testid}
+                Test ID: {testID}
               </Typography>
             </Box>
 
@@ -440,7 +443,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               {/*==========以下データセル==========*/}
               <TableBody>
                 {
-                  testData?.classes.at(0)?.users.map((user: User, user_index) =>
+                  testData?.classes.at(classID-1)?.users.map((user: User, user_index) =>
                     <TableRow key={"ROW" + user_index}>
                       {/*ユーザー名を表示するセル*/}
                       <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
