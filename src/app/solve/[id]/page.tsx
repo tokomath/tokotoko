@@ -15,13 +15,11 @@ import Stack from "@mui/material/Stack";
 import Question from "@/compornents/Question";
 import SendIcon from "@mui/icons-material/Send";
 import Latex from "react-latex-next";
-import {SectionFrame, TestFrame} from "@/app/api/test/testFrames";
-import {getTestById} from "@/app/api/test/getTestById";
-import {isAlreadySubmit, submitProps, submitTest} from "@/app/api/test/submit";
-import {useSession} from "next-auth/react";
-import {getClassByUser} from "@/app/api/class/getClass";
-import {Answer} from "@prisma/client";
-import {useRouter} from "next/navigation";
+import { SectionFrame, TestFrame } from "@/app/api/test/testFrames";
+import { getTestById } from "@/app/api/test/getTestById";
+import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
+import { useSession } from "next-auth/react";
+import { Answer } from "@prisma/client";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -51,16 +49,15 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Page({params}: { params: { id: string } }) {
+export default function Page({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
-  const {data: session, status} = useSession()
-  const router = useRouter();
+  const { data: session, status } = useSession()
 
   useEffect(() => {
     const a = async () => {
-      if(session && session.user.name){
-        setAlreadySubmit(await isAlreadySubmit({username: session.user.name, testId: Number(params.id)}))
+      if (session && session.user.name) {
+        setAlreadySubmit(await isAlreadySubmit({ username: session.user.name, testId: Number(params.id) }))
         setLoading(false);
       }
     }
@@ -69,9 +66,12 @@ export default function Page({params}: { params: { id: string } }) {
 
   if (!loading && session && session.user.name) {
     if (alreadySubmit) {
-      return router.push("/solve/complete")
+      return <Completed id={params.id} />
     } else {
-      return <Solve params={{id: params.id, username: session.user.name}}/>
+      return <Solve
+        id={params.id}
+        username={session.user.name}
+        setAlreadySubmit={() => setAlreadySubmit(true)} />
     }
   } else if (status == "loading") {
     return <>Loading session...</>
@@ -80,16 +80,36 @@ export default function Page({params}: { params: { id: string } }) {
   }
 }
 
-function Solve({ params }: { params: { id: string, username: string } }) {
+function Completed({ id }: { id: string }) {
+  let url = "/result/" + id
+  return (
+    <Stack sx={{ margin: 2 }} textAlign={"center"} >
+      <Typography variant="h4" marginY={5}>Submission Completed</Typography>
+      <Link href={url} fontSize={20} marginY={5}>Check Your Results ＞</Link>
+    </Stack >
+  )
+}
+
+function Solve(
+  { id,
+    username,
+    setAlreadySubmit
+  }: {
+    id: string,
+    username: string,
+    setAlreadySubmit: () => void
+  }) {
   // undefined before init , null when unable to access form TODO
   const [testData, setTestData] = useState<TestFrame | null | undefined>(undefined);
 
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
 
+  const [sendingStatus, setSendingStatus] = useState(false);
+
   useEffect(() => {
     const fetchForm = async () => {
-      const res = await getTestById(Number(params.id), params.username);
+      const res = await getTestById(Number(id), username);
       if (res) {
         const test: TestFrame = {
           test: {
@@ -134,25 +154,28 @@ function Solve({ params }: { params: { id: string, username: string } }) {
   };
 
   const handleSubmit = async () => {
+    setSendingStatus(true);
+
     if (!testData) {
       alert("Error")
+      setSendingStatus(false);
       return
     }
 
-    const ans = {...answers};
+    const ans = { ...answers };
     const answerList = testData.sections.map((section: SectionFrame) => {
-        return section.questions.map((question: any) => {
-          if (ans[question.id.toString()]) {
-            return {id: Number(question.id), text: ans[question.id.toString()]}
-          } else {
-            return {id: Number(question.id), text: ""}
-          }
-        })
+      return section.questions.map((question: any) => {
+        if (ans[question.id.toString()]) {
+          return { id: Number(question.id), text: ans[question.id.toString()] }
+        } else {
+          return { id: Number(question.id), text: "" }
+        }
+      })
     }).flat()
 
     let submitdata: submitProps = {
-      userName: params.username,
-      testId: Number(params.id),
+      userName: username,
+      testId: Number(id),
       answerList: answerList as Answer[],
     };
 
@@ -161,11 +184,14 @@ function Solve({ params }: { params: { id: string, username: string } }) {
     const res = await submitTest(submitdata)
       .then((res) => {
         alert("Sent!");
+        setAlreadySubmit();
       })
       .catch((err) => {
         alert("Failed to send!\n");
         alert(err)
       });
+
+    setSendingStatus(false);
   };
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -216,7 +242,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
             KaTeXヘルプ
           </Link>
           <Typography fontFamily="monospace" marginX={1}>
-            FormID:{params.id}
+            FormID:{id}
           </Typography>
         </Box>
         <Box maxWidth={800} margin="auto">
@@ -296,6 +322,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
             setIndex={setPartIndex}
             maxIndex={testData.sections.length}
             handleSubmit={handleSubmit}
+            sendingStatus={sendingStatus}
           />
         </Box>
       </Box>
@@ -321,18 +348,26 @@ function Next({
   setIndex,
   maxIndex,
   handleSubmit,
+  sendingStatus
 }: {
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
   maxIndex: number;
   handleSubmit: () => void;
+  sendingStatus: boolean;
 }) {
-  if (index === maxIndex - 1) {
+  if (index === maxIndex - 1 && !sendingStatus) {
     return (
       <Button variant="contained" endIcon={<SendIcon />} onClick={handleSubmit}>
         Send
       </Button>
     );
+  } else if (sendingStatus) {
+    return (
+      <Button disabled>
+        Sending...
+      </Button>
+    )
   }
 
   return (
