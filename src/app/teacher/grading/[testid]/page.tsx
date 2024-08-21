@@ -218,6 +218,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
   const { data: session, status } = useSession();
   const testID = Number(params.testid);
   const classID = Number(searchParams.get("classid"));
+  const [classIndex,setClassIndex] = useState(0);
   const [sectionValue, setSectionValue] = useState(0);
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
 
@@ -279,7 +280,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     exportdata_csv = r1 + "" + r2 + "" + r3;
     submissionData.map((submissionDatum, index) => {
       let rn: String = "";
-      rn += String(testData?.classes.at(classID-1)?.users.at(index)?.name) + ",";
+      rn += String(testData?.classes.at(classIndex)?.users.at(index)?.name) + ",";
       submissionDatum.answers.map((answer, answer_index) => {
         rn += answer.text + "," + points[index][answer_index] + ",";
       })
@@ -291,7 +292,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     const url = URL.createObjectURL(blob);
     const a_buf = document.createElement('a');
     a_buf.href = url;
-    a_buf.download = testData?.title + "_" + testData?.classes.at(classID-1)?.name + ".csv"
+    a_buf.download = testData?.title + "_" + testData?.classes.at(classIndex)?.name + ".csv"
     document.body.appendChild(a_buf);
     a_buf.click();
     document.body.removeChild(a_buf);
@@ -335,19 +336,35 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
       const fetchTest = async () => {
         const test_res = await getTestById(Number(testID), String(session.user.name));
         if (test_res) {
-          //console.log("getTestById");
-          //console.log(test_res);
+          let class_index = -1;
+          console.log("getTestById");
+          console.log(test_res);
           setTestData(test_res);
+          test_res.classes.map((a_class,index) => {
+            if(a_class.id == classID)
+            {
+              class_index = index;
+              setClassIndex(index);
+              console.log(a_class.id + " " + classID +" "+index);
+            }
+          });
+
+          if(class_index == -1)
+          {
+            console.log("zero" + class_index)
+            setTestData(null);
+            return;
+          }
 
           //console.log("Submissions")
-          test_res.classes.at(classID-1)?.users.map(async (user, index) => {
+          test_res.classes.at(class_index)?.users.map(async (user, index) => {
             const submission_res = await getSubmission({ testId: Number(testID), username: user.name });
             //console.log(index + ":" + user.name);
             //console.log(submission_res);
             if (submission_res) {
               submissionData_buf.push({ id: Number(submission_res?.id), studentId: Number(submission_res?.studentId), answers: submission_res.answers });
             }
-            if (index + 1 == test_res.classes.at(classID-1)?.users.length) {
+            if (index + 1 == test_res.classes.at(class_index)?.users.length) {
               submissionData_buf.map((submissionDatum_buf, index_submission) => {
                 submissionDatum_buf.answers.map((answer, index_answer) => {
                   setPoints(prevPoints => ({
@@ -383,7 +400,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
             </Typography>
             <Box width="20em">
               <Typography textAlign="right">
-                Class Name: {testData?.classes.at(classID-1)?.name}
+                Class Name: {testData?.classes.at(classIndex)?.name}
               </Typography>
               <Typography textAlign="right">
                 Class ID: {classID}
@@ -410,6 +427,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               : (<>
                 <p>Submission Data not found. </p>
                 <p>The test has not been submitted yet or the test does not exist.</p>
+                <p>The ClassID or TestID may be incorrect.</p>
               </>)
           }
           <TableContainer component={Paper}>
@@ -443,7 +461,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               {/*==========以下データセル==========*/}
               <TableBody>
                 {
-                  testData?.classes.at(classID-1)?.users.map((user: User, user_index) =>
+                  testData?.classes.at(classIndex)?.users.map((user: User, user_index) =>
                     <TableRow key={"ROW" + user_index}>
                       {/*ユーザー名を表示するセル*/}
                       <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
