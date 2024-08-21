@@ -20,7 +20,6 @@ import { getTestById } from "@/app/api/test/getTestById";
 import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
 import { useSession } from "next-auth/react";
 import { Answer } from "@prisma/client";
-import { useRouter } from "next/navigation";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -54,7 +53,6 @@ export default function Page({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
   const { data: session, status } = useSession()
-  const router = useRouter();
 
   useEffect(() => {
     const a = async () => {
@@ -68,9 +66,12 @@ export default function Page({ params }: { params: { id: string } }) {
 
   if (!loading && session && session.user.name) {
     if (alreadySubmit) {
-      return <Completed params={{ id: params.id }} />
+      return <Completed id={params.id} />
     } else {
-      return <Solve params={{ id: params.id, username: session.user.name }} />
+      return <Solve
+        id={params.id}
+        username={session.user.name}
+        setAlreadySubmit={() => setAlreadySubmit(true)} />
     }
   } else if (status == "loading") {
     return <>Loading session...</>
@@ -79,8 +80,8 @@ export default function Page({ params }: { params: { id: string } }) {
   }
 }
 
-function Completed({ params }: { params: { id: string } }) {
-  let url = "/result/" + params.id
+function Completed({ id }: { id: string }) {
+  let url = "/result/" + id
   return (
     <Stack sx={{ margin: 2 }} textAlign={"center"} >
       <Typography variant="h4" marginY={5}>Submission Completed</Typography>
@@ -89,7 +90,15 @@ function Completed({ params }: { params: { id: string } }) {
   )
 }
 
-function Solve({ params }: { params: { id: string, username: string } }) {
+function Solve(
+  { id,
+    username,
+    setAlreadySubmit
+  }: {
+    id: string,
+    username: string,
+    setAlreadySubmit: () => void
+  }) {
   // undefined before init , null when unable to access form TODO
   const [testData, setTestData] = useState<TestFrame | null | undefined>(undefined);
 
@@ -100,7 +109,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
 
   useEffect(() => {
     const fetchForm = async () => {
-      const res = await getTestById(Number(params.id), params.username);
+      const res = await getTestById(Number(id), username);
       if (res) {
         const test: TestFrame = {
           test: {
@@ -165,8 +174,8 @@ function Solve({ params }: { params: { id: string, username: string } }) {
     }).flat()
 
     let submitdata: submitProps = {
-      userName: params.username,
-      testId: Number(params.id),
+      userName: username,
+      testId: Number(id),
       answerList: answerList as Answer[],
     };
 
@@ -175,6 +184,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
     const res = await submitTest(submitdata)
       .then((res) => {
         alert("Sent!");
+        setAlreadySubmit();
       })
       .catch((err) => {
         alert("Failed to send!\n");
@@ -232,7 +242,7 @@ function Solve({ params }: { params: { id: string, username: string } }) {
             KaTeXヘルプ
           </Link>
           <Typography fontFamily="monospace" marginX={1}>
-            FormID:{params.id}
+            FormID:{id}
           </Typography>
         </Box>
         <Box maxWidth={800} margin="auto">
