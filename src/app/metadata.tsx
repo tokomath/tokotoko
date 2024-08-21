@@ -1,6 +1,6 @@
-import type {Metadata} from "next";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "TokoToko",
+  title: "Formula Form",
   description: "E-learning for math",
 };

@@ -23,7 +23,7 @@ export default function RootLayout({
         <footer>
           {/* 中央寄せ */}
           <Box display="flex" justifyContent="center" alignItems="center" flexDirection="column">
-            <Typography fontSize={17}>TokoToko / とことこ</Typography>
+            <Typography fontSize={17}>Formula Form</Typography>
             <Box display="flex" justifyContent="center" alignItems="center" flexDirection="row" marginTop={1}>
               <Link href="https://github.com/tokomath/tokotoko" marginRight={1}>Source Code</Link>
               <Link href="https://github.com/tokomath/tokotoko/blob/main/ThirdPartyNotices.txt" marginLeft={1}>Third Party Licenses</Link>
