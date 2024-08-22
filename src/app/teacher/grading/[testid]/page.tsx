@@ -222,6 +222,8 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
   const [classIndex,setClassIndex] = useState(0);
   const [sectionValue, setSectionValue] = useState(0);
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
+  const [submission_index, setSubmissionIndex] = useState<Record<number,number>>({});
+  
 
   const [cursorImage,setCursorImage] = useState("");
   const [totalpoint_label, set_totalpoint_label] = useState("");
@@ -245,7 +247,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         [questionIndex]: newPoint
       }
     }));
-    console.log(-1 * Number(newPoint))
+    //console.log(-1 * Number(newPoint))
   }
 
   const savebuttonHandle = async () => {
@@ -275,7 +277,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     let r3: String = "Answer,";
     testData?.sections.map((section, section_index) => {
       section.questions.map((question, question_index) => {
-        r1 += "Part" + section_index + "-" + question_index + ",,";
+        r1 += "Part" + (section_index+1) + "-" + (question_index+1) + ",,";
         r2 += question.question + ",,";
         r3 += question.answer + ",,";
       })
@@ -284,15 +286,32 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     r2 = r2.slice(0, r2.length - 1) + "\n";
     r3 = r3.slice(0, r3.length - 1) + "\n";
     exportdata_csv = r1 + "" + r2 + "" + r3;
-    submissionData.map((submissionDatum, index) => {
+    let answer_index_max = 0;
+    testData?.sections.map((sections) => {
+      answer_index_max += sections.questions.length;
+    })
+
+    testData?.classes.at(classIndex)?.users.map((user, user_index) => {
       let rn: String = "";
-      rn += String(testData?.classes.at(classIndex)?.users.at(index)?.name) + ",";
-      submissionDatum.answers.map((answer, answer_index) => {
-        rn += answer.text + "," + points[index][answer_index] + ",";
-      })
+      const data_index = submission_index[user_index];
+      rn += user.name + ",";
+      if(data_index != undefined)
+      {
+        const submittion = submissionData.at(data_index);
+        submittion?.answers.map((answer,answer_index) => {
+          rn += answer.text.replaceAll("\n","").replaceAll(",","，") + "," + points[data_index][answer_index]+",";
+        })
+      }
+      else
+      {
+        for(let i = 0; i < (answer_index_max*2);i++)
+        {
+          rn+=","
+        }
+      }
       rn = rn.slice(0, rn.length - 1) + "\n"
       exportdata_csv += rn + "";
-    })
+    });
 
     const blob = new Blob([exportdata_csv + ""], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -343,34 +362,38 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         const test_res = await getTestById(Number(testID), String(session.user.name));
         if (test_res) {
           let class_index = -1;
-          console.log("getTestById");
-          console.log(test_res);
+          //console.log("getTestById");
+          //console.log(test_res);
           setTestData(test_res);
           test_res.classes.map((a_class,index) => {
             if(a_class.id == classID)
             {
               class_index = index;
               setClassIndex(index);
-              console.log(a_class.id + " " + classID +" "+index);
             }
           });
 
           if(class_index == -1)
           {
-            console.log("zero" + class_index)
             setTestData(null);
             return;
           }
 
           //console.log("Submissions")
-          test_res.classes.at(class_index)?.users.map(async (user, index) => {
+          let count_submissions  = 0;
+          test_res.classes.at(class_index)?.users.map(async (user, user_index) => {
             const submission_res = await getSubmission({ testId: Number(testID), username: user.name });
-            //console.log(index + ":" + user.name);
+            //console.log(user_index + ":" + user.name);
             //console.log(submission_res);
-            if (submission_res) {
+            if (submission_res != null) {
               submissionData_buf.push({ id: Number(submission_res?.id), studentId: Number(submission_res?.studentId), answers: submission_res.answers });
+              count_submissions += 1;
+              setSubmissionIndex(prevIndex => ({
+                ...prevIndex,
+                [user_index]:(Number(count_submissions) - 1)
+              }));
             }
-            if (index + 1 == test_res.classes.at(class_index)?.users.length) {
+            if (user_index + 1 == test_res.classes.at(class_index)?.users.length) {
               submissionData_buf.map((submissionDatum_buf, index_submission) => {
                 submissionDatum_buf.answers.map((answer, index_answer) => {
                   setPoints(prevPoints => ({
@@ -387,7 +410,6 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               set_ungraded_label("Ungraded");
 
               setCursorImage(String(generateCursor()));
-              console.log(class_index);
             }
           });
         }
@@ -507,19 +529,28 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
 
                           //現在のセクションの問題を表示する
                           for (let question_index = start; question_index < start + Number(testData.sections.at(sectionValue)?.questions.length); question_index++) {
-                            let answer = submissionData.at(user_index)?.answers.at(question_index);
-                            if (answer != undefined) {
-                              const currentPoint = points[user_index]?.[question_index];
+                            let data_index = submission_index[user_index];
+                            let answer = submissionData.at(data_index)?.answers.at(question_index);
+                            if (data_index != undefined && answer != undefined) {
+                              const currentPoint = points[data_index]?.[question_index];
                               cells.push(
                                 <AnswerCell answer={answer.text}
                                   point={currentPoint}
                                   answerCellHandle={answerCellClickHandle}
                                   key={user.id + "-" + answer.questionId}
-                                  userIndex={user_index}
+                                  userIndex={data_index}
                                   questionIndex={question_index}
                                   cursorImage={cursorImage}
                                   >
                                 </AnswerCell>
+                              )
+                            }
+                            else
+                            {
+                              cells.push(
+                                <TableCell key={"noanswer"+user_index+"-"+question_index} align="center">
+                                  -
+                                </TableCell>
                               )
                             }
                           }
