@@ -275,17 +275,26 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     let r1: String = "Part-QNumber,";
     let r2: String = "Question,";
     let r3: String = "Answer,";
+
+    function format_text(str : String) : String
+    {
+      //改行が含まれていたら取り除き、カンマは全角に置換する。（csvデータが壊れるのを防ぐため）
+      return str.replaceAll("\n","").replaceAll(",","，");
+    }
+
     testData?.sections.map((section, section_index) => {
       section.questions.map((question, question_index) => {
         r1 += "Part" + (section_index+1) + "-" + (question_index+1) + ",,";
-        r2 += question.question + ",,";
-        r3 += question.answer + ",,";
+        r2 += format_text(question.question) + ",,";
+        r3 += format_text(question.answer) + ",,";
       })
     })
+
     r1 = r1.slice(0, r1.length - 1) + "\n";
     r2 = r2.slice(0, r2.length - 1) + "\n";
     r3 = r3.slice(0, r3.length - 1) + "\n";
     exportdata_csv = r1 + "" + r2 + "" + r3;
+
     let answer_index_max = 0;
     testData?.sections.map((sections) => {
       answer_index_max += sections.questions.length;
@@ -294,12 +303,12 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     testData?.classes.at(classIndex)?.users.map((user, user_index) => {
       let rn: String = "";
       const data_index = submission_index[user_index];
-      rn += user.name + ",";
+      rn += format_text(user.name) + ",";
       if(data_index != undefined)
       {
         const submittion = submissionData.at(data_index);
         submittion?.answers.map((answer,answer_index) => {
-          rn += answer.text.replaceAll("\n","").replaceAll(",","，") + "," + points[data_index][answer_index]+",";
+          rn += format_text(answer.text) + "," + points[data_index][answer_index]+",";
         })
       }
       else
