@@ -46,6 +46,11 @@ export const grading = async (id: number, your_answer: string): Promise<number> 
   // 2 Correct, 1 MabyCorrect, 0 Unknown
   // ID をもとに、正答と回答を取得して比較する
 
+  // 空欄の場合は 0 点
+  if (your_answer === "") {
+    return 0;
+  }
+
   try {
     const ans = await prisma.question.findUnique({
       where: { id: id }
