@@ -139,7 +139,9 @@ function Result({ params }: { params: { id: string, username: string } }) {
       {/* 問題部分 */}
       <Box maxWidth={640} margin="auto">
         <Box alignContent="center" padding={2}>
-          <div>{"点数: " + point + "point"}</div>
+        {
+          point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + "point"}</div>
+        }
         </Box>
         <Tabs
           value={partIndex}
