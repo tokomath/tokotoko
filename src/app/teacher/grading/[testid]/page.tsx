@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, colors } from "@mui/material";
+import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem } from "@mui/material";
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmission } from "@/app/api/test/result"
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
-import { useSearchParams } from "next/navigation"
+import { useRouter,useSearchParams } from "next/navigation"
 
 import styles from "./styles.module.css"
 
@@ -213,6 +213,7 @@ function generateCursor() : String{
 
 export default function GradingPage({ params }: { params: { testid: number } }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [testData, setTestData] = useState<TestData | null>(null);
   const [submissionData, setSubmissionData] = useState<Submission[]>([]);
   const { data: session, status } = useSession();
@@ -227,6 +228,11 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
   const [ungraded_label,set_ungraded_label] = useState("");
 
   //#region イベントハンドラ
+  const selectClassHandle = (selectedClassID: number) => {    
+    savebuttonHandle();
+    router.push("/teacher/grading/"+testID+"?classid="+selectedClassID);
+  }
+
   const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
     setSectionValue(newValue);
   };
@@ -381,27 +387,47 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               set_ungraded_label("Ungraded");
 
               setCursorImage(String(generateCursor()));
+              console.log(class_index);
             }
           });
         }
       }
       fetchTest();
     }
-  }, [status]);
+  }, [status,classID]);
 
   return (
     <>
       {/*==========ヘッダエリア==========*/}
-      <Paper sx={{ borderRadius: 0, width: "100%" }}>
+      <Paper sx={{ borderRadius: 0, width: "100%",m:0,p:0}}>
         <Box sx={{ pt: 2, pr: 2, pb: 1 }}>
           <Box display="flex" justifyContent="right">
-            <Typography variant="h4" sx={{ ml: 2, mt: 2 }} width="100%">
-              {testData?.title}
-            </Typography>
-            <Box width="20em">
-              <Typography textAlign="right">
-                Class Name: {testData?.classes.at(classIndex)?.name}
+            <Box width="100%">
+              <Typography variant="h4" sx={{ ml: 2, mt: 2 }} width="100%">
+                {testData?.title}
               </Typography>
+              <hr/>
+              <Typography variant="h6" sx={{ ml: 2 }}>
+                {testData?.summary}
+              </Typography>
+            </Box>
+
+            <Box width="10em">
+              <Box display="flex" justifyContent="right">
+              {
+                Number(testData?.classes.length) > 0 ?
+                <TextField select id="select_class" value={classID}>
+                {
+                  testData?.classes.map((a_class,index) => 
+                    <MenuItem key={"select_class"+index} value={Number(a_class.id)} onClick={()=>selectClassHandle(Number(a_class.id))}>
+                      {a_class.name}
+                    </MenuItem>
+                  )
+                }
+              </TextField>
+              : <></>
+              }
+              </Box>
               <Typography textAlign="right">
                 Class ID: {classID}
               </Typography>
@@ -409,12 +435,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                 Test ID: {testID}
               </Typography>
             </Box>
-
           </Box>
-          <hr />
-          <Typography variant="h6" sx={{ ml: 2 }}>
-            {testData?.summary}
-          </Typography>
         </Box>
       </Paper>
 
