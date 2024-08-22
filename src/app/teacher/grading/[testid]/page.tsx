@@ -415,6 +415,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
             <Box width="10em">
               <Box display="flex" justifyContent="right">
               {
+                /*クラスを選択するコンボボックス*/
                 Number(testData?.classes.length) > 0 ?
                 <TextField select id="select_class" value={classID}>
                 {
