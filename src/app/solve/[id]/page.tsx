@@ -20,6 +20,7 @@ import { getTestById } from "@/app/api/test/getTestById";
 import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
 import { useSession } from "next-auth/react";
 import { Answer } from "@prisma/client";
+import TopBar from "@/compornents/TopBar";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -66,12 +67,23 @@ export default function Page({ params }: { params: { id: string } }) {
 
   if (!loading && session && session.user.name) {
     if (alreadySubmit) {
-      return <Completed id={params.id} />
+      return (
+        <>
+          <TopBar page_name="" user_name={session.user.name} />
+          <Completed id={params.id} />
+        </>
+      )
     } else {
-      return <Solve
-        id={params.id}
-        username={session.user.name}
-        setAlreadySubmit={() => setAlreadySubmit(true)} />
+      return (
+        <>
+          <TopBar page_name="" user_name={session.user.name} />
+          <Solve
+            id={params.id}
+            username={session.user.name}
+            setAlreadySubmit={() => setAlreadySubmit(true)}
+          />
+        </>
+      )
     }
   } else if (status == "loading") {
     return <>Loading session...</>
@@ -252,8 +264,16 @@ function Solve(
             </Typography>
             <Typography>{testData.test.summary}</Typography>
             <Typography>
-              Start:{testData.test.startDate.toString()} → Deadline:
-              {testData.test.endDate.toString()}
+              {"Start: " + testData.test.startDate.getFullYear() + "/" + (testData.test.startDate.getMonth() + 1) + "/" + testData.test.startDate.getDate() + " " +
+                testData.test.startDate.getHours() + ":" + testData.test.startDate.getMinutes() +
+                " (UTC+" + testData.test.startDate.getTimezoneOffset() / -60 + "h)"
+              }
+            </Typography>
+            <Typography>
+              {"End : " + testData.test.endDate.getFullYear() + "/" + (testData.test.endDate.getMonth() + 1) + "/" + testData.test.endDate.getDate() + " " +
+                testData.test.endDate.getHours() + ":" + testData.test.endDate.getMinutes() +
+                " (UTC+" + testData.test.endDate.getTimezoneOffset() / -60 + "h)"
+              }
             </Typography>
           </Stack>
         </Box>
@@ -326,7 +346,7 @@ function Solve(
           />
         </Box>
       </Box>
-    </main>
+    </main >
   );
 }
 
