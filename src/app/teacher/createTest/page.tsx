@@ -419,7 +419,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
         <Latex >{section.section.summary}</Latex>
       </Stack>
       <TextField
-        label={"section summary"}
+        label={"summary"}
         value={section.section.summary}
         onChange={(e) => handleSectionSummaryChange(e.target.value)}
 
