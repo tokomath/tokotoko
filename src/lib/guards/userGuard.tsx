@@ -48,7 +48,7 @@ export const TeacherGuard = ({children}: any) => {
   if(auth === "loading")
     return <></>
   if(auth === "ok")
-    return <h1>{children}</h1>
+    return <>{children}</>
   if(auth === "ng"){
     router.push("/")
     return null

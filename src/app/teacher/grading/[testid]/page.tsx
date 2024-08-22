@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, colors } from "@mui/material";
+import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem } from "@mui/material";
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
@@ -9,6 +9,7 @@ import { useSession } from 'next-auth/react';
 import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmission } from "@/app/api/test/result"
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
+import { useRouter,useSearchParams } from "next/navigation"
 
 import styles from "./styles.module.css"
 
@@ -211,10 +212,14 @@ function generateCursor() : String{
 }
 
 export default function GradingPage({ params }: { params: { testid: number } }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [testData, setTestData] = useState<TestData | null>(null);
   const [submissionData, setSubmissionData] = useState<Submission[]>([]);
   const { data: session, status } = useSession();
-  const [classID, setClassID] = useState(0);
+  const testID = Number(params.testid);
+  const classID = Number(searchParams.get("classid"));
+  const [classIndex,setClassIndex] = useState(0);
   const [sectionValue, setSectionValue] = useState(0);
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
 
@@ -223,6 +228,11 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
   const [ungraded_label,set_ungraded_label] = useState("");
 
   //#region イベントハンドラ
+  const selectClassHandle = (selectedClassID: number) => {    
+    savebuttonHandle();
+    router.push("/teacher/grading/"+testID+"?classid="+selectedClassID);
+  }
+
   const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
     setSectionValue(newValue);
   };
@@ -276,7 +286,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     exportdata_csv = r1 + "" + r2 + "" + r3;
     submissionData.map((submissionDatum, index) => {
       let rn: String = "";
-      rn += String(testData?.classes.at(0)?.users.at(index)?.name) + ",";
+      rn += String(testData?.classes.at(classIndex)?.users.at(index)?.name) + ",";
       submissionDatum.answers.map((answer, answer_index) => {
         rn += answer.text + "," + points[index][answer_index] + ",";
       })
@@ -288,7 +298,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     const url = URL.createObjectURL(blob);
     const a_buf = document.createElement('a');
     a_buf.href = url;
-    a_buf.download = testData?.title + "_" + testData?.classes.at(0)?.name + ".csv"
+    a_buf.download = testData?.title + "_" + testData?.classes.at(classIndex)?.name + ".csv"
     document.body.appendChild(a_buf);
     a_buf.click();
     document.body.removeChild(a_buf);
@@ -324,27 +334,43 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     return ungraded;
   }
   useEffect(() => {
-    if (session) {
+    if (session && classID != 0) {
       //console.log("Session");
       //console.log(session);
+
       const submissionData_buf: Array<Submission> = [];
       const fetchTest = async () => {
-        const test_res = await getTestById(Number(params.testid), String(session.user.name));
+        const test_res = await getTestById(Number(testID), String(session.user.name));
         if (test_res) {
-          //console.log("getTestById");
-          //console.log(test_res);
+          let class_index = -1;
+          console.log("getTestById");
+          console.log(test_res);
           setTestData(test_res);
-          setClassID(Number(test_res.classes.at(0)?.id));
+          test_res.classes.map((a_class,index) => {
+            if(a_class.id == classID)
+            {
+              class_index = index;
+              setClassIndex(index);
+              console.log(a_class.id + " " + classID +" "+index);
+            }
+          });
+
+          if(class_index == -1)
+          {
+            console.log("zero" + class_index)
+            setTestData(null);
+            return;
+          }
 
           //console.log("Submissions")
-          test_res.classes.at(0)?.users.map(async (user, index) => {
-            const submission_res = await getSubmission({ testId: Number(params.testid), username: user.name });
+          test_res.classes.at(class_index)?.users.map(async (user, index) => {
+            const submission_res = await getSubmission({ testId: Number(testID), username: user.name });
             //console.log(index + ":" + user.name);
             //console.log(submission_res);
             if (submission_res) {
               submissionData_buf.push({ id: Number(submission_res?.id), studentId: Number(submission_res?.studentId), answers: submission_res.answers });
             }
-            if (index + 1 == test_res.classes.at(0)?.users.length) {
+            if (index + 1 == test_res.classes.at(class_index)?.users.length) {
               submissionData_buf.map((submissionDatum_buf, index_submission) => {
                 submissionDatum_buf.answers.map((answer, index_answer) => {
                   setPoints(prevPoints => ({
@@ -361,40 +387,56 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               set_ungraded_label("Ungraded");
 
               setCursorImage(String(generateCursor()));
+              console.log(class_index);
             }
           });
         }
       }
       fetchTest();
     }
-  }, [status]);
+  }, [status,classID]);
 
   return (
     <>
       {/*==========ヘッダエリア==========*/}
-      <Paper sx={{ borderRadius: 0, width: "100%" }}>
+      <Paper sx={{ borderRadius: 0, width: "100%",m:0,p:0}}>
         <Box sx={{ pt: 2, pr: 2, pb: 1 }}>
           <Box display="flex" justifyContent="right">
-            <Typography variant="h4" sx={{ ml: 2, mt: 2 }} width="100%">
-              {testData?.title}
-            </Typography>
-            <Box width="20em">
-              <Typography textAlign="right">
-                Class Name: {testData?.classes.at(0)?.name}
+            <Box width="100%">
+              <Typography variant="h4" sx={{ ml: 2, mt: 2 }} width="100%">
+                {testData?.title}
               </Typography>
+              <hr/>
+              <Typography variant="h6" sx={{ ml: 2 }}>
+                {testData?.summary}
+              </Typography>
+            </Box>
+
+            <Box width="10em">
+              <Box display="flex" justifyContent="right">
+              {
+                /*クラスを選択するコンボボックス*/
+                Number(testData?.classes.length) > 0 ?
+                <TextField select id="select_class" value={classID}>
+                {
+                  testData?.classes.map((a_class,index) => 
+                    <MenuItem key={"select_class"+index} value={Number(a_class.id)} onClick={()=>selectClassHandle(Number(a_class.id))}>
+                      {a_class.name}
+                    </MenuItem>
+                  )
+                }
+              </TextField>
+              : <></>
+              }
+              </Box>
               <Typography textAlign="right">
                 Class ID: {classID}
               </Typography>
               <Typography textAlign="right">
-                Test ID: {params.testid}
+                Test ID: {testID}
               </Typography>
             </Box>
-
           </Box>
-          <hr />
-          <Typography variant="h6" sx={{ ml: 2 }}>
-            {testData?.summary}
-          </Typography>
         </Box>
       </Paper>
 
@@ -407,6 +449,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               : (<>
                 <p>Submission Data not found. </p>
                 <p>The test has not been submitted yet or the test does not exist.</p>
+                <p>The ClassID or TestID may be incorrect.</p>
               </>)
           }
           <TableContainer component={Paper}>
@@ -440,7 +483,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               {/*==========以下データセル==========*/}
               <TableBody>
                 {
-                  testData?.classes.at(0)?.users.map((user: User, user_index) =>
+                  testData?.classes.at(classIndex)?.users.map((user: User, user_index) =>
                     <TableRow key={"ROW" + user_index}>
                       {/*ユーザー名を表示するセル*/}
                       <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
