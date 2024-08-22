@@ -56,8 +56,8 @@ const MypageContent = (props: { userName: string }) => {
     return (
       <Stack spacing={2}>
         {
-          tests.map((item) => (
-            <Card>
+          tests.map((item, id) => (
+            <Card key={id}>
               <CardActionArea onClick={
                 () => {
                   location.href = "/solve/" + item.test.id
