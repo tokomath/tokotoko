@@ -17,6 +17,7 @@ import { isAlreadySubmit } from "@/app/api/test/submit";
 import { useSession } from "next-auth/react";
 import { getSubmission } from "@/app/api/test/result";
 import { BlockMath } from "react-katex";
+import TopBar from "@/compornents/TopBar";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -62,7 +63,10 @@ export default function Page({ params }: { params: { id: string } }) {
   }, [session])
 
   if (!loading && session && session.user.name && alreadySubmit) {
-    return <Result params={{ id: params.id, username: session.user.name }} />
+    return <>
+      <TopBar page_name="Result" user_name={session.user.name} />
+      <Result params={{ id: params.id, username: session.user.name }} />
+    </>
   } else if (status == "loading") {
     return <>Loading session...</>
   } else {
@@ -139,9 +143,9 @@ function Result({ params }: { params: { id: string, username: string } }) {
       {/* 問題部分 */}
       <Box maxWidth={640} margin="auto">
         <Box alignContent="center" padding={2}>
-        {
-          point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + "point"}</div>
-        }
+          {
+            point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + "point"}</div>
+          }
         </Box>
         <Tabs
           value={partIndex}

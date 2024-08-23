@@ -1,16 +1,15 @@
 "use client";
 
-import React, {useEffect, useState} from "react";
-import {List, ListItem, Card, CardContent, Typography, Button, Link, Box} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, Typography, CardActionArea, } from "@mui/material";
 import 'katex/dist/katex.min.css';
-import {Test, Class, User} from "@prisma/client";
+import { Test, Class } from "@prisma/client";
 
-
-import SchoolIcon from '@mui/icons-material/School';
 import Stack from '@mui/material/Stack';
-import {getTestByClass} from "@/app/api/test/getTestByClass";
-import {getClassByUser} from "@/app/api/class/getClass";
+import { getTestByClass } from "@/app/api/test/getTestByClass";
+import { getClassByUser } from "@/app/api/class/getClass";
 import { useSession } from 'next-auth/react';
+import TopBar from "@/compornents/TopBar";
 
 interface TestInterface {
   test: Test,
@@ -18,19 +17,19 @@ interface TestInterface {
 };
 
 export default function Mypage() {
-  const {data: session, status } = useSession();
+  const { data: session, status } = useSession();
   // when not logining
-  
-  if(session){
+
+  if (session) {
     const userName = session.user.name;
-    if(userName){
+    if (userName) {
       return <MypageContent userName={userName} />
     }
-  } 
+  }
 
 
 }
-const MypageContent = (props: {userName: string}) => {
+const MypageContent = (props: { userName: string }) => {
   const [testId, setTestId] = useState<number[]>([])
   const [tests, setTests] = useState<TestInterface[]>([]);
 
@@ -43,7 +42,7 @@ const MypageContent = (props: {userName: string}) => {
         const tmp = classes.map(async (c: Class) => {
           const tmpClass = await getTestByClass(c.id)
           return tmpClass.map((t: Test) => {
-            return {test: t, class: c}
+            return { test: t, class: c }
           })
         });
         return tmp
@@ -55,54 +54,50 @@ const MypageContent = (props: {userName: string}) => {
 
   const TestCard = () => {
     return (
-      <Box width={"100%"} alignSelf={"center"}>
+      <Stack spacing={2}>
         {
-          tests.map((item, idx) => (
-            // eslint-disable-next-line react/jsx-key
-            <Box margin={"15px"}>
-              <Link href={"/solve/" + item.test.id}>
-                <Card key={idx}>
-                  <CardContent>
-                    <Stack direction={"row"} justifyContent={"space-between"}>
-                      <Typography alignSelf={"center"} variant="h4">
-                        {item.test.title}
-                      </Typography>
-                      <Stack>
-                        <Typography textAlign={"right"} variant="h6">
-                          {"deadline/  " + item.test.endDate.toDateString()}
-                        </Typography>
-                        <Typography textAlign={"right"} variant="h6">
-                          {"class/  " + item.class.name}
-                        </Typography>
-                      </Stack>
-                    </Stack>
-
-                    <Typography variant="h6">
-                      {"summary:  " + item.test.summary}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Link>
-            </Box>
+          tests.map((item, id) => (
+            <Card key={id}>
+              <CardActionArea onClick={
+                () => {
+                  location.href = "/solve/" + item.test.id
+                }}
+              >
+                <CardContent>
+                  <Typography variant="body2" color="text.secondary">
+                    {item.class.name}
+                  </Typography>
+                  <Typography gutterBottom variant="h5" component="div">
+                    {item.test.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {"Start: " +
+                      item.test.startDate.getFullYear() + "/" + (item.test.startDate.getMonth() + 1) + "/" + item.test.startDate.getDate() + " " +
+                      item.test.startDate.getHours() + ":" + item.test.startDate.getMinutes() +
+                      " (UTC+" + item.test.startDate.getTimezoneOffset() / -60 + "h)"
+                    }
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {"End : " +
+                      item.test.endDate.getFullYear() + "/" + (item.test.endDate.getMonth() + 1) + "/" + item.test.endDate.getDate() + " " +
+                      item.test.endDate.getHours() + ":" + item.test.endDate.getMinutes() +
+                      " (UTC+" + item.test.endDate.getTimezoneOffset() / -60 + "h)"}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </Card>
           ))
         }
-      </Box>
+      </Stack>
     )
   }
 
   return (
-    <Stack marginX={"10px"} alignContent={"center"}>
-      <Stack alignSelf={"center"} direction={"row"}>
-        <Box paddingX={"10px"}>
-          <SchoolIcon fontSize={"large"}/>
-        </Box>
-        <Stack direction={"row"}>
-          <Typography textAlign={"center"} variant="h3">
-            {props.userName}
-          </Typography>
-        </Stack>
+    <>
+      <TopBar page_name={"My Page"} user_name={props.userName} />
+      <Stack maxWidth={800} marginX={"auto"} padding={2}>
+        <TestCard />
       </Stack>
-      <TestCard/>
-    </Stack>
+    </>
   )
 }
