@@ -543,7 +543,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                             if (data_index != undefined && answer != undefined) {
                               const currentPoint = points[data_index]?.[question_index];
                               cells.push(
-                                <AnswerCell answer={answer.text}
+                                <AnswerCell answer={(answer.text == "" ? " " : answer.text)}
                                   point={currentPoint}
                                   answerCellHandle={answerCellClickHandle}
                                   key={user.id + "-" + answer.questionId}
