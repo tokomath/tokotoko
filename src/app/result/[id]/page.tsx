@@ -91,17 +91,24 @@ function Result({ params }: { params: { id: string, username: string } }) {
         setData(data)
         let i = 0;
         let p = 0;
+        let misaiten = false;
         data.test.sections.forEach((sec) => {
           sec.questions.forEach((q) => {
             //@ts-ignore
             q["ans"] = data.answers[i];
-            if (data.answers[i].point > 0) {
+            if (data.answers[i].point >= 0) {
               p += data.answers[i].point;
+            } else {
+              misaiten = true;
             }
             i += 1;
           })
         })
-        setPoint(p)
+        if (misaiten) {
+          setPoint(-1)
+        } else {
+          setPoint(p)
+        }
         console.log(data)
       } else {
         setData(null)
@@ -270,7 +277,9 @@ function Question({ id, number, question, myAns, trueAns, point }: any) {
         <Box minWidth={20} />
         <BlockMath>{trueAns}</BlockMath>
       </Box>
-      <div>{point} points</div>
+      {
+        point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + " points"}</div>
+      }
     </Stack>
 
   )
