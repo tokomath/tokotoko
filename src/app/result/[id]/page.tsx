@@ -90,14 +90,18 @@ function Result({ params }: { params: { id: string, username: string } }) {
       if (data) {
         setData(data)
         let i = 0;
+        let p = 0;
         data.test.sections.forEach((sec) => {
           sec.questions.forEach((q) => {
             //@ts-ignore
             q["ans"] = data.answers[i];
-            setPoint(point + data.answers[i].point)
-            i += 1
+            if (data.answers[i].point > 0) {
+              p += data.answers[i].point;
+            }
+            i += 1;
           })
         })
+        setPoint(p)
         console.log(data)
       } else {
         setData(null)
@@ -144,7 +148,7 @@ function Result({ params }: { params: { id: string, username: string } }) {
       <Box maxWidth={640} margin="auto">
         <Box alignContent="center" padding={2}>
           {
-            point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + "point"}</div>
+            point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + " points"}</div>
           }
         </Box>
         <Tabs
@@ -266,7 +270,7 @@ function Question({ id, number, question, myAns, trueAns, point }: any) {
         <Box minWidth={20} />
         <BlockMath>{trueAns}</BlockMath>
       </Box>
-      <div>{point} point</div>
+      <div>{point} points</div>
     </Stack>
 
   )
