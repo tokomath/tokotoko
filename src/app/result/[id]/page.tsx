@@ -166,6 +166,12 @@ function Result({ params }: { params: { id: string, username: string } }) {
             value={partIndex}
             index={i1}
           >
+            <Box margin={2}>
+              <Typography variant="h6">
+                PART {section.number}
+              </Typography>
+              <Latex>{section.summary}</Latex>
+            </Box>
             {section.questions.map((question: any) => {
               return <Paper key={question.id} sx={{ marginTop: 2, padding: 2 }}><React.Fragment key={question.id}>
                 <Question
