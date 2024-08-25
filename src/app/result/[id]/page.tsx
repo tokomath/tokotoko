@@ -279,7 +279,7 @@ function Question({ id, number, question, myAns, trueAns, point }: any) {
         alignItems="center"
         paddingX={2}
       >
-        <Typography>答え</Typography>
+        <Typography>正答</Typography>
         <Box minWidth={20} />
         <BlockMath>{trueAns}</BlockMath>
       </Box>
