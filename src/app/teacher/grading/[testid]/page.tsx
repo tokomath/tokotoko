@@ -521,11 +521,11 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                       
                       {/* 合計ポイントを表示するセル */}
                       <TableCell key={"totalPoints-" + user_index} sx={{ textAlign: "center" }} className={styles.point_cell}>
-                        {calculateUserTotalPoints(user_index)}
+                        {calculateUserTotalPoints(submission_index[user_index])}
                       </TableCell>
 
                       {/*未採点問題数を表示するセル*/}
-                      <UngradedCountCell user_index={user_index} ungraded_count={countUngraded(user_index)}/>
+                      <UngradedCountCell user_index={user_index} ungraded_count={countUngraded(submission_index[user_index])}/>
                       
                       {
                         (function () {
