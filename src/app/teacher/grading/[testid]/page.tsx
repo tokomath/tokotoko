@@ -525,7 +525,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                       </TableCell>
 
                       {/*未採点問題数を表示するセル*/}
-                      <UngradedCountCell user_index={user_index} ungraded_count={countUngraded(user_index)}/>
+                      <UngradedCountCell user_index={user_index} ungraded_count={countUngraded(submission_index[user_index])}/>
                       
                       {
                         (function () {
