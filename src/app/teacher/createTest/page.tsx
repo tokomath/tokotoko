@@ -36,8 +36,13 @@ import { Test, Section, Question, Class } from "@prisma/client";
 import dayjs, { Dayjs } from "dayjs";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Autocomplete from '@mui/material/Autocomplete';
+
 import Latex from "react-latex-next";
 import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
+
+const insert_options =["None","Image","HTML"];
 
 export default function Page() {
   const [sections, setSections] = useState<SectionFrame[]>([]);
@@ -50,6 +55,7 @@ export default function Page() {
   const [assignedClass, setAssignedClass] = useState<Class[]>([]);
 
   const [classList, setClassList] = useState<Class[]>([]);
+
   useEffect(() => {
     const fetchClasses = async () => {
       // TODO: teacherIdを取得
@@ -349,6 +355,8 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       sectionId: 1,
       question: "",
       number: section.questions.length + 1,
+      insertType: "None",
+      insertContent:"",
       answer: "",
     };
 
@@ -371,6 +379,8 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           sectionId: 1,
           question: q.question,
           number: i + 1,
+          insertType: q.insertType,
+          insertContent: q.insertContent,
           answer: q.answer,
         };
         return question;
@@ -464,6 +474,13 @@ const QuestionPage = ({
 
     setQuestion(newQ);
   };
+  
+  const setInsertType = (insertType:string)=> {
+    const newQ = question;
+    question.insertType = insertType;
+
+    setQuestion(newQ);
+  };
 
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">
@@ -478,6 +495,13 @@ const QuestionPage = ({
         value={question.question}
         onChange={(e) => setQues(e.target.value)}
       />
+      <Box>
+        {/*コンテンツ挿入エリア*/}
+          <Autocomplete disablePortal
+          options={insert_options} defaultValue={question.insertType} disableClearable
+          onChange={(event,option)=>setInsertType(option)}
+          sx={{ width: "30%" }}  renderInput={(params) => <TextField {...params} label="Insert" />}/>
+      </Box>
       <Stack direction={"row"} gap={1}>
         <Typography>{"Answer: "}</Typography>
         <InlineMath>{question.answer}</InlineMath>
