@@ -55,7 +55,7 @@ model Question {
   number        Int
   question      String
   insertType    String
-  insert        String
+  insertContent String
   answer        String
   submissionAnswers Answer[]
 
