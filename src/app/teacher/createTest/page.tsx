@@ -624,8 +624,9 @@ const QuestionPage = ({
                       <>
                         <Image src={question.insertContent} alt={question.id} width={640} height={480}
                         style={{
-                            width: "auto",
-                            height: "100%",
+                          maxWidth: "100%",
+                          maxHeight: "100%",
+                          objectFit: "contain",
                         }}/>
                       </>;
                       break;
@@ -640,7 +641,17 @@ const QuestionPage = ({
                   return(
                     <>
                       <Typography>Preview</Typography>
-                      {returnDOM}
+                      <Box sx={{
+                        width: "100%",
+                        maxheight: "50vh",
+                        overflow: "hidden",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        border: "1px solid gray"
+                      }}>
+                        {returnDOM}
+                      </Box>
                     </>
                   );
                 }

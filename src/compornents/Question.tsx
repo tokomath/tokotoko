@@ -95,7 +95,7 @@ export default function Question({ id, number, question, answer,insertType,inser
                 style={{
                   maxWidth: "100%",
                   maxHeight: "100%",
-                  objectFit: "contain", // アスペクト比を保ったまま全体表示
+                  objectFit: "contain",
                 }}/>
                 break;
               case "HTML":
