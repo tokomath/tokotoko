@@ -4,18 +4,24 @@ import Stack from '@mui/material/Stack';
 import Latex from "react-latex-next";
 import React, { useEffect } from "react";
 import 'katex/dist/katex.min.css';
-import { ArrowBack, ArrowForward, Clear } from "@mui/icons-material";
+import { ArrowBack, ArrowForward, Clear, WidthFull } from "@mui/icons-material";
 import { red } from "@mui/material/colors";
+import DOMPurify from "dompurify";
+import htmlparse from 'html-react-parser';
+
+import Image from "next/image";
 
 interface QuestionProps {
   id: string;
   number: string;
   question: string;
+  insertType: string;
+  insertContent: string;
   answer: string;
   changeAnswer: (answer: string) => void;
 }
 
-export default function Question({ id, number, question, answer, changeAnswer }: QuestionProps) {
+export default function Question({ id, number, question, answer,insertType,insertContent, changeAnswer }: QuestionProps) {
   const inputRef = React.useRef<HTMLInputElement>();
 
   const [selectionStart, setSelectionStart] = React.useState(0);
@@ -76,6 +82,46 @@ export default function Question({ id, number, question, answer, changeAnswer }:
       <Box display="flex" alignItems="center">
         <Typography variant="h2" fontSize={17}>({number})　</Typography>
         <Latex>{question}</Latex>
+      </Box>
+      <Box>
+        <>
+          {function(){
+            let returnDOM : React.JSX.Element = <></>;
+            switch(insertType)
+            {
+              case "Image":
+                returnDOM = 
+                <Image src={insertContent} alt={question} width={640} height={480}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain", // アスペクト比を保ったまま全体表示
+                }}/>
+                break;
+              case "HTML":
+                returnDOM = 
+                <Box>
+                  {htmlparse(DOMPurify.sanitize(insertContent))}
+                </Box>;
+                break;
+            }
+            return (
+              <>
+                <Box  sx={{
+                  width: "100%",
+                  maxheight: "50vh",
+                  overflow: "hidden",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  border: "1px solid gray"
+                }}>
+                  {returnDOM}
+                </Box>
+              </>
+            );
+          }()}
+        </>
       </Box>
       <Box
         display="flex"

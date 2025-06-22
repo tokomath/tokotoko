@@ -613,7 +613,7 @@ const QuestionPage = ({
         </Box>
         <Box>
           <>
-            {(function(){
+            {function(){
                 if(question.insertContent.length > 0)
                 {
                   let returnDOM :React.JSX.Element = <></>;
@@ -644,7 +644,7 @@ const QuestionPage = ({
                     </>
                   );
                 }
-            }())}
+            }()}
           </>
         </Box>
       </Stack>

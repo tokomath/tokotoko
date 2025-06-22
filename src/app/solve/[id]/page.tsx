@@ -321,6 +321,8 @@ function Solve(
                     id={question.id.toString()}
                     number={question.number.toString()}
                     question={question.question}
+                    insertType={question.insertType}
+                    insertContent={question.insertContent}
                     answer={answers[question.id]}
                     changeAnswer={(answer) =>
                       changeAnswer(question.id, answer)
