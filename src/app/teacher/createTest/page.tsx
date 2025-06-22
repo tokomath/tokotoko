@@ -485,7 +485,10 @@ const QuestionPage = ({
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">
       <Box display="flex" justifyContent="space-between">
-        <Latex>{"(" + question.number + ") " + question.question}</Latex>
+        <Box display="flex" alignContent="center">
+          <Typography>{"(" + question.number + ") "}</Typography>
+          <InlineMath>{question.question}</InlineMath>
+        </Box>
         <IconButton aria-label="delete" onClick={deleteQuestion}>
           <CloseIcon />
         </IconButton>
