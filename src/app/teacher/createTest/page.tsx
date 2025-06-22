@@ -145,16 +145,46 @@ export default function Page() {
       }
     };
 
+    const isnotInsertedContentError = () => {
+      let missing_content : boolean= false;
+      let missing_content_list : String = "";
+      sections.map((section,count) => {
+        section.questions.map((question)=>{
+          if(question.insertType != "None" && question.insertContent == "")
+          {
+            missing_content = true;
+            missing_content_list += (count+1).toString()+"-"+question.number.toString()+",";
+          }
+        })
+      })
+      if(missing_content)
+      {
+        return <Alert severity="error">コンテンツが挿入されていません<br/>At {missing_content_list}</Alert>;
+      }
+    }
+
     return (
       <Stack gap={"5px"}>
         {isAfterWarning()}
         {isClassError()}
+        {isnotInsertedContentError()}
       </Stack>
     );
   };
 
   const checkDataError = () => {
-    return startDate.isAfter(endDate) || assignedClass.length === 0;
+    let isError : boolean = false;
+    isError = startDate.isAfter(endDate);
+    isError = assignedClass.length === 0;
+
+    sections.map((section,count) => {
+      section.questions.map((question)=>{
+        if(question.insertType != "None" && question.insertContent == "")
+          isError = true;
+      })
+    });
+
+    return  isError;
   };
 
   // クラスの割り当て用
@@ -482,6 +512,16 @@ const QuestionPage = ({
     setQuestion(newQ);
   };
 
+  const contetError = () => {
+    const isnotInsertedError = () => {
+      if (question.insertType != "None" && question.insertContent == "") {
+        return <Alert severity="error">コンテンツが挿入されていません。</Alert>;
+      }
+    };
+
+    return <Stack spacing={"5px"}>{isnotInsertedError()}</Stack>;
+  };
+
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">
       <Box display="flex" justifyContent="space-between">
@@ -498,12 +538,28 @@ const QuestionPage = ({
         value={question.question}
         onChange={(e) => setQues(e.target.value)}
       />
-      <Box>
+      <Box display="flex" justifyContent="space-between">
+      <Box display="flex" alignContent="center">
         {/*コンテンツ挿入エリア*/}
           <Autocomplete disablePortal
           options={insert_options} defaultValue={question.insertType} disableClearable
           onChange={(event,option)=>setInsertType(option)}
           sx={{ width: "30%" }}  renderInput={(params) => <TextField {...params} label="Insert" />}/>
+          <>
+            {(function(){
+              if(question.insertType == "None")
+                return(<></>);
+              return(
+              <>
+                <Button variant="contained" component="label">
+                  Upload Image File
+                  <input type="file" style={{ display: "none" }}/>
+                </Button>
+                {contetError()}
+              </>)
+            }())}
+          </>
+          </Box>
       </Box>
       <Stack direction={"row"} gap={1}>
         <Typography>{"Answer: "}</Typography>
