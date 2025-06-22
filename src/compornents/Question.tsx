@@ -6,10 +6,10 @@ import React, { useEffect } from "react";
 import 'katex/dist/katex.min.css';
 import { ArrowBack, ArrowForward, Clear, WidthFull } from "@mui/icons-material";
 import { red } from "@mui/material/colors";
-import DOMPurify from "dompurify";
-import htmlparse from 'html-react-parser';
 
 import Image from "next/image";
+
+import DynamicIframe from "@/compornents/DynamicIframe";
 
 interface QuestionProps {
   id: string;
@@ -91,22 +91,6 @@ export default function Question({ id, number, question, answer,insertType,inser
             {
               case "Image":
                 returnDOM = 
-                <Image src={insertContent} alt={question} width={640} height={480}
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "100%",
-                  objectFit: "contain",
-                }}/>
-                break;
-              case "HTML":
-                returnDOM = 
-                <Box>
-                  {htmlparse(DOMPurify.sanitize(insertContent))}
-                </Box>;
-                break;
-            }
-            return (
-              <>
                 <Box  sx={{
                   width: "100%",
                   maxheight: "50vh",
@@ -116,8 +100,24 @@ export default function Question({ id, number, question, answer,insertType,inser
                   alignItems: "center",
                   border: "1px solid gray"
                 }}>
-                  {returnDOM}
+                  <Image src={insertContent} alt={question} width={640} height={480}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                  }}/>
                 </Box>
+                break;
+              case "HTML":
+                returnDOM = 
+                <Box>
+                  <DynamicIframe srcDoc={insertContent}/>
+                </Box>;
+                break;
+            }
+            return (
+              <>
+                  {returnDOM}
               </>
             );
           }()}
