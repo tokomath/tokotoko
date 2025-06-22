@@ -39,7 +39,11 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Autocomplete from '@mui/material/Autocomplete';
 
+import Image from "next/image";
+
 import Latex from "react-latex-next";
+import DOMPurify from "dompurify";
+import htmlparse from 'html-react-parser';
 import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
 
 const insert_options =["None","Image","HTML"];
@@ -512,6 +516,14 @@ const QuestionPage = ({
     setQuestion(newQ);
   };
 
+  const setInsertContent = (insertContent:string)=> {
+    const newQ = question;
+    question.insertContent = insertContent;
+
+    setQuestion(newQ);
+  };
+
+
   const contetError = () => {
     const isnotInsertedError = () => {
       if (question.insertType != "None" && question.insertContent == "") {
@@ -538,29 +550,104 @@ const QuestionPage = ({
         value={question.question}
         onChange={(e) => setQues(e.target.value)}
       />
-      <Box display="flex" justifyContent="space-between">
-      <Box display="flex" alignContent="center">
+      <Stack direction={"column"}>
         {/*コンテンツ挿入エリア*/}
+        <Box display="flex" width={"100%"}>
           <Autocomplete disablePortal
           options={insert_options} defaultValue={question.insertType} disableClearable
-          onChange={(event,option)=>setInsertType(option)}
-          sx={{ width: "30%" }}  renderInput={(params) => <TextField {...params} label="Insert" />}/>
+          onChange={(event,option)=>{
+            setInsertType(option);
+            setInsertContent("");
+          }}
+          sx={{ width: "20%" }}  renderInput={(params) => <TextField {...params} label="Insert" />}/>
           <>
             {(function(){
-              if(question.insertType == "None")
-                return(<></>);
+              let acceptFileType:String = "";
+              switch(question.insertType)
+              {
+                case "None":
+                  return(<></>)
+                case "Image":
+                  acceptFileType = "image/*";
+                  break;
+                case "HTML":
+                  acceptFileType = ".html";
+                  break;
+                default:
+                  return(<></>)
+              }
               return(
               <>
-                <Button variant="contained" component="label">
-                  Upload Image File
-                  <input type="file" style={{ display: "none" }}/>
-                </Button>
-                {contetError()}
+                <Box width={"80%"} display="flex" alignItems="center">
+                  <Button variant="contained" component="label" sx={{whiteSpace: 'nowrap',width:"230px",height:"100%",marginLeft:2}}>
+                    Upload {question.insertType} File
+                    <input type="file" accept={acceptFileType.toString()} style={{ display: "none" }} onChange={async (event) => {
+                      const files = event.currentTarget.files;
+                      if (!files || files?.length === 0) return;
+                      const file = files[0];
+                      let content : String = "";
+                      const reader = new FileReader();
+                      switch(question.insertType)
+                      {
+                        case "Image":
+                          reader.readAsDataURL(file);
+                          reader.onload = () => {
+                            setInsertContent(reader.result != null ? reader.result.toString() : "");
+                          };
+                          break;
+                        case "HTML":
+                          reader.readAsText(file);
+                          reader.onload = () => {
+                            setInsertContent(reader.result != null ? reader.result.toString() : "");
+                          }
+                      }
+                    }}/>
+                  </Button>
+                  <Box width={"100%"} marginLeft={2}>
+                    {contetError()}
+                  </Box>
+                </Box>
               </>)
             }())}
           </>
-          </Box>
-      </Box>
+        </Box>
+        <Box>
+          <>
+            {(function(){
+                if(question.insertContent.length > 0)
+                {
+                  let returnDOM :React.JSX.Element = <></>;
+                  switch (question.insertType)
+                  {
+                    case "Image":
+                      returnDOM =
+                      <>
+                        <Image src={question.insertContent} alt={question.id} width={640} height={480}
+                        style={{
+                            width: "auto",
+                            height: "100%",
+                        }}/>
+                      </>;
+                      break;
+                    
+                    case "HTML":
+                      returnDOM = 
+                      <Box>
+                        {htmlparse(DOMPurify.sanitize(question.insertContent))}
+                      </Box>
+                      break;
+                  }
+                  return(
+                    <>
+                      <Typography>Preview</Typography>
+                      {returnDOM}
+                    </>
+                  );
+                }
+            }())}
+          </>
+        </Box>
+      </Stack>
       <Stack direction={"row"} gap={1}>
         <Typography>{"Answer: "}</Typography>
         <InlineMath>{question.answer}</InlineMath>
