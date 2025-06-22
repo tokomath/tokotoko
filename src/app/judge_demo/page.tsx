@@ -25,7 +25,7 @@ export default function JudgeDemo() {
     <>
       <Typography variant="h1">Judge Demo</Typography>
       <Box maxWidth={1500} margin="auto" display="flex" justifyContent="space-between">
-        <Question id={""} number={""} question={"Collect Answer"} answer={correct_answer} changeAnswer={setCorrect_answer} />
+        <Question id={""} number={""} question={"Collect Answer"} insertType="None" insertContent="" answer={correct_answer} changeAnswer={setCorrect_answer} />
         <Stack>
           <Button
             variant="contained"
@@ -40,7 +40,7 @@ export default function JudgeDemo() {
             0: Unknown, 1: MabyCorrect, 2: Correct
           </Typography>
         </Stack>
-        <Question id={""} number={""} question={"Your Answer"} answer={your_answer} changeAnswer={setYour_answer} />
+        <Question id={""} number={""} question={"Your Answer"} insertType="None" insertContent="" answer={your_answer} changeAnswer={setYour_answer} />
       </Box>
     </>
   )
