@@ -141,6 +141,8 @@ function Solve(
                     sectionId: q.sectionId,
                     number: q.number,
                     question: q.question,
+                    insertType: q.insertType,
+                    insertContent: q.insertContent,
                     answer: q.answer,
                   }
                 })
