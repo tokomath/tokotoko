@@ -22,6 +22,7 @@ import { useSession } from "next-auth/react";
 import { Answer } from "@prisma/client";
 import TopBar from "@/compornents/TopBar";
 
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -141,6 +142,8 @@ function Solve(
                     sectionId: q.sectionId,
                     number: q.number,
                     question: q.question,
+                    insertType: q.insertType,
+                    insertContent: q.insertContent,
                     answer: q.answer,
                   }
                 })
@@ -319,6 +322,8 @@ function Solve(
                     id={question.id.toString()}
                     number={question.number.toString()}
                     question={question.question}
+                    insertType={question.insertType}
+                    insertContent={question.insertContent}
                     answer={answers[question.id]}
                     changeAnswer={(answer) =>
                       changeAnswer(question.id, answer)

@@ -36,8 +36,16 @@ import { Test, Section, Question, Class } from "@prisma/client";
 import dayjs, { Dayjs } from "dayjs";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Autocomplete from '@mui/material/Autocomplete';
+
 import Latex from "react-latex-next";
 import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
+
+import InsertFrame from "@/compornents/InsertFrame";
+
+
+const insert_options =["None","Image","HTML"];
 
 export default function Page() {
   const [sections, setSections] = useState<SectionFrame[]>([]);
@@ -50,6 +58,7 @@ export default function Page() {
   const [assignedClass, setAssignedClass] = useState<Class[]>([]);
 
   const [classList, setClassList] = useState<Class[]>([]);
+
   useEffect(() => {
     const fetchClasses = async () => {
       // TODO: teacherIdを取得
@@ -139,16 +148,46 @@ export default function Page() {
       }
     };
 
+    const isnotInsertedContentError = () => {
+      let missing_content : boolean= false;
+      let missing_content_list : String = "";
+      sections.map((section,count) => {
+        section.questions.map((question)=>{
+          if(question.insertType != "None" && question.insertContent == "")
+          {
+            missing_content = true;
+            missing_content_list += (count+1).toString()+"-"+question.number.toString()+",";
+          }
+        })
+      })
+      if(missing_content)
+      {
+        return <Alert severity="error">コンテンツが挿入されていません<br/>At {missing_content_list}</Alert>;
+      }
+    }
+
     return (
       <Stack gap={"5px"}>
         {isAfterWarning()}
         {isClassError()}
+        {isnotInsertedContentError()}
       </Stack>
     );
   };
 
   const checkDataError = () => {
-    return startDate.isAfter(endDate) || assignedClass.length === 0;
+    let isError : boolean = false;
+    isError = startDate.isAfter(endDate);
+    isError = assignedClass.length === 0;
+
+    sections.map((section,count) => {
+      section.questions.map((question)=>{
+        if(question.insertType != "None" && question.insertContent == "")
+          isError = true;
+      })
+    });
+
+    return  isError;
   };
 
   // クラスの割り当て用
@@ -349,6 +388,8 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       sectionId: 1,
       question: "",
       number: section.questions.length + 1,
+      insertType: "None",
+      insertContent:"",
       answer: "",
     };
 
@@ -371,6 +412,8 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           sectionId: 1,
           question: q.question,
           number: i + 1,
+          insertType: q.insertType,
+          insertContent: q.insertContent,
           answer: q.answer,
         };
         return question;
@@ -464,11 +507,39 @@ const QuestionPage = ({
 
     setQuestion(newQ);
   };
+  
+  const setInsertType = (insertType:string)=> {
+    const newQ = question;
+    question.insertType = insertType;
+
+    setQuestion(newQ);
+  };
+
+  const setInsertContent = (insertContent:string)=> {
+    const newQ = question;
+    question.insertContent = insertContent;
+
+    setQuestion(newQ);
+  };
+
+
+  const contetError = () => {
+    const isnotInsertedError = () => {
+      if (question.insertType != "None" && question.insertContent == "") {
+        return <Alert severity="error">コンテンツが挿入されていません。</Alert>;
+      }
+    };
+
+    return <Stack spacing={"5px"}>{isnotInsertedError()}</Stack>;
+  };
 
   return (
     <Stack gap={1} width={"100%"} padding={2} border="1p">
       <Box display="flex" justifyContent="space-between">
-        <Latex>{"(" + question.number + ") " + question.question}</Latex>
+        <Box display="flex" alignContent="center">
+          <Typography>{"(" + question.number + ") "}</Typography>
+          <InlineMath>{question.question}</InlineMath>
+        </Box>
         <IconButton aria-label="delete" onClick={deleteQuestion}>
           <CloseIcon />
         </IconButton>
@@ -478,6 +549,71 @@ const QuestionPage = ({
         value={question.question}
         onChange={(e) => setQues(e.target.value)}
       />
+      <Stack direction={"column"}>
+        {/*コンテンツ挿入エリア*/}
+        <Box display="flex" width={"100%"}>
+          <Autocomplete disablePortal
+          options={insert_options} defaultValue={question.insertType} disableClearable
+          onChange={(event,option)=>{
+            setInsertType(option);
+            setInsertContent("");
+          }}
+          sx={{ width: "20%" }}  renderInput={(params) => <TextField {...params} label="Insert" />}/>
+          <>
+            {(function(){
+              let acceptFileType:String = "";
+              switch(question.insertType)
+              {
+                case "None":
+                  return(<></>)
+                case "Image":
+                  acceptFileType = "image/*";
+                  break;
+                case "HTML":
+                  acceptFileType = ".html";
+                  break;
+                default:
+                  return(<></>)
+              }
+              return(
+              <>
+                <Box width={"80%"} display="flex" alignItems="center">
+                  <Button variant="contained" component="label" sx={{whiteSpace: 'nowrap',width:"230px",height:"100%",marginLeft:2}}>
+                    Upload {question.insertType} File
+                    <input type="file" accept={acceptFileType.toString()} style={{ display: "none" }} onChange={async (event) => {
+                      const files = event.currentTarget.files;
+                      if (!files || files?.length === 0) return;
+                      const file = files[0];
+                      let content : String = "";
+                      const reader = new FileReader();
+                      switch(question.insertType)
+                      {
+                        case "Image":
+                          reader.readAsDataURL(file);
+                          reader.onload = () => {
+                            setInsertContent(reader.result != null ? reader.result.toString() : "");
+                          };
+                          break;
+                        case "HTML":
+                          reader.readAsText(file);
+                          reader.onload = () => {
+                            setInsertContent(reader.result != null ? reader.result.toString() : "");
+                          }
+                      }
+                    }}/>
+                  </Button>
+                  <Box width={"100%"} marginLeft={2}>
+                    {contetError()}
+                  </Box>
+                </Box>
+              </>)
+            }())}
+          </>
+        </Box>
+        <Box height={"auto"}>
+          <InsertFrame insertType={question.insertType} insertContent={question.insertContent}/>
+        </Box>
+      </Stack>
       <Stack direction={"row"} gap={1}>
         <Typography>{"Answer: "}</Typography>
         <InlineMath>{question.answer}</InlineMath>

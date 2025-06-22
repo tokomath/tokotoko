@@ -4,18 +4,24 @@ import Stack from '@mui/material/Stack';
 import Latex from "react-latex-next";
 import React, { useEffect } from "react";
 import 'katex/dist/katex.min.css';
-import { ArrowBack, ArrowForward, Clear } from "@mui/icons-material";
+import { ArrowBack, ArrowForward, Clear, WidthFull } from "@mui/icons-material";
 import { red } from "@mui/material/colors";
+
+import Image from "next/image";
+
+import InsertFrame from "@/compornents/InsertFrame"
 
 interface QuestionProps {
   id: string;
   number: string;
   question: string;
+  insertType: string;
+  insertContent: string;
   answer: string;
   changeAnswer: (answer: string) => void;
 }
 
-export default function Question({ id, number, question, answer, changeAnswer }: QuestionProps) {
+export default function Question({ id, number, question, answer,insertType,insertContent, changeAnswer }: QuestionProps) {
   const inputRef = React.useRef<HTMLInputElement>();
 
   const [selectionStart, setSelectionStart] = React.useState(0);
@@ -76,6 +82,9 @@ export default function Question({ id, number, question, answer, changeAnswer }:
       <Box display="flex" alignItems="center">
         <Typography variant="h2" fontSize={17}>({number})　</Typography>
         <Latex>{question}</Latex>
+      </Box>
+      <Box>
+        <InsertFrame insertType={insertType} insertContent={insertContent}/>
       </Box>
       <Box
         display="flex"

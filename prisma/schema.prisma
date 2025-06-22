@@ -50,11 +50,13 @@ model Section {
 }
 
 model Question {
-  id                Int      @id @default(autoincrement())
-  sectionId      Int
-  number            Int
-  question          String
-  answer            String
+  id            Int      @id @default(autoincrement())
+  sectionId     Int
+  number        Int
+  question      String
+  insertType    String
+  insertContent String
+  answer        String
   submissionAnswers Answer[]
 
   section Section @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
