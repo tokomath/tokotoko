@@ -26,6 +26,8 @@ export const createTest = async (props: TestFrame) => {
             create: section.questions.map((question) => {
               return {
                 question: question.question,
+                insertType: question.insertType,
+                insertContent: question.insertContent,
                 number: question.number,
                 answer: question.answer,
               };
