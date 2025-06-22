@@ -9,7 +9,7 @@ import { red } from "@mui/material/colors";
 
 import Image from "next/image";
 
-import DynamicIframe from "@/compornents/DynamicIframe";
+import InsertFrame from "@/compornents/InsertFrame"
 
 interface QuestionProps {
   id: string;
@@ -84,44 +84,7 @@ export default function Question({ id, number, question, answer,insertType,inser
         <Latex>{question}</Latex>
       </Box>
       <Box>
-        <>
-          {function(){
-            let returnDOM : React.JSX.Element = <></>;
-            switch(insertType)
-            {
-              case "Image":
-                returnDOM = 
-                <Box  sx={{
-                  width: "100%",
-                  maxheight: "50vh",
-                  overflow: "hidden",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  border: "1px solid gray"
-                }}>
-                  <Image src={insertContent} alt={question} width={640} height={480}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "100%",
-                    objectFit: "contain",
-                  }}/>
-                </Box>
-                break;
-              case "HTML":
-                returnDOM = 
-                <Box>
-                  <DynamicIframe srcDoc={insertContent}/>
-                </Box>;
-                break;
-            }
-            return (
-              <>
-                  {returnDOM}
-              </>
-            );
-          }()}
-        </>
+        <InsertFrame insertType={insertType} insertContent={insertContent}/>
       </Box>
       <Box
         display="flex"

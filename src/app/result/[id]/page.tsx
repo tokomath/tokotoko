@@ -18,6 +18,7 @@ import { useSession } from "next-auth/react";
 import { getSubmission } from "@/app/api/test/result";
 import { BlockMath } from "react-katex";
 import TopBar from "@/compornents/TopBar";
+import InsertFrame from "@/compornents/InsertFrame";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -190,6 +191,8 @@ function Result({ params }: { params: { id: string, username: string } }) {
                   number={question.number.toString()}
                   question={question.question}
                   myAns={question.ans.text}
+                  insertType={question.insertType}
+                  insertContent={question.insertContent}
                   trueAns={question.answer}
                   point={question.ans.point}
                 />
@@ -256,7 +259,7 @@ function Next({
   );
 }
 
-function Question({ id, number, question, myAns, trueAns, point }: any) {
+function Question({ id, number, question,insertType,insertContent,myAns, trueAns, point }: any) {
   return (
     <Stack spacing={2}>
       {/* 横に並べる */}
@@ -264,6 +267,9 @@ function Question({ id, number, question, myAns, trueAns, point }: any) {
         <Typography variant="h2" fontSize={17}>({number}) </Typography>
         <Latex>{question}</Latex>
       </Box>
+      <Divider />
+        <InsertFrame insertType={insertType} insertContent={insertContent}/>
+      <Divider />
       <Box
         display="flex"
         minHeight={40}

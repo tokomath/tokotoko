@@ -39,12 +39,10 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Autocomplete from '@mui/material/Autocomplete';
 
-import Image from "next/image";
-
 import Latex from "react-latex-next";
 import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
 
-import DynamicIframe from "@/compornents/DynamicIframe";
+import InsertFrame from "@/compornents/InsertFrame";
 
 
 const insert_options =["None","Image","HTML"];
@@ -613,47 +611,7 @@ const QuestionPage = ({
           </>
         </Box>
         <Box height={"auto"}>
-          <>
-            {function(){
-                if(question.insertContent.length > 0)
-                {
-                  let returnDOM :React.JSX.Element = <></>;
-                  switch (question.insertType)
-                  {
-                    case "Image":
-                      returnDOM =
-                      <Box sx={{
-                        width: "100%",
-                        //maxheight: "50vh",
-                        overflow: "hidden",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        border: "1px solid gray"
-                      }}>
-                        <Image src={question.insertContent} alt={question.id} width={640} height={480}
-                        style={{
-                          maxWidth: "100%",
-                          maxHeight: "100%",
-                          objectFit: "contain",
-                        }}/>
-                      </Box>;
-                      break;
-                    
-                    case "HTML":
-                      returnDOM = 
-                        <DynamicIframe srcDoc={question.insertContent}/>
-                      break;
-                  }
-                  return(
-                    <>
-                      <Typography>Preview</Typography>
-                      {returnDOM}
-                    </>
-                  );
-                }
-            }()}
-          </>
+          <InsertFrame insertType={question.insertType} insertContent={question.insertContent}/>
         </Box>
       </Stack>
       <Stack direction={"row"} gap={1}>
