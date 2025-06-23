@@ -21,9 +21,8 @@ model Class {
 // 0 -> teacher
 // 1 -> student
 model User {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  pass        String
+  id          String       @id
+  name        String
   classes     Class[]
   submissions Submission[]
   role        Int
@@ -65,7 +64,7 @@ model Question {
 model Submission {
   id             Int      @id @default(autoincrement())
   testId         Int
-  studentId      Int
+  studentId      String
   submissionDate DateTime @default(now())
   answers        Answer[]
 
