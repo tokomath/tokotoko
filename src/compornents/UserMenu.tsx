@@ -18,24 +18,6 @@ export default function UserMenu({ user_name }: UserMenuProps) {
   };
 
   return (
-    <>
-      <Button
-        color="inherit"
-        size='large'
-        startIcon={<AccountCircle />}
-        endIcon={<ArrowDropDownIcon />}
-        onClick={handleClick}
-        style={{ textTransform: 'none' }}
-      >
-        {user_name}
-      </Button >
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={() => setAnchorEl(null)}
-      >
-        {/*<MenuItem onClick={() => signOut()}><ExitToAppSharp />SignOut</MenuItem>*/}
-      </Menu>
-    </>
+    <></>
   );
 }

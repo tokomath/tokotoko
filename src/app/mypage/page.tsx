@@ -10,29 +10,40 @@ import { getTestByClass } from "@/app/api/test/getTestByClass";
 import { getClassByUser } from "@/app/api/class/getClass";
 import TopBar from "@/compornents/TopBar";
 
+import { useAuth, useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
+
 interface TestInterface {
   test: Test,
   class: Class,
 };
 
 export default function Mypage() {
-  //const { data: session, status } = useSession();
-  // when not logining
-  let session = {
-    user: {
-      name: "Changing to Clerk Now" // For testing purposes, replace with actual session data
-    }
+  //next-authを廃止 Clerkに移行
+  const router = useRouter()
+  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser()
+
+  if (!(isUserLoaded)) {
+    return <>Loading</>
   }
 
-  if (session) {
-    const userName = session.user.name;
+  if (isSignedIn && user) {
+    const userName =  user.fullName ? user.fullName : 
+                      user.username ? user.username : 
+                      user.firstName ? user.lastName ? user.firstName + " " + user.lastName : user.firstName:
+                      user.lastName ? user.lastName : "Unknown User";
+    console.log("userId: ",user.id );
+    
+    console.log("userName: ", userName);
     if (userName) {
       return <MypageContent userName={userName} />
     }
   }
-
-
+  else if (!(isSignedIn && user && isUserLoaded)) {
+    router.push('/sign-in')
+  }
 }
+
 const MypageContent = (props: { userName: string }) => {
   const [testId, setTestId] = useState<number[]>([])
   const [tests, setTests] = useState<TestInterface[]>([]);
@@ -98,7 +109,6 @@ const MypageContent = (props: { userName: string }) => {
 
   return (
     <>
-      <TopBar page_name={"My Page"} user_name={props.userName} />
       <Stack maxWidth={800} marginX={"auto"} padding={2}>
         <TestCard />
       </Stack>
