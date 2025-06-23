@@ -8,7 +8,6 @@ import { Test, Class } from "@prisma/client";
 import Stack from '@mui/material/Stack';
 import { getTestByClass } from "@/app/api/test/getTestByClass";
 import { getClassByUser } from "@/app/api/class/getClass";
-import { useSession } from 'next-auth/react';
 import TopBar from "@/compornents/TopBar";
 
 interface TestInterface {
@@ -17,8 +16,13 @@ interface TestInterface {
 };
 
 export default function Mypage() {
-  const { data: session, status } = useSession();
+  //const { data: session, status } = useSession();
   // when not logining
+  let session = {
+    user: {
+      name: "Changing to Clerk Now" // For testing purposes, replace with actual session data
+    }
+  }
 
   if (session) {
     const userName = session.user.name;

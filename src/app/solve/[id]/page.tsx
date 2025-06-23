@@ -18,7 +18,6 @@ import Latex from "react-latex-next";
 import { SectionFrame, TestFrame } from "@/app/api/test/testFrames";
 import { getTestById } from "@/app/api/test/getTestById";
 import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
-import { useSession } from "next-auth/react";
 import { Answer } from "@prisma/client";
 import TopBar from "@/compornents/TopBar";
 
@@ -54,7 +53,13 @@ function a11yProps(index: number) {
 export default function Page({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
-  const { data: session, status } = useSession()
+
+  /* TODO: next-authからの移行 */
+  let session = {
+    user: {
+      name: "testuser", // ここは実際のセッションから取得する必要があります
+    },
+  }
 
   useEffect(() => {
     const a = async () => {

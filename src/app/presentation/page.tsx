@@ -4,7 +4,6 @@ import {useState} from "react";
 import {useRouter} from "next/navigation";
 import {register} from "@/app/api/presentation/register";
 import Stack from "@mui/material/Stack";
-import {signIn } from "next-auth/react";
 
 export default function Page() {
   const [name, setName] = useState("")

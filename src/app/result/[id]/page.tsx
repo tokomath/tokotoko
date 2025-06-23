@@ -14,7 +14,6 @@ import Stack from "@mui/material/Stack";
 import SendIcon from "@mui/icons-material/Send";
 import Latex from "react-latex-next";
 import { isAlreadySubmit } from "@/app/api/test/submit";
-import { useSession } from "next-auth/react";
 import { getSubmission } from "@/app/api/test/result";
 import { BlockMath } from "react-katex";
 import TopBar from "@/compornents/TopBar";
@@ -51,7 +50,14 @@ function a11yProps(index: number) {
 export default function Page({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
-  const { data: session, status } = useSession()
+
+  let session = {
+    user: {
+      name: "testuser", // 仮のユーザー名
+    },
+    satus: "authenticated", // 仮の認証ステータス
+  }
+  /* TODO : next-authからの移行*/
 
   useEffect(() => {
     const a = async () => {

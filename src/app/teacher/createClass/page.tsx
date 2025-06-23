@@ -21,13 +21,14 @@ import { Class, User } from "@prisma/client";
 import { getAllStudent } from "@/app/api/student/getStudent";
 import { getAllTeachers } from "@/app/api/teacher/getTeacher";
 import { ClassFrame, createClass } from "@/app/api/class/createClass";
-import { useSession } from "next-auth/react";
+
 import { nameToUser } from "@/app/api/teacher/nameToUser";
 
 
 export default function Page() {
-  const { data: session } = useSession();
-  const userName = session!.user!.name;
+ /* TODO: next-authからの移行 */
+
+  const userName = "Test name"//session!.user!.name;
   const [teacherId, setTeacherId] = useState<number>(1);
   const [className, setClassName] = useState<string>("");
   const [assignedStudent, setAssignedStudent] = useState<User[]>([]);
@@ -36,6 +37,8 @@ export default function Page() {
   const [assignedTeacher, setAssignedTeacher] = useState<User[]>([]);
   const [teacherList, setTeacherList] = useState<User[]>([]);
   const [isAddMe, setIsAddMe] = useState<boolean>(true);
+
+ 
 
   useEffect(() => {
     // fetch api list

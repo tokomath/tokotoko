@@ -17,7 +17,6 @@ import {
   DialogContent,
 } from "@mui/material";
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import ClassIcon from '@mui/icons-material/Class';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
@@ -42,7 +41,12 @@ export default function Page() {
 }
 
 const YourClassList = () => {
-  const { data: session, status } = useSession()
+  /* TODO: next-authからの移行 */
+  let session = {
+    user: {
+      name: "Teacher Name", // Replace with actual session data
+      }
+  }
 
   const [teacherName, setTeacherName] = useState<string>(session?.user.name || "")
   const [classes, setClasses] = useState<Class[]>([])

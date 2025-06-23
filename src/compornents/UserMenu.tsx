@@ -4,7 +4,6 @@
 import React from 'react';
 import { AccountCircle, ExitToAppSharp } from "@mui/icons-material";
 import { Button, Menu, MenuItem } from "@mui/material";
-import { signOut } from "next-auth/react";
 import { ArrowDropDownIcon } from '@mui/x-date-pickers';
 
 interface UserMenuProps {
@@ -35,7 +34,7 @@ export default function UserMenu({ user_name }: UserMenuProps) {
         open={Boolean(anchorEl)}
         onClose={() => setAnchorEl(null)}
       >
-        <MenuItem onClick={() => signOut()}><ExitToAppSharp />SignOut</MenuItem>
+        {/*<MenuItem onClick={() => signOut()}><ExitToAppSharp />SignOut</MenuItem>*/}
       </Menu>
     </>
   );

@@ -4,7 +4,6 @@ import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, 
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
-import { useSession } from 'next-auth/react';
 
 import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmission } from "@/app/api/test/result"
@@ -216,7 +215,15 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
   const router = useRouter();
   const [testData, setTestData] = useState<TestData | null>(null);
   const [submissionData, setSubmissionData] = useState<Submission[]>([]);
-  const { data: session, status } = useSession();
+
+  let session = {
+    user: {
+      name: ""
+    },
+    status: "unauthenticated"
+  }
+  /* TODO:next-authからの移行 */
+
   const testID = Number(params.testid);
   const classID = Number(searchParams.get("classid"));
   const [classIndex,setClassIndex] = useState(0);
