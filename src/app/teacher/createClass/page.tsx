@@ -5,7 +5,7 @@ import { Class, User } from "@prisma/client";
 
 import { getUsersFromQuery } from "@/app/api/User/getUsersFromQuery";
 import { ClassFrame, createClass } from "@/app/api/class/createClass";
-
+import { UserSelector } from "@/compornents/userSelector"; 
 import {
   Button,
   FormControl,
@@ -27,71 +27,6 @@ import {
 import { Clear } from "@mui/icons-material";
 import { useRouter } from "next/navigation"; // ← 追加
 
-interface UserSelectorProps {
-  role: number;
-  onAddUser: (user: User) => void;
-}
-
-export function UserSelector({ role, onAddUser }: UserSelectorProps) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [inputValue, setInputValue] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      if (!inputValue) return;
-      setLoading(true);
-      try {
-        const res = await getUsersFromQuery(inputValue, role);
-        setUsers(res);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const debounce = setTimeout(fetchUsers, 300);
-    return () => clearTimeout(debounce);
-  }, [inputValue, role]);
-
-  return (
-    <Autocomplete
-      options={users}
-      getOptionLabel={(option) => `${option.name} (${option.email})`}
-      loading={loading}
-      onInputChange={(event, newInputValue) => setInputValue(newInputValue)}
-      onChange={(event, newValue) => {
-        if (newValue) {
-          onAddUser(newValue);
-          setSelectedUser(null);
-          setInputValue('');
-        }
-      }}
-      value={selectedUser}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label={`メールアドレスまたは名前で検索（${role === 0 ? "教師" : "学生"}）`}
-          variant="outlined"
-          InputProps={{
-            ...params.InputProps,
-            endAdornment: (
-              <>
-                {loading && <CircularProgress size={20} />}
-                {params.InputProps.endAdornment}
-              </>
-            ),
-          }}
-        />
-      )}
-    />
-  );
-}
-
-
-
 export default function DualRoleUserSelectors() {
   const [teachers, setTeachers] = useState<User[]>([]);
   const [students, setStudents] = useState<User[]>([]);
@@ -99,11 +34,11 @@ export default function DualRoleUserSelectors() {
   const router = useRouter(); // ← 追加
 
   const createClassButtonFunction = () => {
-    if(!className) {
+    if (!className) {
       alert("クラス名を入力してください。");
       return;
     }
-    if(teachers.length === 0) {
+    if (teachers.length === 0) {
       alert("最低一人の教師を追加してください。");
       return;
     }
