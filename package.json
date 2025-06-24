@@ -30,6 +30,7 @@
     "react-latex-next": "^3.0.0",
     "react-mathquill": "^1.0.3",
     "react-table": "^7.8.0",
+    "svix": "^1.67.0",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
