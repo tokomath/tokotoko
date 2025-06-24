@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,55 +9,51 @@ datasource db {
 }
 
 model Class {
-  id    String    @id @unique @db.VarChar(6)
-  name  String    
-  users User[]
-  tests Test[]
+  id    String @id @unique @db.VarChar(6)
+  name  String
+  tests Test[] @relation("ClassToTest")
+  users User[] @relation("ClassToUser")
 }
 
-// role
-// 0 -> teacher
-// 1 -> student
 model User {
   id          String       @id
   name        String
   email       String
-  classes     Class[]
-  submissions Submission[]
   role        Int
+  submissions Submission[]
+  classes     Class[]      @relation("ClassToUser")
 }
 
 model Test {
   id          Int          @id @default(autoincrement())
   title       String
   summary     String
-  sections    Section[]
   startDate   DateTime     @default(now())
   endDate     DateTime     @default(now())
+  sections    Section[]
   submissions Submission[]
-  classes     Class[]
+  classes     Class[]      @relation("ClassToTest")
 }
 
 model Section {
-  id          Int          @id @default(autoincrement())
-  testId      Int
-  number      Int
-  summary     String
-  questions   Question[]
-  test Test @relation(fields: [testId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  id        Int        @id @default(autoincrement())
+  testId    Int
+  number    Int
+  summary   String
+  questions Question[]
+  test      Test       @relation(fields: [testId], references: [id], onDelete: Cascade)
 }
 
 model Question {
-  id            Int      @id @default(autoincrement())
-  sectionId     Int
-  number        Int
-  question      String
-  insertType    String
-  insertContent String
-  answer        String
+  id                Int      @id @default(autoincrement())
+  sectionId         Int
+  number            Int
+  question          String
+  insertType        String
+  insertContent     String
+  answer            String
   submissionAnswers Answer[]
-
-  section Section @relation(fields: [sectionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  section           Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 }
 
 model Submission {
@@ -69,18 +62,16 @@ model Submission {
   studentId      String
   submissionDate DateTime @default(now())
   answers        Answer[]
-
-  test Test @relation(fields: [testId], references: [id])
-  user User @relation(fields: [studentId], references: [id])
+  user           User     @relation(fields: [studentId], references: [id])
+  test           Test     @relation(fields: [testId], references: [id])
 }
 
 model Answer {
-  id           Int    @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   submissionId Int
   questionId   Int
   point        Int
   text         String
-
-  submission Submission @relation(fields: [submissionId], references: [id])
-  question   Question   @relation(fields: [questionId], references: [id])
+  question     Question   @relation(fields: [questionId], references: [id])
+  submission   Submission @relation(fields: [submissionId], references: [id])
 }
