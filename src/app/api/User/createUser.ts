@@ -1,7 +1,6 @@
 import { prisma } from "../prisma_client";
 
-
-export async function createUser(id:string,name:string,) {
+export async function createUser(id:string,name:string,email:string) {
     const existingUser = await prisma.user.findUnique({ where: { id } });
     
     if (existingUser) {
@@ -13,6 +12,7 @@ export async function createUser(id:string,name:string,) {
         data: {
         id,
         name,
+        email,
         role: 1,
         },
     });

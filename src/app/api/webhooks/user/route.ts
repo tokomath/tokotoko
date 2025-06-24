@@ -6,7 +6,6 @@ import {createUser} from "@/app/api/User/createUser";
 import {deleteUser} from "@/app/api/User/deleteUser"
 import {updateUser} from "@/app/api/User/updateUser"
 
-
 // POSTリクエスト
 export async function POST(req: Request) {
     const SIGNING_SECRET = process.env.SIGNING_SECRET;
@@ -56,9 +55,9 @@ export async function POST(req: Request) {
         {
             case "user.created":
             {
-                const { id, username, first_name, last_name } = evt.data;
+                const { id, username, first_name, last_name, email_addresses} = evt.data;
 
-                createUser(id, username || `${first_name} ${last_name}`);
+                createUser(id, username || `${first_name} ${last_name}`,email_addresses[0].email_address);
 
                 console.log(`User ${id} added to database.`);
                 return NextResponse.json({ message: 'User saved to DB' }, { status: 200 });
@@ -76,11 +75,11 @@ export async function POST(req: Request) {
             case "user.updated":
             {
                 //ユーザー名変更をDBに反映
-                const { id, username, first_name, last_name } = evt.data;
-                const name:string = username ?  username : first_name ? last_name ? first_name+" "+last_name : first_name : id;
+                const { id, first_name, last_name, email_addresses } = evt.data;
+                const name:string = first_name+" "+last_name;
                 if(id && name)
                 {
-                    updateUser(id,name);
+                    updateUser(id,name,email_addresses[0].email_address);
                     return NextResponse.json({message: 'Update user info'},{status:200});
                 }
             }
