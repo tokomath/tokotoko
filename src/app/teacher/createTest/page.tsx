@@ -40,7 +40,10 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Autocomplete from '@mui/material/Autocomplete';
 
 import Latex from "react-latex-next";
-import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
+import { useRouter,useSearchParams } from "next/navigation"
+import { useUser } from '@clerk/nextjs'
+
+import { getClassByUserId } from "@/app/api/class/getClass";
 
 import InsertFrame from "@/compornents/InsertFrame";
 
@@ -48,6 +51,8 @@ import InsertFrame from "@/compornents/InsertFrame";
 const insert_options =["None","Image","HTML"];
 
 export default function Page() {
+  const searchParams = useSearchParams();
+  const param_classId = searchParams.get("classId")
   const [sections, setSections] = useState<SectionFrame[]>([]);
   const [testTitle, setTestTitle] = useState("");
   const [testSummary, setTestSummary] = useState("");
@@ -58,12 +63,17 @@ export default function Page() {
   const [assignedClass, setAssignedClass] = useState<Class[]>([]);
 
   const [classList, setClassList] = useState<Class[]>([]);
+  const teacherId = useUser().user?.id || "";
 
   useEffect(() => {
     const fetchClasses = async () => {
-      // TODO: teacherIdを取得
-      const classes: Class[] = await getAllClass();
+      const classes: Class[] = await getClassByUserId(teacherId);
       setClassList(classes);
+      classList.map((c: Class) => {
+        if (c.id.toString() === param_classId) {
+          setAssignedClass([c]);
+        }
+      });
     };
     fetchClasses();
   }, []);
@@ -192,7 +202,7 @@ export default function Page() {
 
   // クラスの割り当て用
   const handleClassChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const values = event.target.value as number[];
+    const values = event.target.value as string[];
     const select = classList.filter((item) => values.includes(item.id));
 
     setAssignedClass(select);
@@ -321,11 +331,11 @@ const MetaDataPage = ({
           onChange={handleClassChange}
           renderValue={(selected) => (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-              {(selected as number[]).map((value: number) => {
+              {(selected as String[]).map((value: String) => {
                 const item = classList.find(
                   (option: Class) => option.id === value,
                 );
-                return item ? <Chip key={value} label={item.name} /> : null;
+                return item ? <Chip key={value+""} label={item.name} /> : null;
               })}
             </Box>
           )}

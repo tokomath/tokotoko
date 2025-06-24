@@ -10,7 +10,7 @@ import { getTestByClass } from "@/app/api/test/getTestByClass";
 import { getClassByUser } from "@/app/api/class/getClass";
 import TopBar from "@/compornents/TopBar";
 
-import { useAuth, useUser } from '@clerk/nextjs'
+import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 
 interface TestInterface {
@@ -28,10 +28,7 @@ export default function Mypage() {
   }
 
   if (isSignedIn && user) {
-    const userName =  user.fullName ? user.fullName : 
-                      user.username ? user.username : 
-                      user.firstName ? user.lastName ? user.firstName + " " + user.lastName : user.firstName:
-                      user.lastName ? user.lastName : "Unknown User";
+    const userName =  user.firstName + " " + user.lastName;
     console.log("userId: ",user.id );
     
     console.log("userName: ", userName);

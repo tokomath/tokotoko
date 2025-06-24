@@ -29,6 +29,8 @@ import { getAllStudent } from "@/app/api/student/getStudent";
 import { addUserToClass } from "@/app/api/class/addUserToClass";
 import { ClassFrame } from "@/app/api/class/createClass";
 
+import { useUser } from '@clerk/nextjs'
+
 export default function Page() {
   return (
     <Stack>
@@ -41,14 +43,9 @@ export default function Page() {
 }
 
 const YourClassList = () => {
-  /* TODO: next-authからの移行 */
-  let session = {
-    user: {
-      name: "Teacher Name", // Replace with actual session data
-      }
-  }
-
-  const [teacherName, setTeacherName] = useState<string>(session?.user.name || "")
+  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser();
+  
+  const [teacherId, setTeacherId] = useState<string>(user?.id || "")
   const [classes, setClasses] = useState<Class[]>([])
   const [open, setOpen] = useState<boolean>(false)
   const [modifiedClass, setModifiedClass] = useState<Class | null>(null)
@@ -65,7 +62,7 @@ const YourClassList = () => {
 
   useEffect(() => {
     const fetchClass = async () => {
-      const tmpClassList = await getClassByUser(teacherName)
+      const tmpClassList = await getClassByUser(teacherId)
       // const tmpClassList = await getAllClass()
       setClasses(tmpClassList)
     }
@@ -76,7 +73,7 @@ const YourClassList = () => {
     };
     fetchClass()
     fetchStudent();
-  }, [teacherName])
+  }, [teacherId])
 
   const moveToCreateClass = () => {
     location.href = "createClass"
@@ -143,37 +140,7 @@ const YourClassList = () => {
 
   return (
     <Stack alignItems={"center"}>
-      <Typography>
-        {teacherName}&#39;s classes
-      </Typography>
-      {classes.map((c: Class, i: number) => {
-        return (
-          <ListItem key={i}>
-            <ListItemIcon>
-              <ClassIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary={c.name}
-            />
-            <Tooltip title={"add student"}>
-              <IconButton onClick={() => { handleClickOpen(c) }}>
-                <PersonAddAlt1Icon />
-              </IconButton>
-            </Tooltip>
-          </ListItem>
-        )
-      })}
-
-      <ListItem>
-        <Box width={"100%"} display={"flex"} justifyContent={"center"}>
-          <Tooltip title={"create new class"}>
-            <IconButton onClick={moveToCreateClass}>
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </ListItem>
-      <AddStudentDialog />
+      
     </Stack>
   )
 }
