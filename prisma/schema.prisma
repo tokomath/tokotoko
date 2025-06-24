@@ -13,7 +13,7 @@ datasource db {
 
 model Class {
   id    String    @id @unique @db.VarChar(6)
-  name  String    @unique
+  name  String    
   users User[]
   tests Test[]
 }
