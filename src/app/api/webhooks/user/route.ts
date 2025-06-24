@@ -3,6 +3,8 @@ import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import {createUser} from "@/app/api/User/createUser";
+import {deleteUser} from "@/app/api/User/deleteUser"
+import {updateUser} from "@/app/api/User/updateUser"
 
 
 // POSTリクエスト
@@ -49,22 +51,42 @@ export async function POST(req: Request) {
         });
     }
 
-    // `user.created` イベントの処理（適宜変更してください）
     try {
-        if (evt.type === 'user.created') {
-            const { id, username, first_name, last_name } = evt.data;
-            
-            createUser(id, username || `${first_name} ${last_name}`);
+        switch(evt.type)
+        {
+            case "user.created":
+            {
+                const { id, username, first_name, last_name } = evt.data;
 
-            console.log(`User ${id} added to database.`);
-            return NextResponse.json({ message: 'User saved to DB' }, { status: 200 });
+                createUser(id, username || `${first_name} ${last_name}`);
+
+                console.log(`User ${id} added to database.`);
+                return NextResponse.json({ message: 'User saved to DB' }, { status: 200 });
+            }
+            case "user.deleted":
+            {
+                const { id } = evt.data;
+                if(id)
+                {
+                    deleteUser(id);
+                    return NextResponse.json({message: 'User deleting is not available'},{status:200});
+                }
+                break;
+            }
+            case "user.updated":
+            {
+                //ユーザー名変更をDBに反映
+                const { id, username, first_name, last_name } = evt.data;
+                const name:string = username ?  username : first_name ? last_name ? first_name+" "+last_name : first_name : id;
+                if(id && name)
+                {
+                    updateUser(id,name);
+                    return NextResponse.json({message: 'Update user info'},{status:200});
+                }
+            }
+            default:
+                return NextResponse.json({ message: 'Unhandled event' }, { status: 200 });
         }
-        else if (evt.type === 'user.deleted') {
-            
-        }
-
-
-        return NextResponse.json({ message: 'Unhandled event' }, { status: 200 });
     } catch (error) {
         console.error('Webhook Error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
