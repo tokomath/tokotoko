@@ -1,11 +1,20 @@
 "use client";
 
+import React, { useState, useEffect } from 'react';
+import { Class, User } from "@prisma/client";
+
+import { getUsersFromQuery } from "@/app/api/User/getUsersFromQuery";
+import { ClassFrame, createClass } from "@/app/api/class/createClass";
+
 import {
   Button,
   FormControl,
   InputLabel,
   Stack,
   TextField,
+  Autocomplete,
+  CircularProgress,
+  IconButton,
   Select,
   MenuItem,
   OutlinedInput,
@@ -15,142 +24,94 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { Class, User } from "@prisma/client";
+import { Clear } from "@mui/icons-material";
+import { useRouter } from "next/navigation"; // ← 追加
 
-import { getAllStudent } from "@/app/api/student/getStudent";
-import { getAllTeachers } from "@/app/api/teacher/getTeacher";
-import { ClassFrame, createClass } from "@/app/api/class/createClass";
+interface UserSelectorProps {
+  role: number;
+  onAddUser: (user: User) => void;
+}
 
-import { nameToUser } from "@/app/api/teacher/nameToUser";
-
-
-export default function Page() {
- /* TODO: next-authからの移行 */
-
-  const userName = "Test name"//session!.user!.name;
-  const [teacherId, setTeacherId] = useState<number>(1);
-  const [className, setClassName] = useState<string>("");
-  const [assignedStudent, setAssignedStudent] = useState<User[]>([]);
-  const [studentList, setStudentList] = useState<User[]>([]);
-
-  const [assignedTeacher, setAssignedTeacher] = useState<User[]>([]);
-  const [teacherList, setTeacherList] = useState<User[]>([]);
-  const [isAddMe, setIsAddMe] = useState<boolean>(true);
-
- 
+export function UserSelector({ role, onAddUser }: UserSelectorProps) {
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // fetch api list
-    const fetchStudent = async () => {
-      const res = await getAllStudent();
-      setStudentList(res);
-    };
-
-    const fetchTeacher = async () => {
-      const res = await getAllTeachers();
-      setTeacherList(res);
-    };
-
-    const fetchTeacherId = async () => {
-      if (userName) {
-        const res = await nameToUser(userName);
-        setTeacherId(res!.id);
+    const fetchUsers = async () => {
+      if (!inputValue) return;
+      setLoading(true);
+      try {
+        const res = await getUsersFromQuery(inputValue, role);
+        setUsers(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
+    };
 
-    }
-    //function call
-    fetchStudent();
-    fetchTeacher();
-    fetchTeacherId();
-  }, [teacherId, userName]);
+    const debounce = setTimeout(fetchUsers, 300);
+    return () => clearTimeout(debounce);
+  }, [inputValue, role]);
 
-  const handleStudentChange = (event: SelectChangeEvent<number[]>) => {
-    const values = event.target.value as number[];
-    const select = studentList.filter((item) => values.includes(item.id));
+  return (
+    <Autocomplete
+      options={users}
+      getOptionLabel={(option) => `${option.name} (${option.email})`}
+      loading={loading}
+      onInputChange={(event, newInputValue) => setInputValue(newInputValue)}
+      onChange={(event, newValue) => {
+        if (newValue) {
+          onAddUser(newValue);
+          setSelectedUser(null);
+          setInputValue('');
+        }
+      }}
+      value={selectedUser}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label={`メールアドレスまたは名前で検索（${role === 0 ? "教師" : "学生"}）`}
+          variant="outlined"
+          InputProps={{
+            ...params.InputProps,
+            endAdornment: (
+              <>
+                {loading && <CircularProgress size={20} />}
+                {params.InputProps.endAdornment}
+              </>
+            ),
+          }}
+        />
+      )}
+    />
+  );
+}
 
-    setAssignedStudent(select);
-  };
 
-  const handleTeacherChange = (event: SelectChangeEvent<number[]>) => {
-    const values = event.target.value as number[];
-    const select = teacherList.filter((item) => values.includes(item.id));
-    setAssignedTeacher(select);
-  };
 
-  const StudentList = () => {
-    return (
-      <FormControl>
-        <InputLabel id="student-assign">Assigned Student</InputLabel>
-        <Select
-          labelId="student-assign"
-          input={<OutlinedInput />}
-          onChange={handleStudentChange}
-          multiple
-          value={assignedStudent.map((student) => student.id)}
-          renderValue={(selected) => (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-              {(selected as number[]).map((value: number) => {
-                const item = studentList.find(
-                  (option: Class) => option.id === value,
-                );
-                return item ? <Chip key={value} label={item.name} /> : null;
-              })}
-            </Box>
-          )}
-        >
-          {studentList.map((student) => (
-            <MenuItem key={student.id} value={student.id}>
-              {student.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    );
-  };
-
-  const TeacherList = () => {
-    return (
-      <FormControl>
-        <InputLabel id="teacher-assign">Assigned Teacher</InputLabel>
-        <Select
-          labelId="teacher-assign"
-          input={<OutlinedInput />}
-          onChange={handleTeacherChange}
-          multiple
-          value={assignedTeacher.map((teacher) => teacher.id)}
-          renderValue={(selected) => (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-              {(selected as number[]).map((value: number) => {
-                const item = teacherList.find(
-                  (option: Class) => option.id === value,
-                );
-                return item ? <Chip key={value} label={item.name} /> : null;
-              })}
-            </Box>
-          )}
-        >
-          {teacherList.map((teacher) => (
-            <MenuItem key={teacher.id} value={teacher.id}>
-              {teacher.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    );
-  };
+export default function DualRoleUserSelectors() {
+  const [teachers, setTeachers] = useState<User[]>([]);
+  const [students, setStudents] = useState<User[]>([]);
+  const [className, setClassName] = useState<string>("");
+  const router = useRouter(); // ← 追加
 
   const createClassButtonFunction = () => {
+    if(!className) {
+      alert("クラス名を入力してください。");
+      return;
+    }
+    if(teachers.length === 0) {
+      alert("最低一人の教師を追加してください。");
+      return;
+    }
     const newClass: Class = {
-      id: 1,
+      id: "", //自動生成されるため空文字
       name: className,
     };
-    const users = assignedTeacher.concat(assignedStudent);
-    if (isAddMe) {
-      const me: User = teacherList.find((t) => t.id === teacherId) as User;
-      users.push(me);
-    }
-
+    const users = teachers.concat(students);
     const data: ClassFrame = {
       class: newClass,
       user: users,
@@ -158,13 +119,28 @@ export default function Page() {
 
     createClass(data);
     alert("Class Created");
+    router.push("/mypage"); // クラス作成後にマイページへリダイレクト
+  };
+
+  const addUserToList = (
+    list: User[],
+    setList: React.Dispatch<React.SetStateAction<User[]>>,
+    user: User
+  ) => {
+    if (list.find((u) => u.email === user.email)) return; // 重複排除
+    setList([...list, user]);
+  };
+
+  const removeUserFromList = (
+    list: User[],
+    setList: React.Dispatch<React.SetStateAction<User[]>>,
+    email: string
+  ) => {
+    setList(list.filter((u) => u.email !== email));
   };
 
   return (
-    <Stack m={"10px"} gap={"20px"}>
-      <Button variant={"contained"} onClick={createClassButtonFunction}>
-        create class
-      </Button>
+    <Box display="flex" flexDirection="column" gap={2} padding={2}>
       <TextField
         value={className}
         label={"Class Name"}
@@ -172,19 +148,55 @@ export default function Page() {
           setClassName(e.target.value);
         }}
       />
-      <StudentList />
-      <TeacherList />
-      <FormControlLabel
-        label={"Add me to teacher list"}
-        control={
-          <Checkbox
-            checked={isAddMe}
-            onChange={(e) => {
-              setIsAddMe(e.target.checked);
-            }}
-          />
-        }
-      />
-    </Stack>
+      <Box display="flex" flexDirection="column" gap={2}>
+        <h3>学生検索</h3>
+        <UserSelector
+          role={1}
+          onAddUser={(user) => addUserToList(students, setStudents, user)}
+        />
+        <h4>追加された学生</h4>
+        <ul>
+          {students.map((user) => (
+            <li key={user.email} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {user.name} ({user.email})
+              <IconButton
+                onClick={() => removeUserFromList(students, setStudents, user.email)}
+                style={{ marginLeft: "auto", cursor: "pointer" }}
+                aria-label={`Delete ${user.name}`}
+              >
+                <Clear sx={{ color: "red" }} />
+              </IconButton>
+            </li>
+          ))}
+        </ul>
+      </Box>
+
+      {/* Role 1 */}
+      <Box display={"flex"} flexDirection={"column"} gap={2}>
+        <h3>教師検索</h3>
+        <UserSelector
+          role={0}
+          onAddUser={(user) => addUserToList(teachers, setTeachers, user)}
+        />
+        <h4>追加された教師一覧</h4>
+        <ul>
+          {teachers.map((user) => (
+            <li key={user.email} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {user.name} ({user.email})
+              <IconButton
+                onClick={() => removeUserFromList(teachers, setTeachers, user.email)}
+                style={{ marginLeft: "auto", cursor: "pointer" }}
+                aria-label={`Delete ${user.name}`}
+              >
+                <Clear sx={{ color: "red" }} />
+              </IconButton>
+            </li>
+          ))}
+        </ul>
+      </Box>
+      <Button variant={"contained"} onClick={createClassButtonFunction}>
+        クラスを作成
+      </Button>
+    </Box>
   );
 }
