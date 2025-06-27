@@ -24,7 +24,7 @@ import { Class, User } from "@prisma/client";
 import { NumberInput } from "@mui/base/Unstable_NumberInput/NumberInput";
 import AddIcon from "@mui/icons-material/Add";
 
-import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
+import { getAllClass, getClassByUserId } from "@/app/api/class/getClass";
 import { getAllStudent } from "@/app/api/student/getStudent";
 import { addUserToClass } from "@/app/api/class/addUserToClass";
 import { ClassFrame } from "@/app/api/class/createClass";
@@ -35,7 +35,7 @@ export default function Page() {
   return (
     <Stack>
       <Typography>
-        create class
+        Manage class
       </Typography>
       <YourClassList />
     </Stack>
@@ -62,7 +62,7 @@ const YourClassList = () => {
 
   useEffect(() => {
     const fetchClass = async () => {
-      const tmpClassList = await getClassByUser(teacherId)
+      const tmpClassList = await getClassByUserId(teacherId)
       // const tmpClassList = await getAllClass()
       setClasses(tmpClassList)
     }

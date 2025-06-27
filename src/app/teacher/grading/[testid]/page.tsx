@@ -1,10 +1,12 @@
-"use client";
-import React, { useEffect, useState } from "react";
+"use client"
+
+import React, { useEffect, useState,use } from "react"; // Removed 'use' from here
 import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem } from "@mui/material";
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
 
+import { User, Class, Question, Section, Test, Answer, Submission} from "@prisma/client"
 import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmission } from "@/app/api/test/result"
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
@@ -15,57 +17,6 @@ import { useUser } from '@clerk/nextjs'
 import styles from "./styles.module.css"
 
 //#region APIのデータ用
-interface User {
-  id: Number;
-  name: String;
-  role: Number;
-}
-
-interface Class {
-  id: Number;
-  name: String;
-  users: User[];
-}
-
-interface Question {
-  id: number;
-  sectionId: number;
-  number: number;
-  question: string;
-  answer: string;
-}
-
-interface Section {
-  id: number;
-  number: number;
-  summary: string;
-  questions: Question[];
-}
-
-interface TestData {
-  id: number;
-  title: string;
-  summary: string;
-  startDate: Date;
-  endDate: Date;
-  sections: Section[];
-  classes: Class[];
-}
-
-interface Answer {
-  id: Number;
-  point: Number;
-  questionId: Number;
-  submissionId: Number;
-  text: string;
-}
-
-interface Submission {
-  id: Number;
-  studentId: Number;
-  answers: Answer[];
-}
-
 interface Point {
   answerId: number;
   point: number;
@@ -212,22 +163,25 @@ function generateCursor() : String{
   return "";
 }
 
-export default function GradingPage({ params }: { params: { testid: number } }) {
+export default function GradingPage({ params }: { params: Promise<{ testid: number }>}) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [testData, setTestData] = useState<TestData | null>(null);
+  const [Test, setTest] = useState<Test | null>(null);
   const [submissionData, setSubmissionData] = useState<Submission[]>([]);
 
   const { user, isSignedIn } = useUser();
   const session = {
     user: {
       name: user?.firstName + " " + user?.lastName || "",
+      id: user?.id
     },
     status: isSignedIn
   }
-  /* TODO:next-authからの移行 */
 
-  const testID = Number(params.testid);
+  // Directly access testId from params
+  const { testid } = use(params);
+  console.log("testid",testid)
+  
   const classID = searchParams.get("classid");
   const [classIndex,setClassIndex] = useState(0);
   const [sectionValue, setSectionValue] = useState(0);
@@ -242,7 +196,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
   //#region イベントハンドラ
   const selectClassHandle = (selectedClassID: String) => {    
     savebuttonHandle();
-    router.push("/teacher/grading/"+testID+"?classid="+selectedClassID);
+    router.push("/teacher/grading/"+testid+"?classid="+selectedClassID);
   }
 
   const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -288,12 +242,12 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
 
     function format_text(str : String) : String
     {
-      //改行が含まれていたら取り除き、カンマは全角に置換する。（csvデータが壊れるのを防ぐため）
+      //改行が含まれていたら取り除き、カンマは全角に置換する。（csvデータが壊れるため）
       return str.replaceAll("\n","").replaceAll(",","，");
     }
 
-    testData?.sections.map((section, section_index) => {
-      section.questions.map((question, question_index) => {
+    Test?.sections.map((section : Section, section_index : number) => {
+      section.questions.map((question : Question, question_index : number) => {
         r1 += "Part" + (section_index+1) + "-" + (question_index+1) + ",,";
         r2 += format_text(question.question) + ",,";
         r3 += format_text(question.answer) + ",,";
@@ -306,18 +260,18 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     exportdata_csv = r1 + "" + r2 + "" + r3;
 
     let answer_index_max = 0;
-    testData?.sections.map((sections) => {
+    Test?.sections.map((sections : Section) => {
       answer_index_max += sections.questions.length;
     })
 
-    testData?.classes.at(classIndex)?.users.map((user, user_index) => {
+    Test?.classes.at(classIndex)?.users.map((user : User, user_index : number) => {
       let rn: String = "";
       const data_index = submission_index[user_index];
       rn += format_text(user.name) + ",";
       if(data_index != undefined)
       {
         const submittion = submissionData.at(data_index);
-        submittion?.answers.map((answer,answer_index) => {
+        submittion?.answers.map((answer : Answer,answer_index : number) => {
           rn += format_text(answer.text) + "," + points[data_index][answer_index]+",";
         })
       }
@@ -336,7 +290,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     const url = URL.createObjectURL(blob);
     const a_buf = document.createElement('a');
     a_buf.href = url;
-    a_buf.download = testData?.title + "_" + testData?.classes.at(classIndex)?.name + ".csv"
+    a_buf.download = Test?.title + "_" + Test?.classes.at(classIndex)?.name + ".csv"
     document.body.appendChild(a_buf);
     a_buf.click();
     document.body.removeChild(a_buf);
@@ -372,20 +326,14 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     return ungraded;
   }
   useEffect(() => {
-    if (session && classID != "") {
-      //console.log("Session");
-      //console.log(session);
-
-      /**TODO : test_res周りの修正 */
-
+    // Ensure testId and classID are available and session status is true
+    if (testid && classID && session.status) {
       const submissionData_buf: Array<Submission> = [];
       const fetchTest = async () => {
-        const test_res = await getTestById(Number(testID), String(session.user.name));
+        const test_res = await getTestById(Number(testid), String(session.user.id));
         if (test_res) {
           let class_index = -1;
-          //console.log("getTestById");
-          //console.log(test_res);
-          setTestData(test_res);
+          setTest(test_res);
           test_res.classes.map((a_class,index) => {
             if(a_class.id == classID)
             {
@@ -396,48 +344,48 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
 
           if(class_index == -1)
           {
-            setTestData(null);
+            setTest(null);
             return;
           }
 
-          //console.log("Submissions")
           let count_submissions  = 0;
-          test_res.classes.at(class_index)?.users.map(async (user, user_index) => {
-            const submission_res = await getSubmission({ testId: Number(testID), username: user.name });
-            //console.log(user_index + ":" + user.name);
-            //console.log(submission_res);
+          const usersInClass = test_res.classes.at(class_index)?.users || []; // Handle potential undefined
+          
+          // Use Promise.all to wait for all submissions to be fetched
+          await Promise.all(usersInClass.map(async (user, user_index) => {
+            const submission_res = await getSubmission({ testId: Number(testid), username: user.name });
             if (submission_res != null) {
-              submissionData_buf.push({ id: Number(submission_res?.id), studentId: Number(submission_res?.studentId), answers: submission_res.answers });
+              submissionData_buf.push({ id: Number(submission_res?.id), studentId: String(submission_res?.studentId), answers: submission_res.answers });
               count_submissions += 1;
               setSubmissionIndex(prevIndex => ({
                 ...prevIndex,
                 [user_index]:(Number(count_submissions) - 1)
               }));
             }
-            if (user_index + 1 == test_res.classes.at(class_index)?.users.length) {
-              submissionData_buf.map((submissionDatum_buf, index_submission) => {
-                submissionDatum_buf.answers.map((answer, index_answer) => {
-                  setPoints(prevPoints => ({
-                    ...prevPoints,
-                    [index_submission]: {
-                      ...prevPoints[index_submission],
-                      [index_answer]: Number(answer.point)
-                    }
-                  }));
-                })
-              })
-              setSubmissionData(submissionData_buf);
-              set_totalpoint_label("Total Point");
-              set_ungraded_label("Ungraded");
+          }));
 
-              setCursorImage(String(generateCursor()));
-            }
-          });
+          // After all submissions are fetched and submissionData_buf is populated
+          submissionData_buf.map((submissionDatum_buf, index_submission) => {
+            submissionDatum_buf.answers.map((answer : Answer, index_answer : number) => {
+              setPoints(prevPoints => ({
+                ...prevPoints,
+                [index_submission]: {
+                  ...prevPoints[index_submission],
+                  [index_answer]: Number(answer.point)
+                }
+              }));
+            })
+          })
+          setSubmissionData(submissionData_buf);
+          set_totalpoint_label("Total Point");
+          set_ungraded_label("Ungraded");
+
+          setCursorImage(String(generateCursor()));
         }
       }
       fetchTest();
     }
-  }, [status,classID]);
+  }, [testid, classID, session.status]); // Add testId to the dependency array
 
   return (
     <>
@@ -447,11 +395,11 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
           <Box display="flex" justifyContent="right">
             <Box width="100%">
               <Typography variant="h4" sx={{ ml: 2, mt: 2 }} width="100%">
-                {testData?.title}
+                {Test?.title}
               </Typography>
               <hr/>
               <Typography variant="h6" sx={{ ml: 2 }}>
-                {testData?.summary}
+                {Test?.summary}
               </Typography>
             </Box>
 
@@ -459,11 +407,11 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               <Box display="flex" justifyContent="right">
               {
                 /*クラスを選択するコンボボックス*/
-                Number(testData?.classes.length) > 0 ?
+                Number(Test?.classes.length) > 0 ?
                 <TextField select id="select_class" value={classID}>
                 {
-                  testData?.classes.map((a_class,index) => 
-                    <MenuItem key={"select_class"+index} value={Number(a_class.id)} onClick={()=>selectClassHandle(Number(a_class.id))}>
+                  Test?.classes.map((a_class : Class,index : number) => 
+                    <MenuItem key={"select_class"+index} value={Number(a_class.id)} onClick={()=>selectClassHandle(a_class.id)}>
                       {a_class.name}
                     </MenuItem>
                   )
@@ -476,7 +424,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                 Class ID: {classID}
               </Typography>
               <Typography textAlign="right">
-                Test ID: {testID}
+                Test ID: {testid}
               </Typography>
             </Box>
           </Box>
@@ -487,8 +435,8 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         {/*==========ここからTableエリア==========*/}
         <Paper sx={{ m: 1, mr: 0, ml: 0 }}>
           {
-            (testData != null) ?
-              (<SectionTabs sections={testData.sections} sectionValue={sectionValue} sectionHandleChange={sectionHandleChange} />)
+            (Test != null) ?
+              (<SectionTabs sections={Test.sections} sectionValue={sectionValue} sectionHandleChange={sectionHandleChange} />)
               : (<>
                 <p>Submission Data not found. </p>
                 <p>The test has not been submitted yet or the test does not exist.</p>
@@ -513,7 +461,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
 
                   { //表のヘッダ Questionの問題と解を表示する
 
-                    testData?.sections.at(sectionValue)?.questions.map((question: Question, index) =>
+                    Test?.sections.at(sectionValue)?.questions.map((question: Question, index) =>
                       <TableCell key={"question" + index} sx={{ textAlign: "center" }}>
                         <Latex>{question.question}</Latex>
                         <hr />
@@ -526,7 +474,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
               {/*==========以下データセル==========*/}
               <TableBody>
                 {
-                  testData?.classes.at(classIndex)?.users.map((user: User, user_index) =>
+                  Test?.classes.at(classIndex)?.users.map((user: User, user_index) =>
                     <TableRow key={"ROW" + user_index}>
                       {/*ユーザー名を表示するセル*/}
                       <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
@@ -545,11 +493,11 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
                           const cells = [];
                           for (let i = 0; i < sectionValue; i++) //現在のセクションの前にある問題数を数える
                           {
-                            start += Number(testData.sections.at(i)?.questions.length);
+                            start += Number(Test.sections.at(i)?.questions.length);
                           }
 
                           //現在のセクションの問題を表示する
-                          for (let question_index = start; question_index < start + Number(testData.sections.at(sectionValue)?.questions.length); question_index++) {
+                          for (let question_index = start; question_index < start + Number(Test.sections.at(sectionValue)?.questions.length); question_index++) {
                             let data_index = submission_index[user_index];
                             let answer = submissionData.at(data_index)?.answers.at(question_index);
                             if (data_index != undefined && answer != undefined) {
@@ -588,7 +536,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
         {/*==========Table終わり==========*/}
         {
           <>
-            {testData ?
+            {Test ?
               <>
                 <Button variant="contained" sx={{ mb: 1, mt: 0 }} className={styles.save_button} onClick={savebuttonHandle}>Save</Button>
                 <Button sx={{ mb: 1, mt: 0 }} className={styles.export_button} onClick={exportbutonHandle}>Export as CSV</Button>
