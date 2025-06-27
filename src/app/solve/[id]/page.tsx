@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, use} from "react";
 import {
   Box,
   Button,
@@ -20,6 +20,7 @@ import { getTestById } from "@/app/api/test/getTestById";
 import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
 import { Answer } from "@prisma/client";
 import TopBar from "@/compornents/TopBar";
+import { useUser } from '@clerk/nextjs'
 
 
 interface TabPanelProps {
@@ -50,50 +51,50 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page({ params }: { params: Promise<{id:number}>}) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
-
+  const testId = use(params).id;
+  const { user, isSignedIn } = useUser();
+  
   /* TODO: next-authからの移行 */
   let session = {
     user: {
-      name: "testuser", // ここは実際のセッションから取得する必要があります
+      name: user?.firstName + " " + user?.lastName || "",
+      id: user?.id
     },
+    status: isSignedIn
   }
 
   useEffect(() => {
     const a = async () => {
-      if (session && session.user.name) {
-        setAlreadySubmit(await isAlreadySubmit({ username: session.user.name, testId: Number(params.id) }))
+      if (session.status && session.user.name) {
+        setAlreadySubmit(await isAlreadySubmit({ userId: session.user.id || "", testId: Number(testId) }))
         setLoading(false);
       }
     }
     a()
   }, [session])
 
-  if (!loading && session && session.user.name) {
+  if (!loading && session.status && session.user.name) {
     if (alreadySubmit) {
       return (
         <>
-          <TopBar page_name="" user_name={session.user.name} />
-          <Completed id={params.id} />
+          <Completed id={testId.toString()} />
         </>
       )
     } else {
       return (
         <>
-          <TopBar page_name="" user_name={session.user.name} />
           <Solve
-            id={params.id}
+            id={testId.toString()}
             username={session.user.name}
             setAlreadySubmit={() => setAlreadySubmit(true)}
           />
         </>
       )
     }
-  } else if (status == "loading") {
-    return <>Loading session...</>
-  } else {
+  }else {
     return <>Cant open page</>
   }
 }
@@ -117,6 +118,7 @@ function Solve(
     username: string,
     setAlreadySubmit: () => void
   }) {
+  const { user, isSignedIn } = useUser();
   // undefined before init , null when unable to access form TODO
   const [testData, setTestData] = useState<TestFrame | null | undefined>(undefined);
 
@@ -127,7 +129,7 @@ function Solve(
 
   useEffect(() => {
     const fetchForm = async () => {
-      const res = await getTestById(Number(id), username);
+      const res = await getTestById(Number(id),(user != null && user != undefined) ? user.id : "" );
       if (res) {
         const test: TestFrame = {
           test: {
@@ -194,7 +196,7 @@ function Solve(
     }).flat()
 
     let submitdata: submitProps = {
-      userName: username,
+      userId: user?.id || "",
       testId: Number(id),
       answerList: answerList as Answer[],
     };

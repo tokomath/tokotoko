@@ -4,7 +4,7 @@ import { Question, Test, Section, Prisma } from "@prisma/client";
 import { prisma } from "@/app/api/prisma_client"
 import { SectionFrame, TestFrame } from "./testFrames";
 
-export async function getTestById(testId: number, username: string) {
+export async function getTestById(testId: number, userid: string) {
   // todo need to check user has access
   const res = await prisma.test.findUnique({
     where: { id: testId },
@@ -22,7 +22,7 @@ export async function getTestById(testId: number, username: string) {
 
   const ok = res.classes.some((c) => {
     return c.users.some((u) => {
-      return u.name === username
+      return u.id === userid
     })
   });
   if (ok) return res
