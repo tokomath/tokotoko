@@ -182,7 +182,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   const { testid } = use(params);
   console.log("testid",testid)
   
-  const classID = searchParams.get("classid");
+  const classId = searchParams.get("classid");
   const [classIndex,setClassIndex] = useState(0);
   const [sectionValue, setSectionValue] = useState(0);
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
@@ -327,7 +327,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   }
   useEffect(() => {
     // Ensure testId and classID are available and session status is true
-    if (testid && classID && session.status) {
+    if (testid && classId && session.status) {
       const submissionData_buf: Array<Submission> = [];
       const fetchTest = async () => {
         const test_res = await getTestById(Number(testid), String(session.user.id));
@@ -335,7 +335,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           let class_index = -1;
           setTest(test_res);
           test_res.classes.map((a_class,index) => {
-            if(a_class.id == classID)
+            if(a_class.id == classId)
             {
               class_index = index;
               setClassIndex(index);
@@ -353,7 +353,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           
           // Use Promise.all to wait for all submissions to be fetched
           await Promise.all(usersInClass.map(async (user, user_index) => {
-            const submission_res = await getSubmission({ testId: Number(testid), username: user.name });
+            const submission_res = await getSubmission({ testId: Number(testid), userid: user.id });
             if (submission_res != null) {
               submissionData_buf.push({ id: Number(submission_res?.id), studentId: String(submission_res?.studentId), answers: submission_res.answers });
               count_submissions += 1;
@@ -385,7 +385,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       }
       fetchTest();
     }
-  }, [testid, classID, session.status]); // Add testId to the dependency array
+  }, [testid, classId, session.status]); // Add testId to the dependency array
 
   return (
     <>
@@ -408,10 +408,10 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               {
                 /*クラスを選択するコンボボックス*/
                 Number(Test?.classes.length) > 0 ?
-                <TextField select id="select_class" value={classID}>
+                <TextField select id="select_class" value={classId}>
                 {
                   Test?.classes.map((a_class : Class,index : number) => 
-                    <MenuItem key={"select_class"+index} value={Number(a_class.id)} onClick={()=>selectClassHandle(a_class.id)}>
+                    <MenuItem key={"select_class"+index} value={a_class.id} onClick={()=>selectClassHandle(a_class.id)}>
                       {a_class.name}
                     </MenuItem>
                   )
@@ -421,7 +421,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               }
               </Box>
               <Typography textAlign="right">
-                Class ID: {classID}
+                Class ID: {classId}
               </Typography>
               <Typography textAlign="right">
                 Test ID: {testid}
