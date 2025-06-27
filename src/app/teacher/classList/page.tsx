@@ -26,7 +26,7 @@ import { ClassFrame } from "@/app/api/class/createClass";
 import { Class, User } from "@prisma/client";
 import { useUser } from '@clerk/nextjs'
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
-import { useRouter } from "next/navigation"; // ← 追加
+import { useRouter } from "next/navigation";
 
 
 export default function Page() {

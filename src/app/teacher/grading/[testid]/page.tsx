@@ -9,6 +9,8 @@ import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmission } from "@/app/api/test/result"
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
 import { useRouter,useSearchParams } from "next/navigation"
+import { useUser } from '@clerk/nextjs'
+
 
 import styles from "./styles.module.css"
 
@@ -216,16 +218,17 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
   const [testData, setTestData] = useState<TestData | null>(null);
   const [submissionData, setSubmissionData] = useState<Submission[]>([]);
 
-  let session = {
+  const { user, isSignedIn } = useUser();
+  const session = {
     user: {
-      name: ""
+      name: user?.firstName + " " + user?.lastName || "",
     },
-    status: "unauthenticated"
+    status: isSignedIn
   }
   /* TODO:next-authからの移行 */
 
   const testID = Number(params.testid);
-  const classID = Number(searchParams.get("classid"));
+  const classID = searchParams.get("classid");
   const [classIndex,setClassIndex] = useState(0);
   const [sectionValue, setSectionValue] = useState(0);
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
@@ -237,7 +240,7 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
   const [ungraded_label,set_ungraded_label] = useState("");
 
   //#region イベントハンドラ
-  const selectClassHandle = (selectedClassID: number) => {    
+  const selectClassHandle = (selectedClassID: String) => {    
     savebuttonHandle();
     router.push("/teacher/grading/"+testID+"?classid="+selectedClassID);
   }
@@ -369,9 +372,11 @@ export default function GradingPage({ params }: { params: { testid: number } }) 
     return ungraded;
   }
   useEffect(() => {
-    if (session && classID != 0) {
+    if (session && classID != "") {
       //console.log("Session");
       //console.log(session);
+
+      /**TODO : test_res周りの修正 */
 
       const submissionData_buf: Array<Submission> = [];
       const fetchTest = async () => {
