@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, use} from "react";
 import {
   Box,
   Button,
@@ -18,6 +18,7 @@ import { getSubmission } from "@/app/api/test/result";
 import { BlockMath } from "react-katex";
 import TopBar from "@/compornents/TopBar";
 import InsertFrame from "@/compornents/InsertFrame";
+import { useUser } from '@clerk/nextjs'
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -47,22 +48,23 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page({ params }: { params: Promise<{ id: string }>}) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
-
+  const { user, isSignedIn } = useUser();
+  const testId = use(params).id;
   let session = {
     user: {
-      name: "testuser", // 仮のユーザー名
+      name: user?.firstName + " " + user?.lastName || "",
+      id: user?.id || ""
     },
-    satus: "authenticated", // 仮の認証ステータス
+    satus: isSignedIn
   }
-  /* TODO : next-authからの移行*/
 
   useEffect(() => {
     const a = async () => {
-      if (session && session.user.name) {
-        setAlreadySubmit(await isAlreadySubmit({ username: session.user.name, testId: Number(params.id) }))
+      if (session.satus && session.user.id) {
+        setAlreadySubmit(await isAlreadySubmit({ userId: session.user.id, testId: Number(testId) }))
         setLoading(false);
       }
     }
@@ -71,12 +73,10 @@ export default function Page({ params }: { params: { id: string } }) {
 
   if (!loading && session && session.user.name && alreadySubmit) {
     return <>
-      <TopBar page_name="Result" user_name={session.user.name} />
-      <Result params={{ id: params.id, username: session.user.name }} />
+      <Result params={{ id: testId, username: session.user.name }} />
     </>
-  } else if (status == "loading") {
-    return <>Loading session...</>
-  } else {
+  }
+  else {
     return <>Cant open page</>
   }
 }
