@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -40,14 +40,21 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Autocomplete from '@mui/material/Autocomplete';
 
 import Latex from "react-latex-next";
-import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
+import { useRouter, useSearchParams } from "next/navigation"
+import { useUser } from '@clerk/nextjs'
+
+import { getClassByUserId } from "@/app/api/class/getClass";
 
 import InsertFrame from "@/compornents/InsertFrame";
 
 
-const insert_options =["None","Image","HTML"];
+const insert_options = ["None", "Image", "HTML"];
 
-export default function Page() {
+// useSearchParamsを使用するコンポーネントをClientSearchParamWrapperとして分離
+function ClientSearchParamWrapper() {
+  const searchParams = useSearchParams();
+  const param_classId = searchParams.get("classId");
+
   const [sections, setSections] = useState<SectionFrame[]>([]);
   const [testTitle, setTestTitle] = useState("");
   const [testSummary, setTestSummary] = useState("");
@@ -58,15 +65,20 @@ export default function Page() {
   const [assignedClass, setAssignedClass] = useState<Class[]>([]);
 
   const [classList, setClassList] = useState<Class[]>([]);
+  const teacherId = useUser().user?.id || "";
 
   useEffect(() => {
     const fetchClasses = async () => {
-      // TODO: teacherIdを取得
-      const classes: Class[] = await getAllClass();
-      setClassList(classes);
+      if (teacherId) { // teacherId が取得できてからフェッチするように変更
+        const classes: Class[] = await getClassByUserId(teacherId);
+        setClassList(classes);
+        // param_classId の初期設定をここで行う
+        const initialAssignedClass = classes.filter((c: Class) => c.id.toString() === param_classId);
+        setAssignedClass(initialAssignedClass);
+      }
     };
     fetchClasses();
-  }, []);
+  }, [teacherId, param_classId]); // teacherId と param_classId を依存配列に追加
 
   const handleSectionChange = (item: SectionFrame, index: number) => {
     const newS: SectionFrame[] = sections.map((s: SectionFrame, i: number) => {
@@ -149,20 +161,18 @@ export default function Page() {
     };
 
     const isnotInsertedContentError = () => {
-      let missing_content : boolean= false;
-      let missing_content_list : String = "";
-      sections.map((section,count) => {
-        section.questions.map((question)=>{
-          if(question.insertType != "None" && question.insertContent == "")
-          {
+      let missing_content: boolean = false;
+      let missing_content_list: String = "";
+      sections.map((section, count) => {
+        section.questions.map((question) => {
+          if (question.insertType != "None" && question.insertContent == "") {
             missing_content = true;
-            missing_content_list += (count+1).toString()+"-"+question.number.toString()+",";
+            missing_content_list += (count + 1).toString() + "-" + question.number.toString() + ",";
           }
         })
       })
-      if(missing_content)
-      {
-        return <Alert severity="error">コンテンツが挿入されていません<br/>At {missing_content_list}</Alert>;
+      if (missing_content) {
+        return <Alert severity="error">コンテンツが挿入されていません<br />At {missing_content_list}</Alert>;
       }
     }
 
@@ -176,27 +186,33 @@ export default function Page() {
   };
 
   const checkDataError = () => {
-    let isError : boolean = false;
-    isError = startDate.isAfter(endDate);
-    isError = assignedClass.length === 0;
+    let isError: boolean = false;
+    if (startDate.isAfter(endDate)) {
+      isError = true;
+    }
+    if (assignedClass.length === 0) {
+      isError = true;
+    }
 
-    sections.map((section,count) => {
-      section.questions.map((question)=>{
-        if(question.insertType != "None" && question.insertContent == "")
+    sections.forEach((section) => { // forEach を使用して副作用を避ける
+      section.questions.forEach((question) => {
+        if (question.insertType !== "None" && question.insertContent === "") {
           isError = true;
-      })
+        }
+      });
     });
 
-    return  isError;
+    return isError;
   };
 
   // クラスの割り当て用
   const handleClassChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const values = event.target.value as number[];
+    const values = event.target.value as string[];
     const select = classList.filter((item) => values.includes(item.id));
 
     setAssignedClass(select);
   };
+
   return (
     <Stack gap={2} justifyContent={"center"} display={"flex"} marginX={"5vw"}>
       <Button
@@ -267,6 +283,14 @@ export default function Page() {
   );
 }
 
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ClientSearchParamWrapper />
+    </Suspense>
+  );
+}
+
 // stateが更新されるたびにレンダリングされるのを避ける
 // Page()の中に書かないで
 const TabPanels = (props: any) => {
@@ -321,11 +345,11 @@ const MetaDataPage = ({
           onChange={handleClassChange}
           renderValue={(selected) => (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-              {(selected as number[]).map((value: number) => {
+              {(selected as String[]).map((value: String) => {
                 const item = classList.find(
                   (option: Class) => option.id === value,
                 );
-                return item ? <Chip key={value} label={item.name} /> : null;
+                return item ? <Chip key={value + ""} label={item.name} /> : null;
               })}
             </Box>
           )}
@@ -389,7 +413,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       question: "",
       number: section.questions.length + 1,
       insertType: "None",
-      insertContent:"",
+      insertContent: "",
       answer: "",
     };
 
@@ -407,9 +431,10 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       if (i === index) {
         return item;
       } else {
+        // id と sectionId が固定値になっているのを修正
         const question: Question = {
-          id: 1,
-          sectionId: 1,
+          id: q.id, // 既存のidを使用
+          sectionId: q.sectionId, // 既存のsectionIdを使用
           question: q.question,
           number: i + 1,
           insertType: q.insertType,
@@ -427,15 +452,19 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       (q: Question, i: number) => i !== index,
     );
     const newQ2 = newQ.map((q: Question, i: number) => {
-      return { question: q.question, answer: q.answer, number: i + 1 };
+      // id, sectionId, insertType, insertContent を保持するように修正
+      return {
+        ...q, // 既存のプロパティをスプレッド
+        number: i + 1
+      };
     });
     setSection({ ...section, questions: newQ2 });
   };
 
   const handleSectionSummaryChange = (newSummary: string) => {
     const newS: Section = {
-      id: 1,
-      testId: 1,
+      id: section.section.id, // 既存のidを使用
+      testId: section.section.testId, // 既存のtestIdを使用
       summary: newSummary,
       number: section.section.number,
     };
@@ -465,10 +494,6 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
         label={"summary"}
         value={section.section.summary}
         onChange={(e) => handleSectionSummaryChange(e.target.value)}
-
-
-      //value={question.answer}
-      //onChange={(e) => setAns(e.target.value)}
       />
       {
         section.questions.map((q: Question, index: number) => (
@@ -494,32 +519,21 @@ const QuestionPage = ({
   setQuestion,
   deleteQuestion,
 }: any) => {
+  // useStateを直接更新するのではなく、setQuestionを通じて更新する
   const setAns = (newAns: string) => {
-    const newQ = question;
-    question.answer = newAns;
-
-    setQuestion(newQ);
+    setQuestion({ ...question, answer: newAns });
   };
 
   const setQues = (newQues: string) => {
-    const newQ = question;
-    question.question = newQues;
-
-    setQuestion(newQ);
-  };
-  
-  const setInsertType = (insertType:string)=> {
-    const newQ = question;
-    question.insertType = insertType;
-
-    setQuestion(newQ);
+    setQuestion({ ...question, question: newQues });
   };
 
-  const setInsertContent = (insertContent:string)=> {
-    const newQ = question;
-    question.insertContent = insertContent;
+  const setInsertType = (insertType: string) => {
+    setQuestion({ ...question, insertType: insertType });
+  };
 
-    setQuestion(newQ);
+  const setInsertContent = (insertContent: string) => {
+    setQuestion({ ...question, insertContent: insertContent });
   };
 
 
@@ -534,95 +548,93 @@ const QuestionPage = ({
   };
 
   return (
-    <Stack gap={1} width={"100%"} padding={2} border="1p">
-      <Box display="flex" justifyContent="space-between">
-        <Box display="flex" alignContent="center">
-          <Typography>{"(" + question.number + ") "}</Typography>
-          <InlineMath>{question.question}</InlineMath>
+      <Stack gap={1} width={"100%"} padding={2} border="1p">
+        <Box display="flex" justifyContent="space-between">
+          <Box display="flex" alignContent="center">
+            <Typography>{"(" + question.number + ") "}</Typography>
+            <InlineMath>{question.question}</InlineMath>
+          </Box>
+          <IconButton aria-label="delete" onClick={deleteQuestion}>
+            <CloseIcon />
+          </IconButton>
         </Box>
-        <IconButton aria-label="delete" onClick={deleteQuestion}>
-          <CloseIcon />
-        </IconButton>
-      </Box>
-      <TextField
-        label={"question"}
-        value={question.question}
-        onChange={(e) => setQues(e.target.value)}
-      />
-      <Stack direction={"column"}>
-        {/*コンテンツ挿入エリア*/}
-        <Box display="flex" width={"100%"}>
-          <Autocomplete disablePortal
-          options={insert_options} defaultValue={question.insertType} disableClearable
-          onChange={(event,option)=>{
-            setInsertType(option);
-            setInsertContent("");
-          }}
-          sx={{ width: "20%" }}  renderInput={(params) => <TextField {...params} label="Insert" />}/>
-          <>
-            {(function(){
-              let acceptFileType:String = "";
-              switch(question.insertType)
-              {
-                case "None":
-                  return(<></>)
-                case "Image":
-                  acceptFileType = "image/*";
-                  break;
-                case "HTML":
-                  acceptFileType = ".html";
-                  break;
-                default:
-                  return(<></>)
-              }
-              return(
-              <>
-                <Box width={"80%"} display="flex" alignItems="center">
-                  <Button variant="contained" component="label" sx={{whiteSpace: 'nowrap',width:"230px",height:"100%",marginLeft:2}}>
-                    Upload {question.insertType} File
-                    <input type="file" accept={acceptFileType.toString()} style={{ display: "none" }} onChange={async (event) => {
-                      const files = event.currentTarget.files;
-                      if (!files || files?.length === 0) return;
-                      const file = files[0];
-                      let content : String = "";
-                      const reader = new FileReader();
-                      switch(question.insertType)
-                      {
-                        case "Image":
-                          reader.readAsDataURL(file);
-                          reader.onload = () => {
-                            setInsertContent(reader.result != null ? reader.result.toString() : "");
-                          };
-                          break;
-                        case "HTML":
-                          reader.readAsText(file);
-                          reader.onload = () => {
-                            setInsertContent(reader.result != null ? reader.result.toString() : "");
+        <TextField
+          label={"question"}
+          value={question.question}
+          onChange={(e) => setQues(e.target.value)}
+        />
+        <Stack direction={"column"}>
+          {/*コンテンツ挿入エリア*/}
+          <Box display="flex" width={"100%"}>
+            <Autocomplete disablePortal
+              options={insert_options} defaultValue={question.insertType} disableClearable
+              onChange={(event, option) => {
+                setInsertType(option);
+                setInsertContent(""); // タイプ変更時にコンテンツをクリア
+              }}
+              sx={{ width: "20%" }} renderInput={(params) => <TextField {...params} label="Insert" />} />
+            <>
+              {(function () {
+                let acceptFileType: String = "";
+                switch (question.insertType) {
+                  case "None":
+                    return (<></>)
+                  case "Image":
+                    acceptFileType = "image/*";
+                    break;
+                  case "HTML":
+                    acceptFileType = ".html";
+                    break;
+                  default:
+                    return (<></>)
+                }
+                return (
+                  <>
+                    <Box width={"80%"} display="flex" alignItems="center">
+                      <Button variant="contained" component="label" sx={{ whiteSpace: 'nowrap', width: "230px", height: "100%", marginLeft: 2 }}>
+                        Upload {question.insertType} File
+                        <input type="file" accept={acceptFileType.toString()} style={{ display: "none" }} onChange={async (event) => {
+                          const files = event.currentTarget.files;
+                          if (!files || files?.length === 0) return;
+                          const file = files[0];
+                          let content: String = "";
+                          const reader = new FileReader();
+                          switch (question.insertType) {
+                            case "Image":
+                              reader.readAsDataURL(file);
+                              reader.onload = () => {
+                                setInsertContent(reader.result != null ? reader.result.toString() : "");
+                              };
+                              break;
+                            case "HTML":
+                              reader.readAsText(file);
+                              reader.onload = () => {
+                                setInsertContent(reader.result != null ? reader.result.toString() : "");
+                              }
                           }
-                      }
-                    }}/>
-                  </Button>
-                  <Box width={"100%"} marginLeft={2}>
-                    {contetError()}
-                  </Box>
-                </Box>
-              </>)
-            }())}
-          </>
-        </Box>
-        <Box height={"auto"}>
-          <InsertFrame insertType={question.insertType} insertContent={question.insertContent}/>
-        </Box>
+                        }} />
+                      </Button>
+                      <Box width={"100%"} marginLeft={2}>
+                        {contetError()}
+                      </Box>
+                    </Box>
+                  </>)
+              }())}
+            </>
+          </Box>
+          <Box height={"auto"}>
+            <InsertFrame insertType={question.insertType} insertContent={question.insertContent} />
+          </Box>
+        </Stack>
+        <Stack direction={"row"} gap={1}>
+          <Typography>{"Answer: "}</Typography>
+          <InlineMath>{question.answer}</InlineMath>
+        </Stack>
+        <TextField
+          label={"answer"}
+          value={question.answer}
+          onChange={(e) => setAns(e.target.value)}
+        />
       </Stack>
-      <Stack direction={"row"} gap={1}>
-        <Typography>{"Answer: "}</Typography>
-        <InlineMath>{question.answer}</InlineMath>
-      </Stack>
-      <TextField
-        label={"answer"}
-        value={question.answer}
-        onChange={(e) => setAns(e.target.value)}
-      />
-    </Stack>
   );
 };

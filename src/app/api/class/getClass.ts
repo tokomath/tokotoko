@@ -1,15 +1,18 @@
 "use server"
 import {prisma} from "@/app/api/prisma_client"
 
-export const getClassByUser = async (username: string) => {
+export const getClassByUserId = async (id: string) => {
   return prisma.class.findMany({
     where: {
       users: {
         some: {
-          name: username
+          id: id
         }
       }
-    }
+    },
+    include: {
+      users: true,
+    },
   });
 }
 

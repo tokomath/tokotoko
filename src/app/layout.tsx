@@ -1,36 +1,45 @@
-"use client"
-import { Inter } from "next/font/google";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
-import "./globals.css";
-import { Link, Typography } from "@mui/material";
-import { SessionProvider } from "next-auth/react";
-import { Box } from "@mui/system";
+import localFont from 'next/font/local'
+import './globals.css'
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs'
+import type { Children, ReactNode } from 'react'
+import { Geist, Geist_Mono } from 'next/font/google'
+import TopBar from '@/compornents/TopBar'
 
-const inter = Inter({ subsets: ["latin"] });
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
+
+
+const RootLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   return (
-    <html lang="en">
-      <meta name="google" content="notranslate" />
-      <body className={inter.className}>
-        <SessionProvider>
-          <AppRouterCacheProvider>{children}</AppRouterCacheProvider>
-        </SessionProvider>
-        <footer>
-          {/* 中央寄せ */}
-          <Box display="flex" justifyContent="center" alignItems="center" flexDirection="column">
-            <Typography fontSize={17}>Formula Form</Typography>
-            <Box display="flex" justifyContent="center" alignItems="center" flexDirection="row" marginTop={1}>
-              <Link href="https://github.com/tokomath/tokotoko" marginRight={1}>Source Code</Link>
-              <Link href="https://github.com/tokomath/tokotoko/blob/main/ThirdPartyNotices.txt" marginLeft={1}>Third Party Licenses</Link>
-            </Box>
-          </Box>
-        </footer>
-      </body>
-    </html >
-  );
+    <ClerkProvider>
+      <html lang="ja">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <header className="fixed top-0 left-0 w-full z-50 h-16 bg-neutral-100 flex items-center">
+            <TopBar page_name="Formula From" user_name="" />
+          </header>
+          <main className="min-h-[calc(100dvh-4rem)] max-w-full pt-16">
+            {children}
+          </main>
+        </body>
+      </html>
+    </ClerkProvider>
+  )
 }
+
+export default RootLayout

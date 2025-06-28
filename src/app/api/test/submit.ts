@@ -4,20 +4,16 @@ import { prisma } from "../prisma_client";
 import { Answer } from "@prisma/client";
 
 export interface submitProps {
-  userName: string;
+  userId: string;
   testId: number;
   answerList: Answer[];
 }
 
 export const submitTest = async (props: submitProps) => {
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { name: props.userName },
-  });
-
   const sub = await prisma.submission.create({
     data: {
       testId: props.testId,
-      studentId: user.id,
+      studentId: props.userId,
       answers: {},
     },
   });
@@ -36,8 +32,8 @@ export const submitTest = async (props: submitProps) => {
     });
 };
 
-export const isAlreadySubmit = async (props: { testId: number, username: string }) => {
-  const a = await prisma.submission.findFirst({ where: { user: { name: props.username }, testId: props.testId } })
+export const isAlreadySubmit = async (props: { testId: number, userId: string }) => {
+  const a = await prisma.submission.findFirst({ where: { user: { id: props.userId }, testId: props.testId } })
   if (a) return true;
   else return false;
 }

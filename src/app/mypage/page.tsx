@@ -7,9 +7,11 @@ import { Test, Class } from "@prisma/client";
 
 import Stack from '@mui/material/Stack';
 import { getTestByClass } from "@/app/api/test/getTestByClass";
-import { getClassByUser } from "@/app/api/class/getClass";
-import { useSession } from 'next-auth/react';
+import { getClassByUserId } from "@/app/api/class/getClass";
 import TopBar from "@/compornents/TopBar";
+
+import { useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 
 interface TestInterface {
   test: Test,
@@ -17,27 +19,37 @@ interface TestInterface {
 };
 
 export default function Mypage() {
-  const { data: session, status } = useSession();
-  // when not logining
+  //next-authを廃止 Clerkに移行
+  const router = useRouter();
+  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser();
 
-  if (session) {
-    const userName = session.user.name;
+  if (!(isUserLoaded)) {
+    return <>Loading</>
+  }
+
+  if (isSignedIn && user) {
+    const userName =  user.firstName + " " + user.lastName;
+    console.log("userId: ",user.id );
+    
+    console.log("userName: ", userName);
     if (userName) {
       return <MypageContent userName={userName} />
     }
   }
-
-
+  else if (!(isSignedIn && user && isUserLoaded)) {
+    router.push('/sign-in')
+  }
 }
+
 const MypageContent = (props: { userName: string }) => {
   const [testId, setTestId] = useState<number[]>([])
   const [tests, setTests] = useState<TestInterface[]>([]);
-
+  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser()
   useEffect(() => {
     getTests()
   }, [])
   const getTests = async () => {
-    const test = await getClassByUser(props.userName)
+    const test = await getClassByUserId(user?.id || "")
       .then(async (classes: Class[]) => {
         const tmp = classes.map(async (c: Class) => {
           const tmpClass = await getTestByClass(c.id)
@@ -94,7 +106,6 @@ const MypageContent = (props: { userName: string }) => {
 
   return (
     <>
-      <TopBar page_name={"My Page"} user_name={props.userName} />
       <Stack maxWidth={800} marginX={"auto"} padding={2}>
         <TestCard />
       </Stack>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, use} from "react";
 import {
   Box,
   Button,
@@ -14,11 +14,11 @@ import Stack from "@mui/material/Stack";
 import SendIcon from "@mui/icons-material/Send";
 import Latex from "react-latex-next";
 import { isAlreadySubmit } from "@/app/api/test/submit";
-import { useSession } from "next-auth/react";
 import { getSubmission } from "@/app/api/test/result";
 import { BlockMath } from "react-katex";
 import TopBar from "@/compornents/TopBar";
 import InsertFrame from "@/compornents/InsertFrame";
+import { useUser } from '@clerk/nextjs'
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -48,15 +48,23 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Page({ params }: { params: { id: string } }) {
+export default function Page({ params }: { params: Promise<{ id: string }>}) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
-  const { data: session, status } = useSession()
+  const { user, isSignedIn } = useUser();
+  const testId = use(params).id;
+  let session = {
+    user: {
+      name: user?.firstName + " " + user?.lastName || "",
+      id: user?.id || ""
+    },
+    satus: isSignedIn
+  }
 
   useEffect(() => {
     const a = async () => {
-      if (session && session.user.name) {
-        setAlreadySubmit(await isAlreadySubmit({ username: session.user.name, testId: Number(params.id) }))
+      if (session.satus && session.user.id) {
+        setAlreadySubmit(await isAlreadySubmit({ userId: session.user.id, testId: Number(testId) }))
         setLoading(false);
       }
     }
@@ -65,17 +73,15 @@ export default function Page({ params }: { params: { id: string } }) {
 
   if (!loading && session && session.user.name && alreadySubmit) {
     return <>
-      <TopBar page_name="Result" user_name={session.user.name} />
-      <Result params={{ id: params.id, username: session.user.name }} />
+      <Result params={{ id: testId, userid: session.user.id }} />
     </>
-  } else if (status == "loading") {
-    return <>Loading session...</>
-  } else {
+  }
+  else {
     return <>Cant open page</>
   }
 }
 
-function Result({ params }: { params: { id: string, username: string } }) {
+function Result({ params }: { params: { id: string, userid: string } }) {
   // undefined before init , null when unable to access form TODO
   const [data, setData] = useState<any | null | undefined>(undefined);
   const [partIndex, setPartIndex] = useState(0);
@@ -87,7 +93,7 @@ function Result({ params }: { params: { id: string, username: string } }) {
 
   useEffect(() => {
     const fetch = async () => {
-      const data = await getSubmission({ testId: Number(params.id), username: params.username })
+      const data = await getSubmission({ testId: Number(params.id), userid: params.userid })
       if (data) {
         setData(data)
         let i = 0;

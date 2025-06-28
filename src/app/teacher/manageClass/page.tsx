@@ -17,7 +17,6 @@ import {
   DialogContent,
 } from "@mui/material";
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import ClassIcon from '@mui/icons-material/Class';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
@@ -25,16 +24,18 @@ import { Class, User } from "@prisma/client";
 import { NumberInput } from "@mui/base/Unstable_NumberInput/NumberInput";
 import AddIcon from "@mui/icons-material/Add";
 
-import { getAllClass, getClassByUser } from "@/app/api/class/getClass";
+import { getAllClass, getClassByUserId } from "@/app/api/class/getClass";
 import { getAllStudent } from "@/app/api/student/getStudent";
 import { addUserToClass } from "@/app/api/class/addUserToClass";
 import { ClassFrame } from "@/app/api/class/createClass";
+
+import { useUser } from '@clerk/nextjs'
 
 export default function Page() {
   return (
     <Stack>
       <Typography>
-        create class
+        Manage class
       </Typography>
       <YourClassList />
     </Stack>
@@ -42,9 +43,9 @@ export default function Page() {
 }
 
 const YourClassList = () => {
-  const { data: session, status } = useSession()
-
-  const [teacherName, setTeacherName] = useState<string>(session?.user.name || "")
+  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser();
+  
+  const [teacherId, setTeacherId] = useState<string>(user?.id || "")
   const [classes, setClasses] = useState<Class[]>([])
   const [open, setOpen] = useState<boolean>(false)
   const [modifiedClass, setModifiedClass] = useState<Class | null>(null)
@@ -61,7 +62,7 @@ const YourClassList = () => {
 
   useEffect(() => {
     const fetchClass = async () => {
-      const tmpClassList = await getClassByUser(teacherName)
+      const tmpClassList = await getClassByUserId(teacherId)
       // const tmpClassList = await getAllClass()
       setClasses(tmpClassList)
     }
@@ -72,7 +73,7 @@ const YourClassList = () => {
     };
     fetchClass()
     fetchStudent();
-  }, [teacherName])
+  }, [teacherId])
 
   const moveToCreateClass = () => {
     location.href = "createClass"
@@ -139,37 +140,7 @@ const YourClassList = () => {
 
   return (
     <Stack alignItems={"center"}>
-      <Typography>
-        {teacherName}&#39;s classes
-      </Typography>
-      {classes.map((c: Class, i: number) => {
-        return (
-          <ListItem key={i}>
-            <ListItemIcon>
-              <ClassIcon />
-            </ListItemIcon>
-            <ListItemText
-              primary={c.name}
-            />
-            <Tooltip title={"add student"}>
-              <IconButton onClick={() => { handleClickOpen(c) }}>
-                <PersonAddAlt1Icon />
-              </IconButton>
-            </Tooltip>
-          </ListItem>
-        )
-      })}
-
-      <ListItem>
-        <Box width={"100%"} display={"flex"} justifyContent={"center"}>
-          <Tooltip title={"create new class"}>
-            <IconButton onClick={moveToCreateClass}>
-              <AddIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </ListItem>
-      <AddStudentDialog />
+      
     </Stack>
   )
 }

@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.22.0",
     "@emotion/cache": "^11.11.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
@@ -18,11 +19,10 @@
     "@mui/material-nextjs": "^5.15.11",
     "@mui/x-data-grid": "^7.12.1",
     "@mui/x-date-pickers": "^7.7.1",
-    "@prisma/client": "^5.12.1",
+    "@prisma/client": "^6.10.1",
     "dayjs": "^1.11.11",
     "nerdamer": "^1.1.13",
-    "next": "^14.2.4",
-    "next-auth": "^4.24.7",
+    "next": "^15.3.4",
     "react": "^18",
     "react-dom": "^18",
     "react-is": "^18.3.1",
@@ -30,6 +30,7 @@
     "react-latex-next": "^3.0.0",
     "react-mathquill": "^1.0.3",
     "react-table": "^7.8.0",
+    "svix": "^1.67.0",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
