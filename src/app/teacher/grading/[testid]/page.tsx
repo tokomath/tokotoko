@@ -216,7 +216,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
   const savebuttonHandle = async () => {
     let send_data: Array<Point> = [];
-    submissionData.map((submission, userIndex) => {
+    submissionData.map((submission : Submission, userIndex : number) => {
       submission.answers.map((answer, answerIndex) => {
         const userPoints = points[userIndex];
         const newPoint = userPoints ? userPoints[answerIndex] || 0 : 0;

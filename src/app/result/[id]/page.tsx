@@ -73,7 +73,7 @@ export default function Page({ params }: { params: Promise<{ id: string }>}) {
 
   if (!loading && session && session.user.name && alreadySubmit) {
     return <>
-      <Result params={{ id: testId, username: session.user.name }} />
+      <Result params={{ id: testId, userid: session.user.id }} />
     </>
   }
   else {
@@ -81,7 +81,7 @@ export default function Page({ params }: { params: Promise<{ id: string }>}) {
   }
 }
 
-function Result({ params }: { params: { id: string, username: string } }) {
+function Result({ params }: { params: { id: string, userid: string } }) {
   // undefined before init , null when unable to access form TODO
   const [data, setData] = useState<any | null | undefined>(undefined);
   const [partIndex, setPartIndex] = useState(0);
@@ -93,7 +93,7 @@ function Result({ params }: { params: { id: string, username: string } }) {
 
   useEffect(() => {
     const fetch = async () => {
-      const data = await getSubmission({ testId: Number(params.id), username: params.username })
+      const data = await getSubmission({ testId: Number(params.id), userid: params.userid })
       if (data) {
         setData(data)
         let i = 0;
