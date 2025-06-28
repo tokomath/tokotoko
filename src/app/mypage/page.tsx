@@ -7,7 +7,7 @@ import { Test, Class } from "@prisma/client";
 
 import Stack from '@mui/material/Stack';
 import { getTestByClass } from "@/app/api/test/getTestByClass";
-import { getClassByUser } from "@/app/api/class/getClass";
+import { getClassByUserId } from "@/app/api/class/getClass";
 import TopBar from "@/compornents/TopBar";
 
 import { useUser } from '@clerk/nextjs'
@@ -20,8 +20,8 @@ interface TestInterface {
 
 export default function Mypage() {
   //next-authを廃止 Clerkに移行
-  const router = useRouter()
-  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser()
+  const router = useRouter();
+  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser();
 
   if (!(isUserLoaded)) {
     return <>Loading</>
@@ -44,12 +44,12 @@ export default function Mypage() {
 const MypageContent = (props: { userName: string }) => {
   const [testId, setTestId] = useState<number[]>([])
   const [tests, setTests] = useState<TestInterface[]>([]);
-
+  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser()
   useEffect(() => {
     getTests()
   }, [])
   const getTests = async () => {
-    const test = await getClassByUser(props.userName)
+    const test = await getClassByUserId(user?.id || "")
       .then(async (classes: Class[]) => {
         const tmp = classes.map(async (c: Class) => {
           const tmpClass = await getTestByClass(c.id)

@@ -1,9 +1,11 @@
+import { use } from "react"
 import { SignIn } from '@clerk/nextjs'
 
-const SignInPage = ({ params }: { params: { redirect_url: string } }) => {
+const SignInPage = ({ params }: { params: Promise<{ redirect_url: string }> }) => {
+  const {redirect_url} = use(params);
   return (
     <div className="w-full mt-4 flex justify-center items-center">
-      <SignIn fallbackRedirectUrl={params.redirect_url} />
+      <SignIn fallbackRedirectUrl={redirect_url} />
     </div>
   )
 }
