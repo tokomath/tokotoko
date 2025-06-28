@@ -8,7 +8,6 @@ import Latex from "react-latex-next";
 
 import { User, Class, Question, Section, Answer, Submission as PrismaSubmission } from "@prisma/client" // Add PrismaSubmission type
 import { getTestById } from "@/app/api/test/getTestById";
-// getSubmission の代わりに getSubmissionsByTestAndClass をインポートします
 import { getSubmissionsByTestAndClass } from "@/app/api/test/result"; // Assuming getSubmissionsByTestAndClass is in this file
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -22,8 +21,6 @@ interface Point {
   point: number;
 }
 
-// getSubmissionsByTestAndClass の戻り値の型に合わせてSubmissionの型を定義
-// Prismaの型を拡張して、includeされる関係を含めます
 interface SubmissionWithRelations extends PrismaSubmission {
   user: User;
   test: {
@@ -137,7 +134,6 @@ const UngradedCountCell = React.memo(function UngradedCountCell({ ungraded_count
   );
 });
 
-// FIX: この関数はブラウザ環境でのみ呼び出す必要がある
 function generateCursor(): string {
   // `document` is only available in the browser environment
   if (typeof document === 'undefined') {
@@ -165,7 +161,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   const searchParams = useSearchParams();
   const router = useRouter();
   const [Test_, setTest] = useState<any | null | undefined>(undefined);
-  // submissionData の型を SubmissionWithRelations[] に更新
   const [submissionData, setSubmissionData] = useState<SubmissionWithRelations[] | null | undefined>(undefined);
 
   const { user, isSignedIn } = useUser();
@@ -175,21 +170,16 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
   const [classIndex, setClassIndex] = useState(0);
   const [sectionValue, setSectionValue] = useState(0);
-  // points のキーは submissionData 内のインデックスにマッピングされるため、Record<number, Record<number, number>> で問題なし
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
-  // submission_index は Test_?.classes.at(classIndex)?.users の user_index をキーとし、
-  // submissionData 内の該当する提出物のインデックスを値とする
   const [submission_index, setSubmissionIndex] = useState<Record<number, number>>({});
 
   const [cursorImage, setCursorImage] = useState("");
 
   useEffect(() => {
-    // このEFFECTはクライアントサイドでのみ実行されるため、documentが利用可能
     setCursorImage(generateCursor());
-  }, []); // 空の依存配列は、コンポーネントがマウントされたときに1回だけ実行されることを意味する
+  }, []);
 
 
-  //#region イベントハンドラ (useCallbackで最適化)
   const selectClassHandle = useCallback((selectedClassID: string) => {
     router.push(`/teacher/grading/${testid}?classid=${selectedClassID}`);
   }, [router, testid]);
@@ -201,7 +191,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   const answerCellClickHandle = useCallback((newPoint: number, userIndex: number, questionIndex: number) => {
     setPoints(prevPoints => ({
       ...prevPoints,
-      [userIndex]: { // userIndex は submissionData 内のインデックスに対応
+      [userIndex]: {
         ...prevPoints[userIndex],
         [questionIndex]: newPoint
       }
@@ -212,7 +202,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     if (!submissionData) return;
 
     let send_data: Array<Point> = [];
-    submissionData.forEach((submission, dataIndex) => { // dataIndex は submissionData 内のインデックス
+    submissionData.forEach((submission, dataIndex) => {
       submission.answers.forEach((answer: Answer, answerIndex: number) => {
         const newPoint = points[dataIndex]?.[answerIndex] ?? answer.point;
         send_data.push({ answerId: Number(answer.id), point: Number(newPoint) });
@@ -252,34 +242,31 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     r3 = r3.slice(0, r3.length - 1) + "\n";
     exportdata_csv = r1 + r2 + r3;
 
-    // 全てのセクションの質問の総数を計算
     const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
 
     Test_.classes.at(classIndex)?.users.forEach((user: User, user_index: number) => {
         let rn: string = "";
-        const data_index = submission_index[user_index]; // user_indexからsubmissionDataのインデックスを取得
+        const data_index = submission_index[user_index];
         rn += `${format_text(user.name || '')},`;
 
         if (data_index !== undefined) {
-            const submission = submissionData.at(data_index); // 提出物を取得
+            const submission = submissionData.at(data_index); 
             if (submission) {
-                // 回答を質問の総数に基づいてループし、回答がない場合は空白を埋める
                 for (let i = 0; i < totalQuestionsCount; i++) {
                     const answer = submission.answers[i];
                     if (answer) {
                         rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
                     } else {
-                        // 該当する回答がない場合（例: 質問の数が回答の数より多い場合）
-                        rn += ",,"; // 回答テキストと点数分の空白
+                        rn += ",,";
                     }
                 }
             } else {
                 // 提出データが見つからない場合
-                rn += ",".repeat(totalQuestionsCount * 2); // 質問総数分の空白
+                rn += ",".repeat(totalQuestionsCount * 2);
             }
         } else {
             // 提出インデックスが見つからない場合（提出がないユーザー）
-            rn += ",".repeat(totalQuestionsCount * 2); // 質問総数分の空白
+            rn += ",".repeat(totalQuestionsCount * 2);
         }
         rn = rn.slice(0, rn.length - 1) + "\n";
         exportdata_csv += rn;
@@ -296,25 +283,23 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     URL.revokeObjectURL(url);
   }, [Test_, classIndex, submissionData, submission_index, points]);
 
-  //#endregion
 
   const userMetrics = useMemo(() => {
       if (!Test_ || !submissionData) return [];
 
       return Test_.classes.at(classIndex)?.users.map((user: User, user_index: number) => {
-          const data_index = submission_index[user_index]; // user_indexからsubmissionDataのインデックスを取得
-          if (data_index === undefined) { // 該当する提出がない場合
+          const data_index = submission_index[user_index]; 
+          if (data_index === undefined) { 
               return { totalPoints: 0, ungradedCount: 0 };
           }
 
-          const userPoints = points[data_index]; // submissionDataのインデックスに対応するpointsを取得
+          const userPoints = points[data_index];
           let totalPoints = 0;
           let ungradedCount = 0;
 
-          // 提出物の回答数に基づいてループ
           const submissionAnswers = submissionData[data_index]?.answers || [];
           for (let i = 0; i < submissionAnswers.length; i++) {
-              const point = userPoints?.[i] ?? submissionAnswers[i].point; // pointsになければ元のpointを使用
+              const point = userPoints?.[i] ?? submissionAnswers[i].point;
               if (point === -1) {
                   ungradedCount++;
               } else {
@@ -369,28 +354,22 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
         const usersInClass = test_res.classes[foundClassIndex]?.users || [];
 
-        // ユーザーリストをループし、各ユーザーに対応する提出物をallSubmissionsForClassから探す
         usersInClass.forEach((userInClass: User, user_index: number) => {
-          // このユーザーの提出物をallSubmissionsForClassから見つける
           const submission_res = allSubmissionsForClass.find(
             (sub) => sub.user.id === userInClass.id
           );
 
           if (submission_res) {
-            // 提出が見つかった場合、newSubmissionData に追加し、インデックスをマッピング
             const dataIndex = newSubmissionData.length;
             newSubmissionData.push(submission_res);
-            newSubmissionIndex[user_index] = dataIndex; // Test_.classes.usersのuser_indexとnewSubmissionDataのdataIndexを紐付け
+            newSubmissionIndex[user_index] = dataIndex;
 
             const userPoints: Record<number, number> = {};
-            // 提出物のanswersをループしてポイントを初期化
             submission_res.answers.forEach((answer: Answer, answer_index: number) => {
               userPoints[answer_index] = Number(answer.point);
             });
             newPoints[dataIndex] = userPoints;
           }
-          // 提出が見つからないユーザーは newSubmissionData や newPoints に追加されない
-          // submission_indexにはundefinedのままとなり、UIで適切に「-」が表示される
         });
         
         setSubmissionData(newSubmissionData);
@@ -400,7 +379,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
       fetchTestAndSubmissions();
     }
-  }, [testid, classId, isSignedIn, user?.id]); // 依存配列にuser?.idを追加
+  }, [testid, classId, isSignedIn, user?.id]);
 
   return (
     <>
@@ -493,24 +472,21 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                                     const questionGlobalIndex = visibleQuestions.startIndex + index;
                                     const data_index = submission_index[user_index]; // user_index から submissionData のインデックスを取得
                                     
-                                    // 提出データがあり、かつその提出データにこの質問の回答が存在する場合
                                     if (data_index !== undefined && submissionData?.[data_index]?.answers?.[questionGlobalIndex]) {
                                         const answer = submissionData[data_index].answers[questionGlobalIndex];
-                                        // 現在のポイントを取得（pointsにカスタムされたものがあればそれを使用、なければ元のanswer.point）
                                         const currentPoint = points[data_index]?.[questionGlobalIndex] ?? Number(answer.point);
                                         return (
                                             <AnswerCell
                                                 answer={(answer.text === "" ? " " : answer.text)}
                                                 point={currentPoint}
                                                 answerCellHandle={answerCellClickHandle}
-                                                key={`answer-${user.id}-${question.id}`} // 各セルの一意なキー
-                                                userIndex={data_index} // submissionData内のインデックスを渡す
-                                                questionIndex={questionGlobalIndex} // 提出物のanswers配列における絶対インデックスを渡す
+                                                key={`answer-${user.id}-${question.id}`}
+                                                userIndex={data_index} 
+                                                questionIndex={questionGlobalIndex}
                                                 cursorImage={cursorImage}
                                             />
                                         )
                                     } else {
-                                        // 提出データがない、または該当する回答がない場合
                                         return (
                                             <TableCell key={`noanswer-${user.id}-${question.id}`} align="center">
                                             -
