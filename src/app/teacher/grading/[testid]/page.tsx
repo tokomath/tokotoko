@@ -1,18 +1,18 @@
 "use client"
 
-import React, { useEffect, useState,use } from "react"; // Removed 'use' from here
+import React, { useEffect, useState, useMemo, useCallback, use } from "react";
 import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem } from "@mui/material";
 import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
 
-import { User, Class, Question, Section, Test, Answer, Submission} from "@prisma/client"
+import { User, Class, Question, Section, Answer, Submission as PrismaSubmission } from "@prisma/client" // Add PrismaSubmission type
 import { getTestById } from "@/app/api/test/getTestById";
-import { getSubmission } from "@/app/api/test/result"
+// getSubmission の代わりに getSubmissionsByTestAndClass をインポートします
+import { getSubmissionsByTestAndClass } from "@/app/api/test/result"; // Assuming getSubmissionsByTestAndClass is in this file
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
-import { useRouter,useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useUser } from '@clerk/nextjs'
-
 
 import styles from "./styles.module.css"
 
@@ -21,11 +21,25 @@ interface Point {
   answerId: number;
   point: number;
 }
+
+// getSubmissionsByTestAndClass の戻り値の型に合わせてSubmissionの型を定義
+// Prismaの型を拡張して、includeされる関係を含めます
+interface SubmissionWithRelations extends PrismaSubmission {
+  user: User;
+  test: {
+    id: number;
+    title: string;
+    summary: string;
+    startDate: Date;
+    endDate: Date;
+    sections: (Section & { questions: Question[] })[];
+  };
+  answers: Answer[];
+}
 //#endregion
 
 //======================================
 //#region TabPanel等のプロパティ
-//(ほぼmui公式サンプルからコピペ)
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -48,33 +62,18 @@ function CustomTabPanel(props: TabPanelProps) {
   );
 }
 
-function a11yProps(index0: number, index1?: number, index2?: number) {
+function a11yProps(index0: number) {
   return {
-    id: `simple-tab-${index0}` + (index1 == null ? "" : `-${index1}`) + (index2 == null ? "" : `-${index2}`),
-    'aria-controls': `simple-tabpanel-${index0}` + (index1 == null ? "" : `-${index1}`) + + (index2 == null ? "" : `-${index2}`),
+    id: `simple-tab-${index0}`,
+    'aria-controls': `simple-tabpanel-${index0}`,
   };
 }
 //======================================
 //#endregion
 
 //#region Sectionのタブ
-interface AnswerCellProps {
-  point: number;
-  userIndex: number;
-  questionIndex: number;
-  answer: String;
-  answerCellHandle: (point: number, userIndex: number, questionIndex: number) => void;
-
-  cursorImage: String;
-}
-
-interface UngradedCountCellProps {
-  user_index: number;
-  ungraded_count: number;
-}
-
 interface SectionTabProps {
-  sections: Section[];
+  sections: Section[]
   sectionValue: number;
   sectionHandleChange: (event: React.SyntheticEvent, newValue: number) => void;
 }
@@ -103,322 +102,335 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
 }
 //#endregion
 
-function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle,cursorImage}: AnswerCellProps) {
-  if(!answer)
-  {
+//#region Memoized Components
+const AnswerCell = React.memo(function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle, cursorImage }: { answer: string; point: number; userIndex: number; questionIndex: number; answerCellHandle: (newPoint: number, userIndex: number, questionIndex: number) => void; cursorImage: string; }) {
+  if (!answer) {
     return null
   }
-  
+
   const click_handle = () => {
     const new_point = (point === 0 ? 1 : 0);
     answerCellHandle(new_point, userIndex, questionIndex);
   }
 
   const keydown_handle = (event: React.KeyboardEvent<HTMLTableCellElement>) => {
-    switch(event.key)
-    {
+    switch (event.key) {
       case "Enter":
       case " ":
         click_handle();
     }
   }
-  
+
   return (<>
-    <TableCell onClick={click_handle}  onKeyDown={keydown_handle} tabIndex={0} className={styles.answer_cell} style={{ cursor: `url(${cursorImage}), auto` }}>
-      <div className={((point == -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
+    <TableCell onClick={click_handle} onKeyDown={keydown_handle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
+      <div className={((point === -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
       <div className={styles.matharea}><InlineMath math={String(answer)} /></div>
     </TableCell>
   </>)
-}
+});
 
-function UngradedCountCell({user_index, ungraded_count }: UngradedCountCellProps) {
-  let style = (ungraded_count === 0) ? styles.ungraded_false : styles.ungraded_true;
+const UngradedCountCell = React.memo(function UngradedCountCell({ ungraded_count }: { ungraded_count: number }) {
   return (
-    <TableCell key={"ungraded-" + user_index} sx={{ textAlign: "center" }} className={styles.point_cell+" "+((ungraded_count === 0) ? styles.ungraded_false : styles.ungraded_true)}>
-    {ungraded_count}
-  </TableCell>
+    <TableCell sx={{ textAlign: "center" }} className={styles.point_cell + " " + ((ungraded_count === 0) ? styles.ungraded_false : styles.ungraded_true)}>
+      {ungraded_count}
+    </TableCell>
   );
-}
+});
 
-
-function generateCursor() : String{
+// FIX: この関数はブラウザ環境でのみ呼び出す必要がある
+function generateCursor(): string {
+  // `document` is only available in the browser environment
+  if (typeof document === 'undefined') {
+    return "";
+  }
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   canvas.height = 64;
   canvas.width = 64;
-  if(ctx != null)
-  {
-    ctx.clearRect(0,0, canvas.width,canvas.height);
-
-    //@mui/icons-material/ModeEditOutline のpathデータ
+  if (ctx != null) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     const path = new Path2D("M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z");
     ctx.strokeStyle = "#1976d2";
     ctx.lineWidth = 2;
     ctx.stroke(path);
-
     const ImageUrl = canvas.toDataURL("image/png");
     canvas.remove();
     return ImageUrl;
   }
   return "";
 }
+//#endregion
 
-export default function GradingPage({ params }: { params: Promise<{ testid: number }>}) {
+export default function GradingPage({ params }: { params: Promise<{ testid: number }> }) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [Test, setTest] = useState<Test | null>(null);
-  const [submissionData, setSubmissionData] = useState<Submission[]>([]);
+  const [Test_, setTest] = useState<any | null | undefined>(undefined);
+  // submissionData の型を SubmissionWithRelations[] に更新
+  const [submissionData, setSubmissionData] = useState<SubmissionWithRelations[] | null | undefined>(undefined);
 
   const { user, isSignedIn } = useUser();
-  const session = {
-    user: {
-      name: user?.firstName + " " + user?.lastName || "",
-      id: user?.id
-    },
-    status: isSignedIn
-  }
 
-  // Directly access testId from params
   const { testid } = use(params);
-  console.log("testid",testid)
-  
   const classId = searchParams.get("classid");
-  const [classIndex,setClassIndex] = useState(0);
+
+  const [classIndex, setClassIndex] = useState(0);
   const [sectionValue, setSectionValue] = useState(0);
+  // points のキーは submissionData 内のインデックスにマッピングされるため、Record<number, Record<number, number>> で問題なし
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
-  const [submission_index, setSubmissionIndex] = useState<Record<number,number>>({});
-  
+  // submission_index は Test_?.classes.at(classIndex)?.users の user_index をキーとし、
+  // submissionData 内の該当する提出物のインデックスを値とする
+  const [submission_index, setSubmissionIndex] = useState<Record<number, number>>({});
 
-  const [cursorImage,setCursorImage] = useState("");
-  const [totalpoint_label, set_totalpoint_label] = useState("");
-  const [ungraded_label,set_ungraded_label] = useState("");
+  const [cursorImage, setCursorImage] = useState("");
 
-  //#region イベントハンドラ
-  const selectClassHandle = (selectedClassID: String) => {    
-    savebuttonHandle();
-    router.push("/teacher/grading/"+testid+"?classid="+selectedClassID);
-  }
+  useEffect(() => {
+    // このEFFECTはクライアントサイドでのみ実行されるため、documentが利用可能
+    setCursorImage(generateCursor());
+  }, []); // 空の依存配列は、コンポーネントがマウントされたときに1回だけ実行されることを意味する
 
-  const sectionHandleChange = (event: React.SyntheticEvent, newValue: number) => {
+
+  //#region イベントハンドラ (useCallbackで最適化)
+  const selectClassHandle = useCallback((selectedClassID: string) => {
+    router.push(`/teacher/grading/${testid}?classid=${selectedClassID}`);
+  }, [router, testid]);
+
+  const sectionHandleChange = useCallback((event: React.SyntheticEvent, newValue: number) => {
     setSectionValue(newValue);
-  };
+  }, []);
 
-  const answerCellClickHandle = (newPoint: number, userIndex: number, questionIndex: number) => {
+  const answerCellClickHandle = useCallback((newPoint: number, userIndex: number, questionIndex: number) => {
     setPoints(prevPoints => ({
       ...prevPoints,
-      [userIndex]: {
+      [userIndex]: { // userIndex は submissionData 内のインデックスに対応
         ...prevPoints[userIndex],
         [questionIndex]: newPoint
       }
     }));
-    //console.log(-1 * Number(newPoint))
-  }
+  }, []);
 
-  const savebuttonHandle = async () => {
+  const savebuttonHandle = useCallback(async () => {
+    if (!submissionData) return;
+
     let send_data: Array<Point> = [];
-    submissionData.map((submission : Submission, userIndex : number) => {
-      submission.answers.map((answer, answerIndex) => {
-        const userPoints = points[userIndex];
-        const newPoint = userPoints ? userPoints[answerIndex] || 0 : 0;
-        send_data.push({ answerId: Number(answer.id), point: newPoint });
+    submissionData.forEach((submission, dataIndex) => { // dataIndex は submissionData 内のインデックス
+      submission.answers.forEach((answer: Answer, answerIndex: number) => {
+        const newPoint = points[dataIndex]?.[answerIndex] ?? answer.point;
+        send_data.push({ answerId: Number(answer.id), point: Number(newPoint) });
       });
     });
-    //console.log("SEND DATA")
-    //console.log(send_data);
+
     const send_res = await setAnswerPoints(send_data);
-    if (send_res == 0) {
-      alert("Saved grading data successfully.")
+    if (send_res === 0) {
+      alert("Saved grading data successfully.");
+    } else {
+      alert("An Error has occurred.");
     }
-    else if (send_res == -1) {
-      alert("An Error has occurred.")
-    }
-  }
+  }, [submissionData, points]);
+  
+  const exportbutonHandle = useCallback(() => {
+    if (!Test_ || !submissionData) return;
 
-  const exportbutonHandle = () => {
-    let exportdata_csv: String = "";
-    let r1: String = "Part-QNumber,";
-    let r2: String = "Question,";
-    let r3: String = "Answer,";
+    let exportdata_csv: string = "";
+    let r1: string = "Part-QNumber,";
+    let r2: string = "Question,";
+    let r3: string = "Answer,";
 
-    function format_text(str : String) : String
-    {
-      //改行が含まれていたら取り除き、カンマは全角に置換する。（csvデータが壊れるため）
-      return str.replaceAll("\n","").replaceAll(",","，");
+    const format_text = (str: string): string => {
+        return str.replaceAll("\n", "").replaceAll(",", "，");
     }
 
-    Test?.sections.map((section : Section, section_index : number) => {
-      section.questions.map((question : Question, question_index : number) => {
-        r1 += "Part" + (section_index+1) + "-" + (question_index+1) + ",,";
-        r2 += format_text(question.question) + ",,";
-        r3 += format_text(question.answer) + ",,";
-      })
+    Test_.sections.forEach((section:any, section_index: number) => {
+        section.questions.forEach((question: Question, question_index: number) => {
+            r1 += `Part${section_index + 1}-${question_index + 1},,`;
+            r2 += `${format_text(question.question)},,`;
+            r3 += `${format_text(question.answer)},,`;
+        })
     })
 
     r1 = r1.slice(0, r1.length - 1) + "\n";
     r2 = r2.slice(0, r2.length - 1) + "\n";
     r3 = r3.slice(0, r3.length - 1) + "\n";
-    exportdata_csv = r1 + "" + r2 + "" + r3;
+    exportdata_csv = r1 + r2 + r3;
 
-    let answer_index_max = 0;
-    Test?.sections.map((sections : Section) => {
-      answer_index_max += sections.questions.length;
-    })
+    // 全てのセクションの質問の総数を計算
+    const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
 
-    Test?.classes.at(classIndex)?.users.map((user : User, user_index : number) => {
-      let rn: String = "";
-      const data_index = submission_index[user_index];
-      rn += format_text(user.name) + ",";
-      if(data_index != undefined)
-      {
-        const submittion = submissionData.at(data_index);
-        submittion?.answers.map((answer : Answer,answer_index : number) => {
-          rn += format_text(answer.text) + "," + points[data_index][answer_index]+",";
-        })
-      }
-      else
-      {
-        for(let i = 0; i < (answer_index_max*2);i++)
-        {
-          rn+=","
+    Test_.classes.at(classIndex)?.users.forEach((user: User, user_index: number) => {
+        let rn: string = "";
+        const data_index = submission_index[user_index]; // user_indexからsubmissionDataのインデックスを取得
+        rn += `${format_text(user.name || '')},`;
+
+        if (data_index !== undefined) {
+            const submission = submissionData.at(data_index); // 提出物を取得
+            if (submission) {
+                // 回答を質問の総数に基づいてループし、回答がない場合は空白を埋める
+                for (let i = 0; i < totalQuestionsCount; i++) {
+                    const answer = submission.answers[i];
+                    if (answer) {
+                        rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
+                    } else {
+                        // 該当する回答がない場合（例: 質問の数が回答の数より多い場合）
+                        rn += ",,"; // 回答テキストと点数分の空白
+                    }
+                }
+            } else {
+                // 提出データが見つからない場合
+                rn += ",".repeat(totalQuestionsCount * 2); // 質問総数分の空白
+            }
+        } else {
+            // 提出インデックスが見つからない場合（提出がないユーザー）
+            rn += ",".repeat(totalQuestionsCount * 2); // 質問総数分の空白
         }
-      }
-      rn = rn.slice(0, rn.length - 1) + "\n"
-      exportdata_csv += rn + "";
+        rn = rn.slice(0, rn.length - 1) + "\n";
+        exportdata_csv += rn;
     });
 
-    const blob = new Blob([exportdata_csv + ""], { type: 'text/plain' });
+    const blob = new Blob([exportdata_csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a_buf = document.createElement('a');
     a_buf.href = url;
-    a_buf.download = Test?.title + "_" + Test?.classes.at(classIndex)?.name + ".csv"
+    a_buf.download = `${Test_?.title}_${Test_?.classes.at(classIndex)?.name}.csv`;
     document.body.appendChild(a_buf);
     a_buf.click();
     document.body.removeChild(a_buf);
     URL.revokeObjectURL(url);
-  }
+  }, [Test_, classIndex, submissionData, submission_index, points]);
 
   //#endregion
 
-  const calculateUserTotalPoints = (userIndex: number): number => {
-    let totalPoints = 0;
-    const userPoints = points[userIndex];
+  const userMetrics = useMemo(() => {
+      if (!Test_ || !submissionData) return [];
 
-    if (userPoints) {
-      Object.values(userPoints).forEach(point => {
-        totalPoints += (point != -1) ? point : 0;
-      });
-    }
-
-    return totalPoints;
-  };
-
-  const countUngraded = (userIndex: number) : number => {
-    let ungraded = 0;
-    const userPoints = points[userIndex];
-
-    if(userPoints)
-    {
-      Object.values(userPoints).forEach(point => {
-        ungraded += (point === -1) ? 1 : 0;
-      });
-    }
-
-    return ungraded;
-  }
-  useEffect(() => {
-    // Ensure testId and classID are available and session status is true
-    if (testid && classId && session.status) {
-      const submissionData_buf: Array<Submission> = [];
-      const fetchTest = async () => {
-        const test_res = await getTestById(Number(testid), String(session.user.id));
-        if (test_res) {
-          let class_index = -1;
-          setTest(test_res);
-          test_res.classes.map((a_class,index) => {
-            if(a_class.id == classId)
-            {
-              class_index = index;
-              setClassIndex(index);
-            }
-          });
-
-          if(class_index == -1)
-          {
-            setTest(null);
-            return;
+      return Test_.classes.at(classIndex)?.users.map((user: User, user_index: number) => {
+          const data_index = submission_index[user_index]; // user_indexからsubmissionDataのインデックスを取得
+          if (data_index === undefined) { // 該当する提出がない場合
+              return { totalPoints: 0, ungradedCount: 0 };
           }
 
-          let count_submissions  = 0;
-          const usersInClass = test_res.classes.at(class_index)?.users || []; // Handle potential undefined
-          
-          // Use Promise.all to wait for all submissions to be fetched
-          await Promise.all(usersInClass.map(async (user, user_index) => {
-            const submission_res = await getSubmission({ testId: Number(testid), userid: user.id });
-            if (submission_res != null) {
-              submissionData_buf.push({ id: Number(submission_res?.id), studentId: String(submission_res?.studentId), answers: submission_res.answers });
-              count_submissions += 1;
-              setSubmissionIndex(prevIndex => ({
-                ...prevIndex,
-                [user_index]:(Number(count_submissions) - 1)
-              }));
-            }
-          }));
+          const userPoints = points[data_index]; // submissionDataのインデックスに対応するpointsを取得
+          let totalPoints = 0;
+          let ungradedCount = 0;
 
-          // After all submissions are fetched and submissionData_buf is populated
-          submissionData_buf.map((submissionDatum_buf, index_submission) => {
-            submissionDatum_buf.answers.map((answer : Answer, index_answer : number) => {
-              setPoints(prevPoints => ({
-                ...prevPoints,
-                [index_submission]: {
-                  ...prevPoints[index_submission],
-                  [index_answer]: Number(answer.point)
-                }
-              }));
-            })
-          })
-          setSubmissionData(submissionData_buf);
-          set_totalpoint_label("Total Point");
-          set_ungraded_label("Ungraded");
+          // 提出物の回答数に基づいてループ
+          const submissionAnswers = submissionData[data_index]?.answers || [];
+          for (let i = 0; i < submissionAnswers.length; i++) {
+              const point = userPoints?.[i] ?? submissionAnswers[i].point; // pointsになければ元のpointを使用
+              if (point === -1) {
+                  ungradedCount++;
+              } else {
+                  totalPoints += point;
+              }
+          }
+          return { totalPoints, ungradedCount };
+      }) || [];
+  }, [Test_, classIndex, submission_index, points, submissionData]);
 
-          setCursorImage(String(generateCursor()));
-        }
-      }
-      fetchTest();
+  const visibleQuestions = useMemo(() => {
+    if (!Test_?.sections) return { questions: [], startIndex: 0 };
+    
+    let startIndex = 0;
+    for (let i = 0; i < sectionValue; i++) {
+        startIndex += Test_.sections[i]?.questions.length || 0;
     }
-  }, [testid, classId, session.status]); // Add testId to the dependency array
+    const questions = Test_.sections.at(sectionValue)?.questions || [];
+    return { questions, startIndex };
+  }, [Test_, sectionValue]);
+
+
+  useEffect(() => {
+    if (testid && classId && isSignedIn) {
+      const fetchTestAndSubmissions = async () => {
+        // 1. テスト情報を取得
+        const test_res = await getTestById(Number(testid), String(user?.id));
+        if (!test_res) {
+          setTest(null);
+          return;
+        }
+        
+        // 2. 指定されたclassIdのクラスを見つける
+        const foundClassIndex = test_res.classes.findIndex((a_class: Class) => a_class.id == classId);
+        if (foundClassIndex === -1) {
+          setTest(null);
+          return;
+        }
+        
+        setTest(test_res);
+        setClassIndex(foundClassIndex);
+        
+        // 3. getSubmissionsByTestAndClass を使用して、指定されたテストとクラスのすべての提出物を取得
+        const allSubmissionsForClass: SubmissionWithRelations[] = await getSubmissionsByTestAndClass({
+          testId: Number(testid),
+          classId: String(classId)
+        });
+
+        const newSubmissionData: SubmissionWithRelations[] = [];
+        const newPoints: Record<number, Record<number, number>> = {};
+        const newSubmissionIndex: Record<number, number> = {};
+
+        const usersInClass = test_res.classes[foundClassIndex]?.users || [];
+
+        // ユーザーリストをループし、各ユーザーに対応する提出物をallSubmissionsForClassから探す
+        usersInClass.forEach((userInClass: User, user_index: number) => {
+          // このユーザーの提出物をallSubmissionsForClassから見つける
+          const submission_res = allSubmissionsForClass.find(
+            (sub) => sub.user.id === userInClass.id
+          );
+
+          if (submission_res) {
+            // 提出が見つかった場合、newSubmissionData に追加し、インデックスをマッピング
+            const dataIndex = newSubmissionData.length;
+            newSubmissionData.push(submission_res);
+            newSubmissionIndex[user_index] = dataIndex; // Test_.classes.usersのuser_indexとnewSubmissionDataのdataIndexを紐付け
+
+            const userPoints: Record<number, number> = {};
+            // 提出物のanswersをループしてポイントを初期化
+            submission_res.answers.forEach((answer: Answer, answer_index: number) => {
+              userPoints[answer_index] = Number(answer.point);
+            });
+            newPoints[dataIndex] = userPoints;
+          }
+          // 提出が見つからないユーザーは newSubmissionData や newPoints に追加されない
+          // submission_indexにはundefinedのままとなり、UIで適切に「-」が表示される
+        });
+        
+        setSubmissionData(newSubmissionData);
+        setPoints(newPoints);
+        setSubmissionIndex(newSubmissionIndex);
+      };
+
+      fetchTestAndSubmissions();
+    }
+  }, [testid, classId, isSignedIn, user?.id]); // 依存配列にuser?.idを追加
 
   return (
     <>
       {/*==========ヘッダエリア==========*/}
-      <Paper sx={{ borderRadius: 0, width: "100%",m:0,p:0}}>
+      <Paper sx={{ borderRadius: 0, width: "100%", m: 0, p: 0 }}>
         <Box sx={{ pt: 2, pr: 2, pb: 1 }}>
           <Box display="flex" justifyContent="right">
             <Box width="100%">
               <Typography variant="h4" sx={{ ml: 2, mt: 2 }} width="100%">
-                {Test?.title}
+                {Test_?.title}
               </Typography>
-              <hr/>
+              <hr />
               <Typography variant="h6" sx={{ ml: 2 }}>
-                {Test?.summary}
+                {Test_?.summary}
               </Typography>
             </Box>
 
             <Box width="10em">
               <Box display="flex" justifyContent="right">
-              {
-                /*クラスを選択するコンボボックス*/
-                Number(Test?.classes.length) > 0 ?
-                <TextField select id="select_class" value={classId}>
-                {
-                  Test?.classes.map((a_class : Class,index : number) => 
-                    <MenuItem key={"select_class"+index} value={a_class.id} onClick={()=>selectClassHandle(a_class.id)}>
-                      {a_class.name}
-                    </MenuItem>
-                  )
+                {Test_?.classes?.length > 0 &&
+                  <TextField select id="select_class" value={classId || ''} fullWidth>
+                    {
+                      Test_?.classes.map((a_class: Class, index: number) =>
+                        <MenuItem key={"select_class" + index} value={a_class.id} onClick={() => selectClassHandle(a_class.id)}>
+                          {a_class.name}
+                        </MenuItem>
+                      )
+                    }
+                  </TextField>
                 }
-              </TextField>
-              : <></>
-              }
               </Box>
               <Typography textAlign="right">
                 Class ID: {classId}
@@ -435,12 +447,12 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         {/*==========ここからTableエリア==========*/}
         <Paper sx={{ m: 1, mr: 0, ml: 0 }}>
           {
-            (Test != null) ?
-              (<SectionTabs sections={Test.sections} sectionValue={sectionValue} sectionHandleChange={sectionHandleChange} />)
+            (Test_ != null && Test_.sections && Test_.sections.length > 0) ?
+              (<SectionTabs sections={Test_.sections} sectionValue={sectionValue} sectionHandleChange={sectionHandleChange} />)
               : (<>
                 <p>Submission Data not found. </p>
                 <p>The test has not been submitted yet or the test does not exist.</p>
-                <p>The ClassID or TestID may be incorrect.</p>
+                <p>The ClassID or TestID may be incorrect or no sections/questions are defined for the test.</p>
               </>)
           }
           <TableContainer component={Paper}>
@@ -449,20 +461,11 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ textAlign: "center" }} className={styles.username_cell}></TableCell>
-                  {/* 合計ポイント表示用のヘッダセル */}
-                  <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>
-                    {totalpoint_label}
-                  </TableCell>
-
-                  {/*未採点問題数表示用のヘッダセル*/}
-                  <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>
-                    {ungraded_label}
-                  </TableCell>
-
-                  { //表のヘッダ Questionの問題と解を表示する
-
-                    Test?.sections.at(sectionValue)?.questions.map((question: Question, index) =>
-                      <TableCell key={"question" + index} sx={{ textAlign: "center" }}>
+                  <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>Total Point</TableCell>
+                  <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>Ungraded</TableCell>
+                  {
+                    visibleQuestions.questions.map((question: Question, index: number) =>
+                      <TableCell key={"question" + question.id} sx={{ textAlign: "center" }}>
                         <Latex>{question.question}</Latex>
                         <hr />
                         <InlineMath>{question.answer}</InlineMath>
@@ -474,76 +477,63 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               {/*==========以下データセル==========*/}
               <TableBody>
                 {
-                  Test?.classes.at(classIndex)?.users.map((user: User, user_index) =>
-                    <TableRow key={"ROW" + user_index}>
-                      {/*ユーザー名を表示するセル*/}
-                      <TableCell key={"username" + user_index} className={styles.name_cell}>{user.name}</TableCell>
-                      
-                      {/* 合計ポイントを表示するセル */}
-                      <TableCell key={"totalPoints-" + user_index} sx={{ textAlign: "center" }} className={styles.point_cell}>
-                        {calculateUserTotalPoints(submission_index[user_index])}
-                      </TableCell>
-
-                      {/*未採点問題数を表示するセル*/}
-                      <UngradedCountCell user_index={user_index} ungraded_count={countUngraded(submission_index[user_index])}/>
-                      
-                      {
-                        (function () {
-                          let start = 0;
-                          const cells = [];
-                          for (let i = 0; i < sectionValue; i++) //現在のセクションの前にある問題数を数える
-                          {
-                            start += Number(Test.sections.at(i)?.questions.length);
-                          }
-
-                          //現在のセクションの問題を表示する
-                          for (let question_index = start; question_index < start + Number(Test.sections.at(sectionValue)?.questions.length); question_index++) {
-                            let data_index = submission_index[user_index];
-                            let answer = submissionData.at(data_index)?.answers.at(question_index);
-                            if (data_index != undefined && answer != undefined) {
-                              const currentPoint = points[data_index]?.[question_index];
-                              cells.push(
-                                <AnswerCell answer={(answer.text == "" ? " " : answer.text)}
-                                  point={currentPoint}
-                                  answerCellHandle={answerCellClickHandle}
-                                  key={user.id + "-" + answer.questionId}
-                                  userIndex={data_index}
-                                  questionIndex={question_index}
-                                  cursorImage={cursorImage}
-                                  >
-                                </AnswerCell>
-                              )
-                            }
-                            else
+                  Test_?.classes.at(classIndex)?.users.map((user: User, user_index: number) => {
+                    const metrics = userMetrics[user_index] || { totalPoints: 0, ungradedCount: 0 };
+                    return (
+                        <TableRow key={"ROW-" + user.id}>
+                            <TableCell key={"username-" + user.id} className={styles.name_cell}>{user.name}</TableCell>
+                            <TableCell key={"totalPoints-" + user.id} sx={{ textAlign: "center" }} className={styles.point_cell}>
+                                {metrics.totalPoints}
+                            </TableCell>
+                            <UngradedCountCell key={"ungraded-" + user.id} ungraded_count={metrics.ungradedCount}/>
                             {
-                              cells.push(
-                                <TableCell key={"noanswer"+user_index+"-"+question_index} align="center">
-                                  -
-                                </TableCell>
-                              )
+                                visibleQuestions.questions.map((question: Question, index: number) => {
+                                    // 表示中のセクションでの質問の相対インデックスに、前のセクションまでの質問数を加算して、
+                                    // 提出物のanswers配列における絶対インデックスを計算
+                                    const questionGlobalIndex = visibleQuestions.startIndex + index;
+                                    const data_index = submission_index[user_index]; // user_index から submissionData のインデックスを取得
+                                    
+                                    // 提出データがあり、かつその提出データにこの質問の回答が存在する場合
+                                    if (data_index !== undefined && submissionData?.[data_index]?.answers?.[questionGlobalIndex]) {
+                                        const answer = submissionData[data_index].answers[questionGlobalIndex];
+                                        // 現在のポイントを取得（pointsにカスタムされたものがあればそれを使用、なければ元のanswer.point）
+                                        const currentPoint = points[data_index]?.[questionGlobalIndex] ?? Number(answer.point);
+                                        return (
+                                            <AnswerCell
+                                                answer={(answer.text === "" ? " " : answer.text)}
+                                                point={currentPoint}
+                                                answerCellHandle={answerCellClickHandle}
+                                                key={`answer-${user.id}-${question.id}`} // 各セルの一意なキー
+                                                userIndex={data_index} // submissionData内のインデックスを渡す
+                                                questionIndex={questionGlobalIndex} // 提出物のanswers配列における絶対インデックスを渡す
+                                                cursorImage={cursorImage}
+                                            />
+                                        )
+                                    } else {
+                                        // 提出データがない、または該当する回答がない場合
+                                        return (
+                                            <TableCell key={`noanswer-${user.id}-${question.id}`} align="center">
+                                            -
+                                            </TableCell>
+                                        )
+                                    }
+                                })
                             }
-                          }
-                          return cells;
-                        }())
-                      }
-                    </TableRow>
-                  )
+                        </TableRow>
+                    )
+                  })
                 }
               </TableBody>
             </Table>
           </TableContainer>
         </Paper>
         {/*==========Table終わり==========*/}
-        {
-          <>
-            {Test ?
-              <>
+        {Test_ && (
+            <>
                 <Button variant="contained" sx={{ mb: 1, mt: 0 }} className={styles.save_button} onClick={savebuttonHandle}>Save</Button>
                 <Button sx={{ mb: 1, mt: 0 }} className={styles.export_button} onClick={exportbutonHandle}>Export as CSV</Button>
-              </>
-              : <></>}
-          </>
-        }
+            </>
+        )}
       </Container>
     </>
   );
