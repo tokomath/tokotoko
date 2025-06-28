@@ -42,7 +42,7 @@ export const TeacherGuard = ({ children }: any) => {
     if (auth === "ok")
         return <>{children}</>
     if (auth === "ng") {
-        router.push("/")
-        return null
+
+        return <>Error:Login as a teacher</>
     }
 }

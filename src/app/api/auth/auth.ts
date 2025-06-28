@@ -13,8 +13,6 @@ export const teacherAuth = async (userid: string) => {
       },
     }
   );
-  console.log(name)
-  console.log(user)
   return user !== null
 };
 

@@ -5,7 +5,7 @@ import { Class, User } from "@prisma/client";
 
 import { getUsersFromQuery } from "@/app/api/User/getUsersFromQuery";
 import { ClassFrame, createClass } from "@/app/api/class/createClass";
-import { UserSelector } from "@/compornents/userSelector"; 
+import { UserSelector } from "@/compornents/userSelector";
 import {
   Button,
   FormControl,
@@ -25,7 +25,9 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import { Clear } from "@mui/icons-material";
-import { useRouter } from "next/navigation"; // ← 追加
+import { useRouter } from "next/navigation";
+import { TeacherGuard } from "@/lib/guard"
+
 
 export default function DualRoleUserSelectors() {
   const [teachers, setTeachers] = useState<User[]>([]);
@@ -75,63 +77,65 @@ export default function DualRoleUserSelectors() {
   };
 
   return (
-    <Box display="flex" flexDirection="column" gap={2} padding={2}>
-      <TextField
-        value={className}
-        label={"Class Name"}
-        onChange={(e) => {
-          setClassName(e.target.value);
-        }}
-      />
-      <Box display="flex" flexDirection="column" gap={2}>
-        <h3>学生検索</h3>
-        <UserSelector
-          role={1}
-          onAddUser={(user) => addUserToList(students, setStudents, user)}
+    <TeacherGuard>
+      <Box display="flex" flexDirection="column" gap={2} padding={2}>
+        <TextField
+          value={className}
+          label={"Class Name"}
+          onChange={(e) => {
+            setClassName(e.target.value);
+          }}
         />
-        <h4>追加された学生</h4>
-        <ul>
-          {students.map((user) => (
-            <li key={user.email} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {user.name} ({user.email})
-              <IconButton
-                onClick={() => removeUserFromList(students, setStudents, user.email)}
-                style={{ marginLeft: "auto", cursor: "pointer" }}
-                aria-label={`Delete ${user.name}`}
-              >
-                <Clear sx={{ color: "red" }} />
-              </IconButton>
-            </li>
-          ))}
-        </ul>
-      </Box>
+        <Box display="flex" flexDirection="column" gap={2}>
+          <h3>学生検索</h3>
+          <UserSelector
+            role={1}
+            onAddUser={(user) => addUserToList(students, setStudents, user)}
+          />
+          <h4>追加された学生</h4>
+          <ul>
+            {students.map((user) => (
+              <li key={user.email} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {user.name} ({user.email})
+                <IconButton
+                  onClick={() => removeUserFromList(students, setStudents, user.email)}
+                  style={{ marginLeft: "auto", cursor: "pointer" }}
+                  aria-label={`Delete ${user.name}`}
+                >
+                  <Clear sx={{ color: "red" }} />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
+        </Box>
 
-      {/* Role 1 */}
-      <Box display={"flex"} flexDirection={"column"} gap={2}>
-        <h3>教師検索</h3>
-        <UserSelector
-          role={0}
-          onAddUser={(user) => addUserToList(teachers, setTeachers, user)}
-        />
-        <h4>追加された教師一覧</h4>
-        <ul>
-          {teachers.map((user) => (
-            <li key={user.email} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {user.name} ({user.email})
-              <IconButton
-                onClick={() => removeUserFromList(teachers, setTeachers, user.email)}
-                style={{ marginLeft: "auto", cursor: "pointer" }}
-                aria-label={`Delete ${user.name}`}
-              >
-                <Clear sx={{ color: "red" }} />
-              </IconButton>
-            </li>
-          ))}
-        </ul>
+        {/* Role 1 */}
+        <Box display={"flex"} flexDirection={"column"} gap={2}>
+          <h3>教師検索</h3>
+          <UserSelector
+            role={0}
+            onAddUser={(user) => addUserToList(teachers, setTeachers, user)}
+          />
+          <h4>追加された教師一覧</h4>
+          <ul>
+            {teachers.map((user) => (
+              <li key={user.email} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {user.name} ({user.email})
+                <IconButton
+                  onClick={() => removeUserFromList(teachers, setTeachers, user.email)}
+                  style={{ marginLeft: "auto", cursor: "pointer" }}
+                  aria-label={`Delete ${user.name}`}
+                >
+                  <Clear sx={{ color: "red" }} />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
+        </Box>
+        <Button variant={"contained"} onClick={createClassButtonFunction}>
+          クラスを作成
+        </Button>
       </Box>
-      <Button variant={"contained"} onClick={createClassButtonFunction}>
-        クラスを作成
-      </Button>
-    </Box>
+    </TeacherGuard>
   );
 }

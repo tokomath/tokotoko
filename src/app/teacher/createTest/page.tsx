@@ -46,6 +46,7 @@ import { useUser } from '@clerk/nextjs'
 import { getClassByUserId } from "@/app/api/class/getClass";
 
 import InsertFrame from "@/compornents/InsertFrame";
+import { TeacherGuard } from "@/lib/guard"
 
 
 const insert_options = ["None", "Image", "HTML"];
@@ -280,14 +281,6 @@ function ClientSearchParamWrapper() {
         ))}
       </Box>
     </Stack>
-  );
-}
-
-export default function Page() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ClientSearchParamWrapper />
-    </Suspense>
   );
 }
 
@@ -548,93 +541,103 @@ const QuestionPage = ({
   };
 
   return (
-      <Stack gap={1} width={"100%"} padding={2} border="1p">
-        <Box display="flex" justifyContent="space-between">
-          <Box display="flex" alignContent="center">
-            <Typography>{"(" + question.number + ") "}</Typography>
-            <InlineMath>{question.question}</InlineMath>
-          </Box>
-          <IconButton aria-label="delete" onClick={deleteQuestion}>
-            <CloseIcon />
-          </IconButton>
+    <Stack gap={1} width={"100%"} padding={2} border="1p">
+      <Box display="flex" justifyContent="space-between">
+        <Box display="flex" alignContent="center">
+          <Typography>{"(" + question.number + ") "}</Typography>
+          <InlineMath>{question.question}</InlineMath>
         </Box>
-        <TextField
-          label={"question"}
-          value={question.question}
-          onChange={(e) => setQues(e.target.value)}
-        />
-        <Stack direction={"column"}>
-          {/*コンテンツ挿入エリア*/}
-          <Box display="flex" width={"100%"}>
-            <Autocomplete disablePortal
-              options={insert_options} defaultValue={question.insertType} disableClearable
-              onChange={(event, option) => {
-                setInsertType(option);
-                setInsertContent(""); // タイプ変更時にコンテンツをクリア
-              }}
-              sx={{ width: "20%" }} renderInput={(params) => <TextField {...params} label="Insert" />} />
-            <>
-              {(function () {
-                let acceptFileType: String = "";
-                switch (question.insertType) {
-                  case "None":
-                    return (<></>)
-                  case "Image":
-                    acceptFileType = "image/*";
-                    break;
-                  case "HTML":
-                    acceptFileType = ".html";
-                    break;
-                  default:
-                    return (<></>)
-                }
-                return (
-                  <>
-                    <Box width={"80%"} display="flex" alignItems="center">
-                      <Button variant="contained" component="label" sx={{ whiteSpace: 'nowrap', width: "230px", height: "100%", marginLeft: 2 }}>
-                        Upload {question.insertType} File
-                        <input type="file" accept={acceptFileType.toString()} style={{ display: "none" }} onChange={async (event) => {
-                          const files = event.currentTarget.files;
-                          if (!files || files?.length === 0) return;
-                          const file = files[0];
-                          let content: String = "";
-                          const reader = new FileReader();
-                          switch (question.insertType) {
-                            case "Image":
-                              reader.readAsDataURL(file);
-                              reader.onload = () => {
-                                setInsertContent(reader.result != null ? reader.result.toString() : "");
-                              };
-                              break;
-                            case "HTML":
-                              reader.readAsText(file);
-                              reader.onload = () => {
-                                setInsertContent(reader.result != null ? reader.result.toString() : "");
-                              }
-                          }
-                        }} />
-                      </Button>
-                      <Box width={"100%"} marginLeft={2}>
-                        {contetError()}
-                      </Box>
+        <IconButton aria-label="delete" onClick={deleteQuestion}>
+          <CloseIcon />
+        </IconButton>
+      </Box>
+      <TextField
+        label={"question"}
+        value={question.question}
+        onChange={(e) => setQues(e.target.value)}
+      />
+      <Stack direction={"column"}>
+        {/*コンテンツ挿入エリア*/}
+        <Box display="flex" width={"100%"}>
+          <Autocomplete disablePortal
+            options={insert_options} defaultValue={question.insertType} disableClearable
+            onChange={(event, option) => {
+              setInsertType(option);
+              setInsertContent(""); // タイプ変更時にコンテンツをクリア
+            }}
+            sx={{ width: "20%" }} renderInput={(params) => <TextField {...params} label="Insert" />} />
+          <>
+            {(function () {
+              let acceptFileType: String = "";
+              switch (question.insertType) {
+                case "None":
+                  return (<></>)
+                case "Image":
+                  acceptFileType = "image/*";
+                  break;
+                case "HTML":
+                  acceptFileType = ".html";
+                  break;
+                default:
+                  return (<></>)
+              }
+              return (
+                <>
+                  <Box width={"80%"} display="flex" alignItems="center">
+                    <Button variant="contained" component="label" sx={{ whiteSpace: 'nowrap', width: "230px", height: "100%", marginLeft: 2 }}>
+                      Upload {question.insertType} File
+                      <input type="file" accept={acceptFileType.toString()} style={{ display: "none" }} onChange={async (event) => {
+                        const files = event.currentTarget.files;
+                        if (!files || files?.length === 0) return;
+                        const file = files[0];
+                        let content: String = "";
+                        const reader = new FileReader();
+                        switch (question.insertType) {
+                          case "Image":
+                            reader.readAsDataURL(file);
+                            reader.onload = () => {
+                              setInsertContent(reader.result != null ? reader.result.toString() : "");
+                            };
+                            break;
+                          case "HTML":
+                            reader.readAsText(file);
+                            reader.onload = () => {
+                              setInsertContent(reader.result != null ? reader.result.toString() : "");
+                            }
+                        }
+                      }} />
+                    </Button>
+                    <Box width={"100%"} marginLeft={2}>
+                      {contetError()}
                     </Box>
-                  </>)
-              }())}
-            </>
-          </Box>
-          <Box height={"auto"}>
-            <InsertFrame insertType={question.insertType} insertContent={question.insertContent} />
-          </Box>
-        </Stack>
-        <Stack direction={"row"} gap={1}>
-          <Typography>{"Answer: "}</Typography>
-          <InlineMath>{question.answer}</InlineMath>
-        </Stack>
-        <TextField
-          label={"answer"}
-          value={question.answer}
-          onChange={(e) => setAns(e.target.value)}
-        />
+                  </Box>
+                </>)
+            }())}
+          </>
+        </Box>
+        <Box height={"auto"}>
+          <InsertFrame insertType={question.insertType} insertContent={question.insertContent} />
+        </Box>
       </Stack>
+      <Stack direction={"row"} gap={1}>
+        <Typography>{"Answer: "}</Typography>
+        <InlineMath>{question.answer}</InlineMath>
+      </Stack>
+      <TextField
+        label={"answer"}
+        value={question.answer}
+        onChange={(e) => setAns(e.target.value)}
+      />
+    </Stack>
   );
 };
+
+export default function Page() {
+  return (
+    <TeacherGuard>
+      <Suspense fallback={<div>Loading...</div>}>
+        <ClientSearchParamWrapper />
+      </Suspense>
+    </TeacherGuard>
+  );
+}
