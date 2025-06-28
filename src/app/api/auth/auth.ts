@@ -2,11 +2,11 @@
 
 import { prisma } from "@/app/api/prisma_client";
 
-export const teacherAuth = async (name: string) => {
+export const teacherAuth = async (userid: string) => {
   const user = await prisma.user.findUnique(
     {
       where: {
-        name: name,
+        id: userid,
         role: 0,
       },
     }
@@ -16,11 +16,11 @@ export const teacherAuth = async (name: string) => {
   return user !== null
 };
 
-export const studentAuth = async (name: string) => {
+export const studentAuth = async (userid: string) => {
   const user = prisma.user.findUnique(
     {
       where: {
-        name: name,
+        id: userid,
         role: 1,
       },
     }
