@@ -12,6 +12,7 @@ import { getSubmissionsByTestAndClass } from "@/app/api/test/result"; // Assumin
 import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useUser } from '@clerk/nextjs'
+import { TeacherGuard } from "@/lib/guard"
 
 import styles from "./styles.module.css"
 
@@ -382,7 +383,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   }, [testid, classId, isSignedIn, user?.id]);
 
   return (
-    <>
+    <TeacherGuard>
       {/*==========ヘッダエリア==========*/}
       <Paper sx={{ borderRadius: 0, width: "100%", m: 0, p: 0 }}>
         <Box sx={{ pt: 2, pr: 2, pb: 1 }}>
@@ -511,6 +512,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
             </>
         )}
       </Container>
-    </>
+    </TeacherGuard>
   );
 }

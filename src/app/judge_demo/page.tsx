@@ -11,7 +11,7 @@ import "katex/dist/katex.min.css";
 
 
 import Question from "@/compornents/Question";
-import judge from "@/lib/guards/judge";
+import judge from "@/lib/judge";
 
 export default function JudgeDemo() {
 

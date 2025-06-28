@@ -1,5 +1,5 @@
 "use server"
-import judge from "@/lib/guards/judge";
+import judge from "@/lib/judge";
 import { prisma } from "../prisma_client";
 import { Answer } from "@prisma/client";
 

@@ -2,6 +2,8 @@
 
 import { prisma } from "@/app/api/prisma_client";
 
+
+/* role 0 = teacher / 1 = student */
 export const teacherAuth = async (userid: string) => {
   const user = await prisma.user.findUnique(
     {
@@ -11,8 +13,6 @@ export const teacherAuth = async (userid: string) => {
       },
     }
   );
-  console.log(name)
-  console.log(user)
   return user !== null
 };
 

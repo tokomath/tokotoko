@@ -30,21 +30,24 @@ import { addUserToClass } from "@/app/api/class/addUserToClass";
 import { ClassFrame } from "@/app/api/class/createClass";
 
 import { useUser } from '@clerk/nextjs'
+import { TeacherGuard } from "@/lib/guard"
 
 export default function Page() {
   return (
-    <Stack>
-      <Typography>
-        Manage class
-      </Typography>
-      <YourClassList />
-    </Stack>
+    <TeacherGuard>
+      <Stack>
+        <Typography>
+          Manage class
+        </Typography>
+        <YourClassList />
+      </Stack>
+    </TeacherGuard>
   )
 }
 
 const YourClassList = () => {
   const { isLoaded: isUserLoaded, isSignedIn, user } = useUser();
-  
+
   const [teacherId, setTeacherId] = useState<string>(user?.id || "")
   const [classes, setClasses] = useState<Class[]>([])
   const [open, setOpen] = useState<boolean>(false)
@@ -140,7 +143,7 @@ const YourClassList = () => {
 
   return (
     <Stack alignItems={"center"}>
-      
+
     </Stack>
   )
 }
