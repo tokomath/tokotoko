@@ -8,11 +8,11 @@ interface TestInterface {
   class: Class;
 }
 
-interface TestWithClass extends TestInterface {
+interface TestWithSubmitStatus extends TestInterface {
   submitted: boolean;
 }
 
-export function StudentTestCard({ test }: { test: TestWithClass }){
+export function StudentTestCard({ test }: { test: TestWithSubmitStatus }){
     const submitted = test.submitted;
 
     const nowDate = dayjs();
@@ -31,7 +31,10 @@ export function StudentTestCard({ test }: { test: TestWithClass }){
     diffstr = diffSec > 0 ? `あと${diffstr}` : `${diffstr.replace("-", "")}前`;
 
     let diffColor = "black";
-    let cardsxprop = { boxShadow: "2px 2px rgba(0,0,0,0.2)" };
+    let cardsxprop = {
+        boxShadow: "2px 2px rgba(0,0,0,0.2)",
+        fontWeight:"meduim"
+    };
     let submitstatus = "未提出";
     if (submitted) {
       cardsxprop.boxShadow = "2px 2px rgba(0,200,64,0.4)";
@@ -40,6 +43,7 @@ export function StudentTestCard({ test }: { test: TestWithClass }){
     if (!submitted && diffMin < 0) {
       diffColor = "red";
       cardsxprop.boxShadow = "2px 2px rgba(255,0,0,0.4)";
+      cardsxprop.fontWeight = "bold"
     }
 
     return (
