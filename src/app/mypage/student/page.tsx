@@ -19,7 +19,6 @@ interface TestInterface {
 };
 
 export default function Mypage() {
-  //next-authを廃止 Clerkに移行
   const router = useRouter();
   const { isLoaded: isUserLoaded, isSignedIn, user } = useUser();
 
@@ -84,16 +83,13 @@ const MypageContent = (props: { userName: string }) => {
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {"Start: " +
-                      item.test.startDate.getFullYear() + "/" + (item.test.startDate.getMonth() + 1) + "/" + item.test.startDate.getDate() + " " +
-                      item.test.startDate.getHours() + ":" + item.test.startDate.getMinutes() +
-                      " (UTC+" + item.test.startDate.getTimezoneOffset() / -60 + "h)"
+                       item.test.startDate.toLocaleString()
                     }
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {"End : " +
-                      item.test.endDate.getFullYear() + "/" + (item.test.endDate.getMonth() + 1) + "/" + item.test.endDate.getDate() + " " +
-                      item.test.endDate.getHours() + ":" + item.test.endDate.getMinutes() +
-                      " (UTC+" + item.test.endDate.getTimezoneOffset() / -60 + "h)"}
+                      item.test.endDate.toLocaleString()
+                    }
                   </Typography>
                 </CardContent>
               </CardActionArea>
