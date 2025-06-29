@@ -34,7 +34,7 @@ const RootLayout = ({ children }: { children: ReactNode }) => (
             display: 'flex',
           }}
         >
-          <TopBar page_name="My page"/>
+          <TopBar page_name=""/>
         </AppBar>
 
         <main
