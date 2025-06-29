@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server"; 
-import { teacherAuth } from "@/app/api/auth/auth";
+import { teacherAuth, studentAuth } from "@/app/api/auth/auth";
 
 export default async function Page() {
   const { userId } = await auth(); 
@@ -9,10 +9,12 @@ export default async function Page() {
   }
   
   const isTeacher = await teacherAuth(userId);
-
-  if (isTeacher) {
+  
+  if (isTeacher) 
     redirect("/mypage/teacher");
-  }
+  
 
-  redirect("/mypage/student");
+  const isStudent = await studentAuth(userId);
+  if(isStudent)
+    redirect("/mypage/student");
 }
