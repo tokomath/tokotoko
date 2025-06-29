@@ -1,9 +1,19 @@
 "use client"
-import {Box, Button} from "@mui/material";
+import {Box, Button,Typography} from "@mui/material";
 import { Stack } from "@mui/system";
 
-import { SignUp,SignIn } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs"; 
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
-  <h1>Formula Form</h1>
+  const { isSignedIn } = useUser();
+  const router = useRouter();
+  useEffect(() => {
+      if(isSignedIn)
+    router.push("mypage");
+  },[isSignedIn]);
+  return(<>
+    
+  </>);
 }
