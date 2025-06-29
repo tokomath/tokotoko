@@ -3,7 +3,7 @@ import { AccountCircle, ExitToAppSharp } from "@mui/icons-material";
 import { AppBar, Button, Toolbar, Typography, Paper, Box } from "@mui/material";
 import React from "react";
 import { useUser } from '@clerk/nextjs'
-
+import { useRouter } from "next/navigation"
 import {
   ClerkProvider,
   SignInButton,
@@ -17,12 +17,15 @@ interface QuestionProps {
 
 export default function TopBar({ page_name = "" }: QuestionProps) {
   const { user } = useUser();
-
+  const router = useRouter();
+  const titleEvent = () => {
+    router.push("/");
+  }
   return (
     <>
       <Toolbar style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
         <Typography variant="h6" component="div" width="calc(100%/3)" textAlign="left">
-          Formula Form
+          <Button variant="text" onClick={titleEvent} sx={{color:"white",fontSize:"22px"}}>Formula Form</Button>
         </Typography>
         <Box width="calc(100%/3)" textAlign="center">
           <Typography variant="h4">{page_name}</Typography>
