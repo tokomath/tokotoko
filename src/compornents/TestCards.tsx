@@ -51,11 +51,12 @@ export function TestCards() {
         }
 
         return (
-            <Card sx={{ height: "auto", textAlign: "left", }} onClick={() => { }}>
+            <Card sx={{ height: "auto", textAlign: "left", }}>
                 <CardContent>
-                    <Typography variant="h5" component="div">
-                        {testData.title}
-                    </Typography>
+                    <Typography variant="h5" component="div">{testData.title} </Typography>
+                    <Typography variant="h6">{testData.summary}</Typography>
+                    <Typography>Start:{testData.startDate.toLocaleString()}</Typography>
+                    <Typography>End  :{testData.endDate.toLocaleString()}</Typography>
                 </CardContent>
                 <CardActions>
                     <Button size="large" onClick={solveButtonFunction}>解答</Button>

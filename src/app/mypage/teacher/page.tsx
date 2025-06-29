@@ -105,7 +105,7 @@ export default function MyPage() {
                         </Box>
                     </TabPanel>
                     <TabPanel value={value} index={1}>
-                        <Box p={2}>
+                        <Box gap={3}>
                             <TestCards/>
                         </Box>
                     </TabPanel>
