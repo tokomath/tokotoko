@@ -1,7 +1,8 @@
+"use client"
 import { AccountCircle, ExitToAppSharp } from "@mui/icons-material";
-import { AppBar, Button, Toolbar, Typography } from "@mui/material";
+import { AppBar, Button, Toolbar, Typography, Paper, Box } from "@mui/material";
 import React from "react";
-import UserMenu from "./UserMenu";
+import { useUser } from '@clerk/nextjs'
 
 import {
   ClerkProvider,
@@ -12,30 +13,37 @@ import {
 } from '@clerk/nextjs'
 interface QuestionProps {
   page_name: string;
-  user_name: string;
 }
 
-export default function TopBar({ page_name = "", user_name = "Unknown User" }: QuestionProps) {
+export default function TopBar({ page_name = "" }: QuestionProps) {
+  const { user } = useUser();
+
   return (
     <>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            {page_name}
-          </Typography>
-          <SignedOut>
-            <div className="h-fit ml-4 bg-blue-500 w-fit p-2 rounded-md text-white text-sm font-semibold">
-              <SignInButton />
-            </div>
-          </SignedOut>
-          <SignedIn>
-            <div className="h-fit ml-4 w-fit">
-              <UserButton />
-            </div>
-          </SignedIn>
-        </Toolbar >
-      </AppBar >
-    </>
+      <Toolbar style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
+        <Typography variant="h6" component="div" width="calc(100%/3)" textAlign="left">
+          Formula Form
+        </Typography>
+        <Box width="calc(100%/3)" textAlign="center">
+          <Typography variant="h4">{page_name}</Typography>
+        </Box>
+        <Box width="calc(100%/3)" textAlign="right">
+          <Box display="flex" justifyContent="flex-end">
+            <Typography>{user?.firstName + " " + user?.lastName}</Typography>
+            <SignedOut>
+              <div className="h-fit ml-4 bg-blue-500 w-fit rounded-md text-white text-sm font-semibold">
+                <SignInButton />
+              </div>
+            </SignedOut>
+            <SignedIn>
+              <div className="h-fit ml-4 w-fit">
+                <UserButton />
+              </div>
+            </SignedIn>
+          </Box>
+        </Box>
+      </Toolbar>
+    </ >
   )
 }
 

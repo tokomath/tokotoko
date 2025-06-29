@@ -1,84 +1,107 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import {
-    Box,
-    Button,
-    Link,
-    Card,
-    Paper,
-    Tab,
-    Tabs,
-    Typography,
-    Divider,
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Paper,
+  Tab,
+  Tabs,
+  Typography,
 } from "@mui/material";
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import 'katex/dist/katex.min.css';
-import { Test, Class } from "@prisma/client";
+import ClassIcon from "@mui/icons-material/Class";
+import SchoolIcon from "@mui/icons-material/School";
+import "katex/dist/katex.min.css";
+import { TeacherGuard } from "@/lib/guard";
+import { TeacherClassCards } from "@/compornents/TeacherClassList";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
-import Stack from '@mui/material/Stack';
-import { getTestByClass } from "@/app/api/test/getTestByClass";
-import { getClassByUserId } from "@/app/api/class/getClass";
-import { TeacherGuard } from "@/lib/guard"
-import { TeacherClassCards } from "@/compornents/TeacherClassList"
-
-import { useUser } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
-
-const ClassCard = () => {
-    const routor = useRouter();
-    const createClassButtonEvent = () => {
-        routor.push("/teacher/createClass");
-    }
-
-    const manageClassButtonEvent = () => {
-        routor.push("/teacher/manageClass");
-    }
-
-    return (<>
-        <CardContent>
-            <Typography variant="h5">クラス</Typography>
-        </CardContent>
-        <CardActions>
-            <Button size="large" onClick={createClassButtonEvent}>作成</Button>
-            <Button size="large" onClick={manageClassButtonEvent}>管理</Button>
-        </CardActions>
-    </>)
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+function TabPanel({ children, value, index, ...other }: TabPanelProps) {
+  return (
+    <div
+      role="tabpanel"
+      id={`vertical-tabpanel-${index}`}
+      aria-labelledby={`vertical-tab-${index}`}
+      style={{
+        display: value === index ? "block" : "none",
+        height: "100%",
+      }}
+      {...other}
+    >
+      <Box sx={{ p: 3 }}>{children}</Box>
+    </div>
+  );
+}
+function a11yProps(index: number) {
+  return {
+    id: `vertical-tab-${index}`,
+    "aria-controls": `vertical-tabpanel-${index}`,
+  };
 }
 
-const ManageCard = () => {
-    
-    return (<>
-        <CardContent>
-            <Typography variant="h5">管理</Typography>
-        </CardContent>
-        <CardActions>
-            <Button size="large" >クラス管理</Button>
-            <Button size="large" >テスト管理</Button>
-        </CardActions>
-    </>)
-}
+const ClassCard = memo(() => {
+  const router = useRouter();
+  const createClass = useCallback(() => router.push("/teacher/createClass"), [router]);
+  const manageClass = useCallback(() => router.push("/teacher/manageClass"), [router]);
+  return (
+    <Card>
+      <CardContent>
+        <Typography variant="h5">クラス</Typography>
+      </CardContent>
+      <CardActions>
+        <Button size="large" onClick={createClass}>作成</Button>
+        <Button size="large" onClick={manageClass}>管理</Button>
+      </CardActions>
+    </Card>
+  );
+});
+ClassCard.displayName = "ClassCard";
 
 export default function MyPage() {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const [value, setValue] = useState(0);
+  const handleChange = (_: React.SyntheticEvent, newValue: number) => setValue(newValue);
 
-    const { isLoaded, isSignedIn, user } = useUser();
+  return (
+    <TeacherGuard>
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
 
 
-    return (
-        <TeacherGuard>
-            <Paper>
-                <Box padding={2}>
-                    <Typography variant="h4">Mypage</Typography>
-                </Box>
-            </Paper>
-            <Box display="flex" flexWrap="wrap" flexDirection="column">
-                <Card style={{ margin: 5, width: "auto" }}>
-                    <ClassCard />
-                    <ManageCard />
-                </Card>
-                <TeacherClassCards/>
-            </Box>
-        </TeacherGuard>
-    )
+        <Box sx={{ flexGrow: 1, display: "flex", overflow: "hidden" }}>
+          <Tabs
+            orientation="vertical"
+            value={value}
+            onChange={handleChange}
+            aria-label="Menu"
+          >
+            <Tab label="Class" icon={<ClassIcon />} {...a11yProps(0)} />
+            <Tab label="Test" icon={<SchoolIcon />} {...a11yProps(1)} />
+          </Tabs>
+
+          <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+            <TabPanel value={value} index={0}>
+              <Box display="flex" flexDirection="column" gap={3}>
+                <ClassCard />
+                <Typography variant="h5">クラス一覧</Typography>
+                <TeacherClassCards />
+              </Box>
+            </TabPanel>
+
+            <TabPanel value={value} index={1}>
+              <Box p={2} />
+            </TabPanel>
+          </Box>
+        </Box>
+      </Box>
+    </TeacherGuard>
+  );
 }
