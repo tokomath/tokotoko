@@ -7,13 +7,13 @@ export async function createUser(id:string,name:string,email:string) {
         return "Error";
     }
     
-    // Create new user
+    //role -1 = 未定
     const newUser = await prisma.user.create({
         data: {
         id,
         name,
         email,
-        role: 1,
+        role: -1,
         },
     });
     
