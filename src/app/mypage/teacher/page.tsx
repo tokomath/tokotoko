@@ -12,7 +12,7 @@ import {
     Typography,
 } from "@mui/material";
 import ClassIcon from "@mui/icons-material/Class";
-import SchoolIcon from "@mui/icons-material/School";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import { TeacherGuard } from "@/lib/guard";
 import { TeacherClassCards } from "@/compornents/ClassList";
 import { TestCards } from "@/compornents/TestCards"
@@ -72,7 +72,7 @@ export default function MyPage() {
     const [tests, setTests] = useState<Test[]>([]);
     const [classes, setClasses] = useState<{ id: string, name: string, users: User[] }[]>([])
 
-    const userId = useUser().user?.id || "";
+    const userId = user?.id || "";
 
     useEffect(() => {
         const fetchTest = async () => {
@@ -111,7 +111,7 @@ export default function MyPage() {
                         sx={{ width: "100%", mt: 1 }}
                     >
                         <Tab icon={<ClassIcon />} label="Class" {...a11yProps(0)} sx={{ textTransform: "none" }} />
-                        <Tab icon={<SchoolIcon />} label="Test" {...a11yProps(1)} sx={{ textTransform: "none" }} />
+                        <Tab icon={<EditNoteIcon />} label="Test" {...a11yProps(1)} sx={{ textTransform: "none" }} />
                     </Tabs>
                 </Box>
                 <Box
