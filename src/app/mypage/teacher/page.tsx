@@ -14,10 +14,14 @@ import {
 import ClassIcon from "@mui/icons-material/Class";
 import SchoolIcon from "@mui/icons-material/School";
 import { TeacherGuard } from "@/lib/guard";
-import { TeacherClassCards } from "@/compornents/TeacherClassList";
+import { TeacherClassCards } from "@/compornents/ClassList";
 import { TestCards } from "@/compornents/TestCards"
+import { useEffect  } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { Test, User } from "@prisma/client";
+import { getTestsByUserId } from "@/app/api/test/getTestsByUserId";
+import { getClassByUserId } from "@/app/api/class/getClass";
 
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;
@@ -61,6 +65,31 @@ export default function MyPage() {
         router.push("/teacher/createClass");
     };
 
+    const createTestButtonEvent = () => {
+        router.push("/teacher/createTest")
+    };
+
+    const [tests, setTests] = useState<Test[]>([]);
+    const [classes, setClasses] = useState<{ id: string, name: string, users: User[] }[]>([])
+
+    const userId = useUser().user?.id || "";
+
+    useEffect(() => {
+        const fetchTest = async () => {
+            const tmpTestList = await getTestsByUserId(userId);
+            setTests(tmpTestList)
+        }
+        
+        const fetchClass = async () => {
+            const tmpClassList = await getClassByUserId(userId)
+            setClasses(tmpClassList)
+        }
+
+        fetchTest()
+        fetchClass()
+    }, [userId]);
+
+
     return (
         <TeacherGuard>
             <Box sx={{ display: "flex", height: `calc(100vh - ${HEADER_HEIGHT}px)` }}>
@@ -94,7 +123,7 @@ export default function MyPage() {
                 >
                     <TabPanel value={value} index={0}>
                         <Box display="flex" flexDirection="column" gap={3} marginBottom="50px">
-                            <TeacherClassCards />
+                            <TeacherClassCards classes={classes}/>
                         </Box>
                         <Box position="fixed" display="flex" justifyContent="flex-end" sx={{
                             bottom: "20px",
@@ -106,7 +135,14 @@ export default function MyPage() {
                     </TabPanel>
                     <TabPanel value={value} index={1}>
                         <Box gap={3}>
-                            <TestCards/>
+                            <TestCards testData={tests}/>
+                        </Box>
+                        <Box position="fixed" display="flex" justifyContent="flex-end" sx={{
+                            bottom: "20px",
+                            right: "20px",
+                            height: "50px"
+                        }}>
+                            <Button variant="contained" onClick={createTestButtonEvent}>新規テストを作成</Button>
                         </Box>
                     </TabPanel>
                 </Box>

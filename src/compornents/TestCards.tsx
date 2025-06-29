@@ -23,23 +23,13 @@ import CardContent from '@mui/material/CardContent';
 import { useRouter } from "next/navigation";
 import { useUser } from '@clerk/nextjs'
 import { useEffect, useState } from "react";
-import { getTestsByUserId } from "@/app/api/test/getTestsByUserId"
 import { Test } from "@prisma/client"
 
-export function TestCards() {
-    const [tests, setTests] = useState<Test[]>([]);
+interface props{
+    testData: Test[]
+}
 
-    const userId = useUser().user?.id || "";
-
-    useEffect(() => {
-        const fetchClass = async () => {
-            const tmpTestList = await getTestsByUserId(userId);
-            setTests(tmpTestList)
-        }
-        fetchClass()
-    }, [userId]);
-
-
+export function TestCards({testData}:props) {
     const TestCards = ({ testData }: { testData: Test }) => {
         const router = useRouter();
 
@@ -68,7 +58,7 @@ export function TestCards() {
 
     return (
         <Grid container spacing={2}>
-            {tests.map((t) => (
+            {testData.map((t) => (
                 <Grid item xs={12} sm={6} md={3} key={t.id}>
                     <TestCards key={t.id} testData={t} />
                 </Grid>

@@ -21,7 +21,6 @@ import {
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import { useEffect, useState } from "react";
-import { getClassByUserId } from "@/app/api/class/getClass";
 import { ClassFrame } from "@/app/api/class/createClass";
 import { Class, User } from "@prisma/client";
 import { useUser } from '@clerk/nextjs'
@@ -29,19 +28,17 @@ import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import { useRouter } from "next/navigation";
 import { TeacherGuard } from "@/lib/guard"
 
-export function TeacherClassCards() {
-    const [classes, setClasses] = useState<{ id: string, name: string, users: User[] }[]>([])
+interface ClassData{
+    id: string,
+    name: string,
+    users: User[]
+}
 
-    const teacherId = useUser().user?.id || "";
+interface props{
+    classes : ClassData[]
+}
 
-    useEffect(() => {
-        const fetchClass = async () => {
-            const tmpClassList = await getClassByUserId(teacherId)
-            setClasses(tmpClassList)
-        }
-        fetchClass()
-    }, [teacherId])
-
+export function TeacherClassCards({classes} : props) {
     const ClassCards = ({ classData }: { classData: { id: string, name: string, users: User[] } }) => {
         const router = useRouter();
 
