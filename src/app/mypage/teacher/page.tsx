@@ -15,6 +15,7 @@ import ClassIcon from "@mui/icons-material/Class";
 import SchoolIcon from "@mui/icons-material/School";
 import { TeacherGuard } from "@/lib/guard";
 import { TeacherClassCards } from "@/compornents/TeacherClassList";
+import { TestCards } from "@/compornents/TestCards"
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
@@ -104,7 +105,9 @@ export default function MyPage() {
                         </Box>
                     </TabPanel>
                     <TabPanel value={value} index={1}>
-                        <Box p={2} />
+                        <Box p={2}>
+                            <TestCards/>
+                        </Box>
                     </TabPanel>
                 </Box>
             </Box>
