@@ -1,45 +1,55 @@
-import localFont from 'next/font/local'
 import './globals.css'
-import {
-  ClerkProvider,
-  SignInButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs'
-import type { Children, ReactNode } from 'react'
+import { ClerkProvider } from '@clerk/nextjs'
+import type { ReactNode } from 'react'
 import { Geist, Geist_Mono } from 'next/font/google'
 import TopBar from '@/compornents/TopBar'
+import { AppBar, Button, Toolbar, Typography, Paper, Box } from "@mui/material";
+const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
+const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
+const HEADER_HEIGHT = 64
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
-
-
-const RootLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
-  return (
-    <ClerkProvider>
-      <html lang="ja">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+const RootLayout = ({ children }: { children: ReactNode }) => (
+  <ClerkProvider>
+    <html lang="ja" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body
+        style={{
+          margin: 0,
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          WebkitFontSmoothing: 'antialiased',
+          fontFamily:
+            'var(--font-geist-sans), var(--font-geist-mono), system-ui, sans-serif',
+        }}
+      >
+        <AppBar
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: HEADER_HEIGHT,
+            zIndex: 50,
+            display: 'flex',
+          }}
         >
-          <header className="fixed top-0 left-0 w-full z-50 h-16 bg-neutral-100 flex items-center">
-            <TopBar page_name="Formula From" user_name="" />
-          </header>
-          <main className="min-h-[calc(100dvh-4rem)] max-w-full pt-16">
-            {children}
-          </main>
-        </body>
-      </html>
-    </ClerkProvider>
-  )
-}
+          <TopBar page_name=""/>
+        </AppBar>
+
+        <main
+          style={{
+            flex: 1,
+            width: '100%',
+            paddingTop: HEADER_HEIGHT,
+            minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
+          }}
+        >
+          {children}
+        </main>
+      </body>
+    </html>
+  </ClerkProvider>
+)
 
 export default RootLayout

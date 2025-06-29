@@ -7,7 +7,6 @@ export async function createUser(id:string,name:string,email:string) {
         return "Error";
     }
     
-    // Create new user
     const newUser = await prisma.user.create({
         data: {
         id,

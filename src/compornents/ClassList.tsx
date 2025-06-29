@@ -21,7 +21,6 @@ import {
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import { useEffect, useState } from "react";
-import { getClassByUserId } from "@/app/api/class/getClass";
 import { ClassFrame } from "@/app/api/class/createClass";
 import { Class, User } from "@prisma/client";
 import { useUser } from '@clerk/nextjs'
@@ -29,19 +28,17 @@ import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import { useRouter } from "next/navigation";
 import { TeacherGuard } from "@/lib/guard"
 
-export default function Page() {
-    const [classes, setClasses] = useState<{ id: string, name: string, users: User[] }[]>([])
+interface ClassData{
+    id: string,
+    name: string,
+    users: User[]
+}
 
-    const teacherId = useUser().user?.id || "";
+interface props{
+    classes : ClassData[]
+}
 
-    useEffect(() => {
-        const fetchClass = async () => {
-            const tmpClassList = await getClassByUserId(teacherId)
-            setClasses(tmpClassList)
-        }
-        fetchClass()
-    }, [teacherId])
-
+export function TeacherClassCards({classes} : props) {
     const ClassCards = ({ classData }: { classData: { id: string, name: string, users: User[] } }) => {
         const router = useRouter();
 
@@ -99,10 +96,7 @@ export default function Page() {
     return (
         <Stack>
             <TeacherGuard>
-                <Typography variant="h4" gutterBottom>
-                    Your Classes
-                </Typography>
-                <Grid container spacing={2} padding={2}>
+                <Grid container spacing={2}>
                     {classes.map((c) => (
                         <Grid item xs={12} sm={6} md={3} key={c.id}>
                             <ClassCards key={c.id} classData={c} />
