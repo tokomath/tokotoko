@@ -1,110 +1,163 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, Typography, CardActionArea, } from "@mui/material";
-import 'katex/dist/katex.min.css';
+import { Tab, Tabs, Box, Grid } from "@mui/material";
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import ClassIcon from "@mui/icons-material/Class";
+
+import "katex/dist/katex.min.css";
 import { Test, Class } from "@prisma/client";
 
-import Stack from '@mui/material/Stack';
 import { getTestByClass } from "@/app/api/test/getTestByClass";
 import { getClassByUserId } from "@/app/api/class/getClass";
-import TopBar from "@/compornents/TopBar";
 
-import { useUser } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { isAlreadySubmit } from "@/app/api/test/submit";
+import { StudentTestCard } from "@/compornents/StudentTestCard"
+
+const TAB_WIDTH = 100;
+const HEADER_HEIGHT = 64;
 
 interface TestInterface {
-  test: Test,
-  class: Class,
-};
+  test: Test;
+  class: Class;
+}
+
+interface TestWithClass extends TestInterface {
+  submitted: boolean;
+}
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel({ children, value, index, ...other }: TabPanelProps) {
+  return (
+    <div
+      role="tabpanel"
+      id={`vertical-tabpanel-${index}`}
+      aria-labelledby={`vertical-tab-${index}`}
+      style={{
+        display: value === index ? "block" : "none",
+        width: "100%",
+        height: "100%",
+      }}
+      {...other}
+    >
+      <Box sx={{ p: 3 }}>{children}</Box>
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `vertical-tab-${index}`,
+    "aria-controls": `vertical-tabpanel-${index}`,
+  };
+}
 
 export default function Mypage() {
   const router = useRouter();
   const { isLoaded: isUserLoaded, isSignedIn, user } = useUser();
 
-  if (!(isUserLoaded)) {
-    return <>Loading</>
+  if (!isUserLoaded) {
+    return <>Loading</>;
   }
 
   if (isSignedIn && user) {
-    const userName =  user.firstName + " " + user.lastName;
-    console.log("userId: ",user.id );
-    
-    console.log("userName: ", userName);
+    const userName = `${user.firstName} ${user.lastName}`;
     if (userName) {
-      return <MypageContent userName={userName} />
+      return <Page/>;
     }
-  }
-  else if (!(isSignedIn && user && isUserLoaded)) {
-    router.push('/sign-in')
+  } else {
+    router.push("/sign-in");
   }
 }
 
-const MypageContent = (props: { userName: string }) => {
-  const [testId, setTestId] = useState<number[]>([])
-  const [tests, setTests] = useState<TestInterface[]>([]);
-  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser()
+const Page = () => {
+  const [value, setValue] = useState(0);
+  const handleChange = (_: React.SyntheticEvent, newValue: number) => setValue(newValue);
+
+  const [tests, setTests] = useState<TestWithClass[]>([]);
+  const { isLoaded: isUserLoaded, user } = useUser();
+
   useEffect(() => {
-    getTests()
-  }, [])
-  const getTests = async () => {
-    const test = await getClassByUserId(user?.id || "")
-      .then(async (classes: Class[]) => {
-        const tmp = classes.map(async (c: Class) => {
-          const tmpClass = await getTestByClass(c.id)
-          return tmpClass.map((t: Test) => {
-            return { test: t, class: c }
+    if (!isUserLoaded || !user) return;
+
+    const loadTests = async () => {
+      const classes = await getClassByUserId(user.id);
+      const testList = (
+        await Promise.all(
+          classes.map(async (c: Class) => {
+            const classTests = await getTestByClass(c.id);
+            return classTests.map<TestInterface>((t) => ({ test: t, class: c }));
           })
-        });
-        return tmp
+        )
+      ).flat();
 
-      })
+      const submittedPairs = await Promise.all(
+        testList.map(async ({ test }) => {
+          const ok = await isAlreadySubmit({ testId: test.id, userId: user.id });
+          return [test.id, ok] as const;
+        })
+      );
+      const submittedMap = Object.fromEntries(submittedPairs);
 
-    setTests((await Promise.all(test)).flat(1))
-  }
+      setTests(
+        testList.map((tc) => ({
+          ...tc,
+          submitted: submittedMap[tc.test.id] ?? false,
+        }))
+      );
+    };
 
-  const TestCard = () => {
-    return (
-      <Stack spacing={2}>
-        {
-          tests.map((item, id) => (
-            <Card key={id}>
-              <CardActionArea onClick={
-                () => {
-                  location.href = "/solve/" + item.test.id
-                }}
-              >
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary">
-                    {item.class.name}
-                  </Typography>
-                  <Typography gutterBottom variant="h5" component="div">
-                    {item.test.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {"Start: " +
-                       item.test.startDate.toLocaleString()
-                    }
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {"End : " +
-                      item.test.endDate.toLocaleString()
-                    }
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          ))
-        }
-      </Stack>
-    )
-  }
+    loadTests();
+  }, [isUserLoaded, user]);
+
+  
 
   return (
-    <>
-      <Stack maxWidth={800} marginX={"auto"} padding={2}>
-        <TestCard />
-      </Stack>
-    </>
-  )
-}
+    <Box sx={{ display: "flex", height: `calc(100vh - ${HEADER_HEIGHT}px)` }}>
+      <Box
+        sx={{
+          width: TAB_WIDTH,
+          flexShrink: 0,
+          position: "sticky",
+          top: 0,
+          height: `calc(100vh - ${HEADER_HEIGHT}px)`,
+          display: "flex",
+        }}
+      >
+        <Tabs
+          orientation="vertical"
+          value={value}
+          onChange={handleChange}
+          aria-label="menu"
+          sx={{ width: "100%", mt: 1 }}
+        >
+          <Tab icon={<ClassIcon />} label="Class" {...a11yProps(0)} sx={{ textTransform: "none" }} />
+          <Tab icon={<EditNoteIcon />} label="Test" {...a11yProps(1)} sx={{ textTransform: "none" }} />
+        </Tabs>
+      </Box>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: "auto",
+          height: `calc(100vh - ${HEADER_HEIGHT}px)`,
+        }}
+      >
+        <TabPanel value={value} index={0}></TabPanel>
+        <TabPanel value={value} index={1}>
+          <Grid container spacing={2}>
+            {tests.map((t,id) => (
+              <StudentTestCard test={t} key={id} />
+            ))}
+          </Grid>
+        </TabPanel>
+      </Box>
+    </Box>
+  );
+};
