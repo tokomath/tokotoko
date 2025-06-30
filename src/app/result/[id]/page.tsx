@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, use} from "react";
+import React, { useEffect, useState, use } from "react";
 import {
   Box,
   Button,
@@ -12,10 +12,9 @@ import {
 import "katex/dist/katex.min.css";
 import Stack from "@mui/material/Stack";
 import SendIcon from "@mui/icons-material/Send";
-import Latex from "react-latex-next";
 import { isAlreadySubmit } from "@/app/api/test/submit";
 import { getSubmission } from "@/app/api/test/result";
-import { BlockMath } from "react-katex";
+import { BlockMath, InlineMath } from "react-katex";
 import TopBar from "@/compornents/TopBar";
 import InsertFrame from "@/compornents/InsertFrame";
 import { useUser } from '@clerk/nextjs'
@@ -48,7 +47,7 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Page({ params }: { params: Promise<{ id: string }>}) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
   const { user, isSignedIn } = useUser();
@@ -188,7 +187,7 @@ function Result({ params }: { params: { id: string, userid: string } }) {
               <Typography variant="h6">
                 PART {section.number}
               </Typography>
-              <Latex>{section.summary}</Latex>
+              <InlineMath>{section.summary}</InlineMath>
             </Box>
             {section.questions.map((question: any) => {
               return <Paper key={question.id} sx={{ marginTop: 2, padding: 2 }}><React.Fragment key={question.id}>
@@ -265,16 +264,21 @@ function Next({
   );
 }
 
-function Question({ id, number, question,insertType,insertContent,myAns, trueAns, point }: any) {
+function Question({ id, number, question, insertType, insertContent, myAns, trueAns, point }: any) {
   return (
     <Stack spacing={2}>
       {/* 横に並べる */}
       <Box display="flex" alignItems="center">
         <Typography variant="h2" fontSize={17}>({number}) </Typography>
-        <Latex>{question}</Latex>
+        <InlineMath>{question}</InlineMath>
       </Box>
-      <Divider />
-        <InsertFrame insertType={insertType} insertContent={insertContent}/>
+      {insertType != "None" ?
+        <><Divider />
+          <InsertFrame insertType={insertType} insertContent={insertContent} />
+        </>
+        : <></>
+      }
+
       <Divider />
       <Box
         display="flex"
