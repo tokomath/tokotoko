@@ -16,7 +16,7 @@ import EditNoteIcon from "@mui/icons-material/EditNote";
 import { TeacherGuard } from "@/lib/guard";
 import { TeacherClassCards } from "@/compornents/ClassList";
 import { TestCards } from "@/compornents/TestCards"
-import { useEffect  } from "react";
+import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Test, User } from "@prisma/client";
@@ -69,6 +69,10 @@ export default function MyPage() {
         router.push("/teacher/createTest")
     };
 
+    const joinClassButtonEvent = () => {
+        router.push("/join");
+    }
+
     const [tests, setTests] = useState<Test[]>([]);
     const [classes, setClasses] = useState<{ id: string, name: string, users: User[] }[]>([])
 
@@ -79,7 +83,7 @@ export default function MyPage() {
             const tmpTestList = await getTestsByUserId(userId);
             setTests(tmpTestList)
         }
-        
+
         const fetchClass = async () => {
             const tmpClassList = await getClassByUserId(userId)
             setClasses(tmpClassList)
@@ -123,19 +127,21 @@ export default function MyPage() {
                 >
                     <TabPanel value={value} index={0}>
                         <Box display="flex" flexDirection="column" gap={3} marginBottom="50px">
-                            <TeacherClassCards classes={classes}/>
+                            <TeacherClassCards classes={classes} />
                         </Box>
                         <Box position="fixed" display="flex" justifyContent="flex-end" sx={{
                             bottom: "20px",
                             right: "20px",
-                            height: "50px"
+                            height: "50px",
+                            gap: 2
                         }}>
+                            <Button variant="contained" onClick={joinClassButtonEvent}>クラスに参加</Button>
                             <Button variant="contained" onClick={createClassButtonEvent}>新規クラスを作成</Button>
                         </Box>
                     </TabPanel>
                     <TabPanel value={value} index={1}>
                         <Box gap={3}>
-                            <TestCards testData={tests}/>
+                            <TestCards testData={tests} />
                         </Box>
                         <Box position="fixed" display="flex" justifyContent="flex-end" sx={{
                             bottom: "20px",
@@ -143,6 +149,7 @@ export default function MyPage() {
                             height: "50px"
                         }}>
                             <Button variant="contained" onClick={createTestButtonEvent}>新規テストを作成</Button>
+
                         </Box>
                     </TabPanel>
                 </Box>

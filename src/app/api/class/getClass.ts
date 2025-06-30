@@ -19,3 +19,11 @@ export const getClassByUserId = async (id: string) => {
 export const getAllClass = async () => {
   return prisma.class.findMany();
 }
+
+export const getClassByClassId = async (classId: string) => {
+  return prisma.class.findUnique({
+    where: {
+      id: classId,
+    },
+  });
+}

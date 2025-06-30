@@ -5,6 +5,7 @@ import {
   Tab,
   Tabs,
   Box,
+  Button,
   Grid,
   Typography,
   Card,
@@ -159,6 +160,8 @@ const Page = () => {
   const [tests, setTests] = useState<TestWithSubmitStatus[]>([]);
   const [classList, setClassList] = useState<ClassWithTests[]>([]);
   const { isLoaded: isUserLoaded, user } = useUser();
+  const router = useRouter();
+
 
   useEffect(() => {
     if (!isUserLoaded || !user) return;
@@ -203,6 +206,10 @@ const Page = () => {
     load();
   }, [isUserLoaded, user]);
 
+  const joinClassButtonEvent = () => {
+    router.push("/join");
+  }
+
   return (
     <Box sx={{ display: "flex", height: `calc(100vh - ${HEADER_HEIGHT}px)` }}>
       <Box
@@ -240,6 +247,13 @@ const Page = () => {
               <ClassCard classData={c} key={id} />
             ))}
           </Grid>
+          <Box position="fixed" display="flex" justifyContent="flex-end" sx={{
+            bottom: "20px",
+            right: "20px",
+            height: "50px"
+          }}>
+            <Button variant="contained" onClick={joinClassButtonEvent}>クラスに参加</Button>
+          </Box>
         </TabPanel>
 
         <TabPanel value={tab} index={1}>
