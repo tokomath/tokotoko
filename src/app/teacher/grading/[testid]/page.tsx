@@ -6,15 +6,15 @@ import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
 
-import { User, Class, Question, Section, Answer, Submission as PrismaSubmission } from "@prisma/client" // Add PrismaSubmission type
+import { User, Class, Question, Section, Answer, Submission as PrismaSubmission } from "@prisma/client";
 import { getTestById } from "@/app/api/test/getTestById";
-import { getSubmissionsByTestAndClass } from "@/app/api/test/result"; // Assuming getSubmissionsByTestAndClass is in this file
-import { setAnswerPoints } from "@/app/api/test/setAnswerPoints"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useUser } from '@clerk/nextjs'
-import { TeacherGuard } from "@/lib/guard"
+import { getSubmissionsByTestAndClass } from "@/app/api/test/result";
+import { setAnswerPoints } from "@/app/api/test/setAnswerPoints";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useUser } from '@clerk/nextjs';
+import { TeacherGuard } from "@/lib/guard";
 
-import styles from "./styles.module.css"
+import styles from "./styles.module.css";
 
 //#region APIのデータ用
 interface Point {
@@ -136,7 +136,6 @@ const UngradedCountCell = React.memo(function UngradedCountCell({ ungraded_count
 });
 
 function generateCursor(): string {
-  // `document` is only available in the browser environment
   if (typeof document === 'undefined') {
     return "";
   }
@@ -161,29 +160,133 @@ function generateCursor(): string {
 export default function GradingPage({ params }: { params: Promise<{ testid: number }> }) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [Test_, setTest] = useState<any | null | undefined>(undefined);
-  const [submissionData, setSubmissionData] = useState<SubmissionWithRelations[] | null | undefined>(undefined);
-
   const { user, isSignedIn } = useUser();
-
   const { testid } = use(params);
-  const classId = searchParams.get("classid");
 
-  const [classIndex, setClassIndex] = useState(0);
+  const [Test_, setTest] = useState<any | null>(null);
+  const [submissionData, setSubmissionData] = useState<SubmissionWithRelations[] | null>(null);
+  const [classId, setClassId] = useState<String | null>(null);
+  const [classIndex, setClassIndex] = useState<number>(0);
   const [sectionValue, setSectionValue] = useState(0);
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
   const [submission_index, setSubmissionIndex] = useState<Record<number, number>>({});
-
   const [cursorImage, setCursorImage] = useState("");
 
+  // 1. URLのクエリパラメータからclassIdを抽出し、ステートに反映する
+  useEffect(() => {
+    const paramClassId = searchParams.get("classid");
+    if (paramClassId) {
+      setClassId(paramClassId);
+    } else {
+      // URLにclassidがない場合、後でデフォルト値を設定するためnullにする
+      setClassId(null);
+    }
+  }, [searchParams]);
+
+  // 2. ページロード時に一度だけカーソル画像を生成
   useEffect(() => {
     setCursorImage(generateCursor());
   }, []);
 
+  // 3. testidとuser情報に基づいてテスト基本情報を取得
+  useEffect(() => {
+    if (!testid || !isSignedIn || !user?.id) return;
 
-  const selectClassHandle = useCallback((selectedClassID: string) => {
+    const fetchTest = async () => {
+      const test_res = await getTestById(Number(testid), String(user.id));
+      setTest(test_res || null);
+    };
+
+    fetchTest();
+  }, [testid, isSignedIn, user?.id]);
+
+  // 4. Test_情報が取得され、classIdが未設定の場合、デフォルト値を設定しURLを更新
+  useEffect(() => {
+    if (Test_ && Test_.classes?.length > 0 && classId === null) {
+      const defaultClassId = Test_.classes[0].id;
+      // router.replaceでURLを更新。これにより1のuseEffectが走り、classIdが設定される
+      router.replace(`/teacher/grading/${testid}?classid=${defaultClassId}`);
+    }
+  }, [Test_, classId, testid, router]);
+
+
+  // 5. classIdが確定したら、そのクラスの提出物を取得・処理
+  useEffect(() => {
+    if (!testid || classId === null || !user?.id || !Test_) return;
+
+    const fetchSubmissions = async () => {
+      try { // tryブロックを開始
+        const foundClassIndex = Test_.classes.findIndex((a_class: Class) => a_class.id == classId);
+
+        if (foundClassIndex === -1) {
+          if (Test_.classes && Test_.classes.length > 0) {
+            const firstValidClassId = Test_.classes[0].id;
+            router.replace(`/teacher/grading/${testid}?classid=${firstValidClassId}`);
+          } else {
+            setSubmissionData(null);
+          }
+          return;
+        }
+
+        setClassIndex(foundClassIndex);
+
+        const allSubmissionsForClass: SubmissionWithRelations[] | null = await getSubmissionsByTestAndClass({
+          testId: Number(testid),
+          classId: String(classId)
+        });
+
+        // 提出物がない場合 (null または 空配列)
+        if (!allSubmissionsForClass || allSubmissionsForClass.length === 0) {
+          setSubmissionData([]);
+          setPoints({});
+          setSubmissionIndex({});
+          return; // この時点で処理を終了し、空の採点表を表示
+        }
+
+        const newSubmissionData: SubmissionWithRelations[] = [];
+        const newPoints: Record<number, Record<number, number>> = {};
+        const newSubmissionIndex: Record<number, number> = {};
+        const usersInClass = Test_.classes[foundClassIndex]?.users || [];
+
+        usersInClass.forEach((userInClass: User, user_index: number) => {
+          const submission_res = allSubmissionsForClass.find(
+            (sub) => sub.user.id === userInClass.id
+          );
+
+          if (submission_res) {
+            const dataIndex = newSubmissionData.length;
+            newSubmissionData.push(submission_res);
+            newSubmissionIndex[user_index] = dataIndex;
+
+            const userPoints: Record<number, number> = {};
+            submission_res.answers.forEach((answer: Answer, answer_index: number) => {
+              userPoints[answer_index] = Number(answer.point);
+            });
+            newPoints[dataIndex] = userPoints;
+          }
+        });
+        setSubmissionData(newSubmissionData);
+        setPoints(newPoints);
+        setSubmissionIndex(newSubmissionIndex);
+
+      } catch (error) { // catchブロックを追加
+        console.error("Failed to fetch submissions:", error);
+        // エラーが発生した場合でも、UIが壊れないように空の状態で初期化する
+        setSubmissionData([]);
+        setPoints({});
+        setSubmissionIndex({});
+      }
+    };
+
+    fetchSubmissions();
+  }, [testid, classId, user?.id, Test_, router]);// routerを依存配列に追加
+
+  const selectClassHandle = useCallback((event: React.ChangeEvent<{ value: unknown }>) => {
+    const selectedClassID = event.target.value as string;
     router.push(`/teacher/grading/${testid}?classid=${selectedClassID}`);
   }, [router, testid]);
+
+
 
   const sectionHandleChange = useCallback((event: React.SyntheticEvent, newValue: number) => {
     setSectionValue(newValue);
@@ -217,7 +320,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       alert("An Error has occurred.");
     }
   }, [submissionData, points]);
-  
+
   const exportbutonHandle = useCallback(() => {
     if (!Test_ || !submissionData) return;
 
@@ -227,15 +330,15 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     let r3: string = "Answer,";
 
     const format_text = (str: string): string => {
-        return str.replaceAll("\n", "").replaceAll(",", "，");
+      return str.replaceAll("\n", "").replaceAll(",", "，");
     }
 
-    Test_.sections.forEach((section:any, section_index: number) => {
-        section.questions.forEach((question: Question, question_index: number) => {
-            r1 += `Part${section_index + 1}-${question_index + 1},,`;
-            r2 += `${format_text(question.question)},,`;
-            r3 += `${format_text(question.answer)},,`;
-        })
+    Test_.sections.forEach((section: any, section_index: number) => {
+      section.questions.forEach((question: Question, question_index: number) => {
+        r1 += `Part${section_index + 1}-${question_index + 1},,`;
+        r2 += `${format_text(question.question)},,`;
+        r3 += `${format_text(question.answer)},,`;
+      })
     })
 
     r1 = r1.slice(0, r1.length - 1) + "\n";
@@ -244,40 +347,41 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     exportdata_csv = r1 + r2 + r3;
 
     const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
+    const currentClass = Test_.classes.at(classIndex);
 
-    Test_.classes.at(classIndex)?.users.forEach((user: User, user_index: number) => {
+    if (currentClass) {
+      currentClass.users.forEach((user: User, user_index: number) => {
         let rn: string = "";
         const data_index = submission_index[user_index];
         rn += `${format_text(user.name || '')},`;
 
         if (data_index !== undefined) {
-            const submission = submissionData.at(data_index); 
-            if (submission) {
-                for (let i = 0; i < totalQuestionsCount; i++) {
-                    const answer = submission.answers[i];
-                    if (answer) {
-                        rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
-                    } else {
-                        rn += ",,";
-                    }
-                }
-            } else {
-                // 提出データが見つからない場合
-                rn += ",".repeat(totalQuestionsCount * 2);
+          const submission = submissionData.at(data_index);
+          if (submission) {
+            for (let i = 0; i < totalQuestionsCount; i++) {
+              const answer = submission.answers[i];
+              if (answer) {
+                rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
+              } else {
+                rn += ",,";
+              }
             }
-        } else {
-            // 提出インデックスが見つからない場合（提出がないユーザー）
+          } else {
             rn += ",".repeat(totalQuestionsCount * 2);
+          }
+        } else {
+          rn += ",".repeat(totalQuestionsCount * 2);
         }
         rn = rn.slice(0, rn.length - 1) + "\n";
         exportdata_csv += rn;
-    });
+      });
+    }
 
     const blob = new Blob([exportdata_csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a_buf = document.createElement('a');
     a_buf.href = url;
-    a_buf.download = `${Test_?.title}_${Test_?.classes.at(classIndex)?.name}.csv`;
+    a_buf.download = `${Test_?.title}_${currentClass?.name}.csv`;
     document.body.appendChild(a_buf);
     a_buf.click();
     document.body.removeChild(a_buf);
@@ -286,105 +390,57 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
 
   const userMetrics = useMemo(() => {
-      if (!Test_ || !submissionData) return [];
+    if (!Test_ || !submissionData) return [];
 
-      return Test_.classes.at(classIndex)?.users.map((user: User, user_index: number) => {
-          const data_index = submission_index[user_index]; 
-          if (data_index === undefined) { 
-              return { totalPoints: 0, ungradedCount: 0 };
+    const currentClass = Test_.classes.at(classIndex);
+    if (!currentClass) return [];
+
+    return currentClass.users.map((user: User, user_index: number) => {
+      const data_index = submission_index[user_index];
+      if (data_index === undefined) {
+        return { totalPoints: 0, ungradedCount: 0 };
+      }
+
+      const userPoints = points[data_index];
+      let totalPoints = 0;
+      let ungradedCount = 0;
+
+      const submissionAnswers = submissionData[data_index]?.answers || [];
+      const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
+
+      for (let i = 0; i < totalQuestionsCount; i++) {
+        const answer = submissionAnswers[i];
+        if (answer) {
+          const point = userPoints?.[i] ?? answer.point;
+          if (point === -1) {
+            ungradedCount++;
+          } else {
+            totalPoints += point;
           }
-
-          const userPoints = points[data_index];
-          let totalPoints = 0;
-          let ungradedCount = 0;
-
-          const submissionAnswers = submissionData[data_index]?.answers || [];
-          for (let i = 0; i < submissionAnswers.length; i++) {
-              const point = userPoints?.[i] ?? submissionAnswers[i].point;
-              if (point === -1) {
-                  ungradedCount++;
-              } else {
-                  totalPoints += point;
-              }
-          }
-          return { totalPoints, ungradedCount };
-      }) || [];
+        }
+      }
+      return { totalPoints, ungradedCount };
+    });
   }, [Test_, classIndex, submission_index, points, submissionData]);
 
   const visibleQuestions = useMemo(() => {
     if (!Test_?.sections) return { questions: [], startIndex: 0 };
-    
+
     let startIndex = 0;
     for (let i = 0; i < sectionValue; i++) {
-        startIndex += Test_.sections[i]?.questions.length || 0;
+      startIndex += Test_.sections[i]?.questions.length || 0;
     }
     const questions = Test_.sections.at(sectionValue)?.questions || [];
     return { questions, startIndex };
   }, [Test_, sectionValue]);
 
+  const currentClassUsers = useMemo(() => {
+    return Test_?.classes.at(classIndex)?.users || [];
+  }, [Test_, classIndex]);
 
-  useEffect(() => {
-    if (testid && classId && isSignedIn) {
-      const fetchTestAndSubmissions = async () => {
-        // 1. テスト情報を取得
-        const test_res = await getTestById(Number(testid), String(user?.id));
-        if (!test_res) {
-          setTest(null);
-          return;
-        }
-        
-        // 2. 指定されたclassIdのクラスを見つける
-        const foundClassIndex = test_res.classes.findIndex((a_class: Class) => a_class.id == classId);
-        if (foundClassIndex === -1) {
-          setTest(null);
-          return;
-        }
-        
-        setTest(test_res);
-        setClassIndex(foundClassIndex);
-        
-        // 3. getSubmissionsByTestAndClass を使用して、指定されたテストとクラスのすべての提出物を取得
-        const allSubmissionsForClass: SubmissionWithRelations[] = await getSubmissionsByTestAndClass({
-          testId: Number(testid),
-          classId: String(classId)
-        });
-
-        const newSubmissionData: SubmissionWithRelations[] = [];
-        const newPoints: Record<number, Record<number, number>> = {};
-        const newSubmissionIndex: Record<number, number> = {};
-
-        const usersInClass = test_res.classes[foundClassIndex]?.users || [];
-
-        usersInClass.forEach((userInClass: User, user_index: number) => {
-          const submission_res = allSubmissionsForClass.find(
-            (sub) => sub.user.id === userInClass.id
-          );
-
-          if (submission_res) {
-            const dataIndex = newSubmissionData.length;
-            newSubmissionData.push(submission_res);
-            newSubmissionIndex[user_index] = dataIndex;
-
-            const userPoints: Record<number, number> = {};
-            submission_res.answers.forEach((answer: Answer, answer_index: number) => {
-              userPoints[answer_index] = Number(answer.point);
-            });
-            newPoints[dataIndex] = userPoints;
-          }
-        });
-        
-        setSubmissionData(newSubmissionData);
-        setPoints(newPoints);
-        setSubmissionIndex(newSubmissionIndex);
-      };
-
-      fetchTestAndSubmissions();
-    }
-  }, [testid, classId, isSignedIn, user?.id]);
 
   return (
     <TeacherGuard>
-      {/*==========ヘッダエリア==========*/}
       <Paper sx={{ borderRadius: 0, width: "100%", m: 0, p: 0 }}>
         <Box sx={{ pt: 2, pr: 2, pb: 1 }}>
           <Box display="flex" justifyContent="right">
@@ -401,10 +457,10 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
             <Box width="10em">
               <Box display="flex" justifyContent="right">
                 {Test_?.classes?.length > 0 &&
-                  <TextField select id="select_class" value={classId || ''} fullWidth>
+                  <TextField select id="select_class" value={classId || ''} onChange={selectClassHandle} fullWidth>
                     {
-                      Test_?.classes.map((a_class: Class, index: number) =>
-                        <MenuItem key={"select_class" + index} value={a_class.id} onClick={() => selectClassHandle(a_class.id)}>
+                      Test_?.classes.map((a_class: Class) =>
+                        <MenuItem key={"select_class_" + a_class.id} value={a_class.id}>
                           {a_class.name}
                         </MenuItem>
                       )
@@ -413,7 +469,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                 }
               </Box>
               <Typography textAlign="right">
-                Class ID: {classId}
+                Class ID: {classId ?? '...'}
               </Typography>
               <Typography textAlign="right">
                 Test ID: {testid}
@@ -424,92 +480,90 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       </Paper>
 
       <Container maxWidth={false} sx={{ mb: 1 }}>
-        {/*==========ここからTableエリア==========*/}
         <Paper sx={{ m: 1, mr: 0, ml: 0 }}>
           {
             (Test_ != null && Test_.sections && Test_.sections.length > 0) ?
               (<SectionTabs sections={Test_.sections} sectionValue={sectionValue} sectionHandleChange={sectionHandleChange} />)
               : (<>
-                <p>Submission Data not found. </p>
-                <p>The test has not been submitted yet or the test does not exist.</p>
-                <p>The ClassID or TestID may be incorrect or no sections/questions are defined for the test.</p>
+                <Box textAlign="center" padding={5}>
+                  <Typography>テストデータが見つかりません。</Typography>
+                </Box>
               </>)
           }
-          <TableContainer component={Paper}>
-            <Table>
-              {/*==========Tableヘッダセル==========*/}
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ textAlign: "center" }} className={styles.username_cell}></TableCell>
-                  <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>Total Point</TableCell>
-                  <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>Ungraded</TableCell>
+          {Test_ ?
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+
+                    <TableCell sx={{ textAlign: "center" }} className={styles.username_cell}></TableCell>
+                    <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>Total Point</TableCell>
+                    <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>Ungraded</TableCell>
+                    {
+                      visibleQuestions.questions.map((question: Question, index: number) =>
+                        <TableCell key={"question" + question.id} sx={{ textAlign: "center" }}>
+                          <InlineMath>{question.question}</InlineMath>
+                          <hr />
+                          <InlineMath>{question.answer}</InlineMath>
+                        </TableCell>
+                      )
+                    }
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {
-                    visibleQuestions.questions.map((question: Question, index: number) =>
-                      <TableCell key={"question" + question.id} sx={{ textAlign: "center" }}>
-                        <Latex>{question.question}</Latex>
-                        <hr />
-                        <InlineMath>{question.answer}</InlineMath>
-                      </TableCell>
-                    )
-                  }
-                </TableRow>
-              </TableHead>
-              {/*==========以下データセル==========*/}
-              <TableBody>
-                {
-                  Test_?.classes.at(classIndex)?.users.map((user: User, user_index: number) => {
-                    const metrics = userMetrics[user_index] || { totalPoints: 0, ungradedCount: 0 };
-                    return (
+                    currentClassUsers.map((user: User, user_index: number) => {
+                      const metrics = userMetrics[user_index] || { totalPoints: 0, ungradedCount: 0 };
+                      return (
                         <TableRow key={"ROW-" + user.id}>
-                            <TableCell key={"username-" + user.id} className={styles.name_cell}>{user.name}</TableCell>
-                            <TableCell key={"totalPoints-" + user.id} sx={{ textAlign: "center" }} className={styles.point_cell}>
-                                {metrics.totalPoints}
-                            </TableCell>
-                            <UngradedCountCell key={"ungraded-" + user.id} ungraded_count={metrics.ungradedCount}/>
-                            {
-                                visibleQuestions.questions.map((question: Question, index: number) => {
-                                    // 表示中のセクションでの質問の相対インデックスに、前のセクションまでの質問数を加算して、
-                                    // 提出物のanswers配列における絶対インデックスを計算
-                                    const questionGlobalIndex = visibleQuestions.startIndex + index;
-                                    const data_index = submission_index[user_index]; // user_index から submissionData のインデックスを取得
-                                    
-                                    if (data_index !== undefined && submissionData?.[data_index]?.answers?.[questionGlobalIndex]) {
-                                        const answer = submissionData[data_index].answers[questionGlobalIndex];
-                                        const currentPoint = points[data_index]?.[questionGlobalIndex] ?? Number(answer.point);
-                                        return (
-                                            <AnswerCell
-                                                answer={(answer.text === "" ? " " : answer.text)}
-                                                point={currentPoint}
-                                                answerCellHandle={answerCellClickHandle}
-                                                key={`answer-${user.id}-${question.id}`}
-                                                userIndex={data_index} 
-                                                questionIndex={questionGlobalIndex}
-                                                cursorImage={cursorImage}
-                                            />
-                                        )
-                                    } else {
-                                        return (
-                                            <TableCell key={`noanswer-${user.id}-${question.id}`} align="center">
-                                            -
-                                            </TableCell>
-                                        )
-                                    }
-                                })
-                            }
+                          <TableCell key={"username-" + user.id} className={styles.name_cell}>{user.name}</TableCell>
+                          <TableCell key={"totalPoints-" + user.id} sx={{ textAlign: "center" }} className={styles.point_cell}>
+                            {metrics.totalPoints}
+                          </TableCell>
+                          <UngradedCountCell key={"ungraded-" + user.id} ungraded_count={metrics.ungradedCount} />
+                          {
+                            visibleQuestions.questions.map((question: Question, index: number) => {
+                              const questionGlobalIndex = visibleQuestions.startIndex + index;
+                              const data_index = submission_index[user_index];
+
+                              if (data_index !== undefined && submissionData?.[data_index]?.answers?.[questionGlobalIndex]) {
+                                const answer = submissionData[data_index].answers[questionGlobalIndex];
+                                const currentPoint = points[data_index]?.[questionGlobalIndex] ?? Number(answer.point);
+                                return (
+                                  <AnswerCell
+                                    answer={(answer.text === "" ? " " : answer.text)}
+                                    point={currentPoint}
+                                    answerCellHandle={answerCellClickHandle}
+                                    key={`answer-${user.id}-${question.id}`}
+                                    userIndex={data_index}
+                                    questionIndex={questionGlobalIndex}
+                                    cursorImage={cursorImage}
+                                  />
+                                )
+                              } else {
+                                return (
+                                  <TableCell key={`noanswer-${user.id}-${question.id}`} align="center">
+                                    -
+                                  </TableCell>
+                                )
+                              }
+                            })
+                          }
                         </TableRow>
-                    )
-                  })
-                }
-              </TableBody>
-            </Table>
-          </TableContainer>
+                      )
+                    })
+                  }
+                </TableBody>
+              </Table>
+            </TableContainer>
+            : <></>
+          }
         </Paper>
-        {/*==========Table終わり==========*/}
         {Test_ && (
-            <>
-                <Button variant="contained" sx={{ mb: 1, mt: 0 }} className={styles.save_button} onClick={savebuttonHandle}>Save</Button>
-                <Button sx={{ mb: 1, mt: 0 }} className={styles.export_button} onClick={exportbutonHandle}>Export as CSV</Button>
-            </>
+          <>
+            <Button variant="contained" sx={{ mb: 1, mt: 0 }} className={styles.save_button} onClick={savebuttonHandle}>Save</Button>
+            <Button sx={{ mb: 1, mt: 0 }} className={styles.export_button} onClick={exportbutonHandle}>Export as CSV</Button>
+          </>
         )}
       </Container>
     </TeacherGuard>
