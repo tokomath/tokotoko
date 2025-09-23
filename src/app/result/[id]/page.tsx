@@ -14,7 +14,8 @@ import Stack from "@mui/material/Stack";
 import SendIcon from "@mui/icons-material/Send";
 import { isAlreadySubmit } from "@/app/api/test/submit";
 import { getSubmission } from "@/app/api/test/result";
-import { BlockMath, InlineMath } from "react-katex";
+import Latex from "react-latex-next";
+
 import TopBar from "@/compornents/TopBar";
 import InsertFrame from "@/compornents/InsertFrame";
 import { useUser } from '@clerk/nextjs'
@@ -187,7 +188,7 @@ function Result({ params }: { params: { id: string, userid: string } }) {
               <Typography variant="h6">
                 PART {section.number}
               </Typography>
-              <InlineMath>{section.summary}</InlineMath>
+              <Latex>{section.summary}</Latex>
             </Box>
             {section.questions.map((question: any) => {
               return <Paper key={question.id} sx={{ marginTop: 2, padding: 2 }}><React.Fragment key={question.id}>
@@ -269,8 +270,9 @@ function Question({ id, number, question, insertType, insertContent, myAns, true
     <Stack spacing={2}>
       {/* 横に並べる */}
       <Box display="flex" alignItems="center">
-        <Typography variant="h2" fontSize={17}>({number}) </Typography>
-        <InlineMath>{question}</InlineMath>
+        <Typography variant="h2" fontSize={17}>({number})</Typography>
+        <Box width="10px"></Box>
+        <Latex>{question}</Latex>
       </Box>
       {insertType != "None" ?
         <><Divider />
@@ -286,7 +288,7 @@ function Question({ id, number, question, insertType, insertContent, myAns, true
         alignItems="center"
         paddingX={2}
       >
-        <BlockMath>{myAns}</BlockMath>
+        <Latex>{myAns}</Latex>
       </Box>
       <Divider />
       <Box
@@ -297,7 +299,7 @@ function Question({ id, number, question, insertType, insertContent, myAns, true
       >
         <Typography>正答</Typography>
         <Box minWidth={20} />
-        <BlockMath>{trueAns}</BlockMath>
+        <Latex>{trueAns}</Latex>
       </Box>
       {
         point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + " points"}</div>

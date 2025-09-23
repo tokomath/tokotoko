@@ -19,7 +19,6 @@ import {
   MenuItem,
   Chip,
 } from "@mui/material";
-import { InlineMath } from "react-katex";
 import "katex/dist/katex.min.css";
 
 import CloseIcon from "@mui/icons-material/Close";
@@ -47,6 +46,7 @@ import { getClassByUserId } from "@/app/api/class/getClass";
 
 import InsertFrame from "@/compornents/InsertFrame";
 import { TeacherGuard } from "@/lib/guard"
+import { InlineMath } from "react-katex";
 
 
 const insert_options = ["None", "Image", "HTML"];
@@ -545,7 +545,7 @@ const QuestionPage = ({
       <Box display="flex" justifyContent="space-between">
         <Box display="flex" alignContent="center">
           <Typography>{"(" + question.number + ") "}</Typography>
-          <InlineMath>{question.question}</InlineMath>
+          <Latex>{question.question}</Latex>
         </Box>
         <IconButton aria-label="delete" onClick={deleteQuestion}>
           <CloseIcon />
@@ -621,7 +621,7 @@ const QuestionPage = ({
       </Stack>
       <Stack direction={"row"} gap={1}>
         <Typography>{"Answer: "}</Typography>
-        <InlineMath>{question.answer}</InlineMath>
+        <Latex>{question.answer.length > 0 ? "$"+question.answer+"$" : ""}</Latex>
       </Stack>
       <TextField
         label={"answer"}
