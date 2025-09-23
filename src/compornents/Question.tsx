@@ -66,11 +66,11 @@ export default function Question({ id, number, question, answer,insertType,inser
   const AnswerBox = () => {
     if (answer) {
       return (
-        <BlockMath>{answer}</BlockMath>
+        <Latex>{"$"+answer+"$"}</Latex>
       )
     } else {
       return (
-        <BlockMath>?</BlockMath>
+        <Latex>?</Latex>
       )
     }
   }

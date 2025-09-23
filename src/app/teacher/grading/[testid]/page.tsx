@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useMemo, useCallback, use } from "react";
 import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem } from "@mui/material";
-import { InlineMath } from "react-katex";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
 
@@ -122,7 +121,7 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, userIndex, qu
   return (<>
     <TableCell onClick={click_handle} onKeyDown={keydown_handle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
       <div className={((point === -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
-      <div className={styles.matharea}><InlineMath math={String(answer)} /></div>
+      <div className={styles.matharea}><Latex>{"$"+String(answer)+"$"}</Latex></div>
     </TableCell>
   </>)
 });
@@ -502,9 +501,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                     {
                       visibleQuestions.questions.map((question: Question, index: number) =>
                         <TableCell key={"question" + question.id} sx={{ textAlign: "center" }}>
-                          <InlineMath>{question.question}</InlineMath>
+                          <Latex>{question.question}</Latex>
                           <hr />
-                          <InlineMath>{question.answer}</InlineMath>
+                          <Latex>{"$"+question.answer+"$"}</Latex>
                         </TableCell>
                       )
                     }
