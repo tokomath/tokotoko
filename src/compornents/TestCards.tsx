@@ -45,8 +45,8 @@ export function TestCards({testData}:props) {
                 <CardContent>
                     <Typography variant="h5" component="div">{testData.title} </Typography>
                     <Typography variant="h6">{testData.summary}</Typography>
-                    <Typography>Start:{testData.startDate.toLocaleString()}</Typography>
-                    <Typography>End  :{testData.endDate.toLocaleString()}</Typography>
+                    <Typography>開始:{testData.startDate.toLocaleString()}</Typography>
+                    <Typography>終了:{testData.endDate.toLocaleString()}</Typography>
                 </CardContent>
                 <CardActions>
                     <Button size="large" onClick={solveButtonFunction}>解答</Button>

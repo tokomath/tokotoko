@@ -9,8 +9,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { joinUserToClass } from "../api/class/addUserToClass";
 import { getClassByClassId } from "../api/class/getClass";
 import { Class } from "@prisma/client"
-import YAML from 'yaml'
 
+//UIテキスト yaml集約
+import YAML from 'yaml'
 const msg_yaml = require("../../msg-ja.yaml") as string
 const msg = YAML.parse(msg_yaml)
 

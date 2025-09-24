@@ -2,6 +2,9 @@ import { Tab, Tabs, Box, Card, CardContent, Typography, CardActionArea, Grid } f
 import dayjs from "dayjs";
 import { Test, Class } from "@prisma/client";
 
+import YAML from 'yaml'
+const msg_yaml = require("../msg-ja.yaml") as string
+const msg = YAML.parse(msg_yaml)
 
 interface TestInterface {
   test: Test;
@@ -23,22 +26,22 @@ export function StudentTestCard({ test }: { test: TestWithSubmitStatus }){
     const diffDay = deadline.diff(nowDate, "days");
 
     let diffstr = "";
-    if (Math.abs(diffHour) > 24) diffstr = `${diffDay}日`;
-    else if (Math.abs(diffMin) > 59) diffstr = `${diffHour}時間`;
-    else if (Math.abs(diffSec) > 59) diffstr = `${diffMin}分`;
-    else diffstr = `${diffSec}秒`;
+    if (Math.abs(diffHour) > 24) diffstr = `${diffDay + msg.DAY}`;
+    else if (Math.abs(diffMin) > 59) diffstr = `${diffHour + msg.HOUR}`;
+    else if (Math.abs(diffSec) > 59) diffstr = `${diffMin + msg.MINUTE}`;
+    else diffstr = `${diffSec + msg.SECOND}`;
 
-    diffstr = diffSec > 0 ? `あと${diffstr}` : `${diffstr.replace("-", "")}前`;
+    diffstr = diffSec > 0 ? `${msg.REST_OF + diffstr}` : `${diffstr.replace("-", "") + msg.BEFORE}`;
 
     let diffColor = "black";
     let cardsxprop = {
         boxShadow: "2px 2px rgba(0,0,0,0.2)",
         fontWeight:"meduim"
     };
-    let submitstatus = "未提出";
+    let submitstatus = msg.NOT_SUBMITTED;
     if (submitted) {
       cardsxprop.boxShadow = "2px 2px rgba(0,200,64,0.4)";
-      submitstatus = "提出済み"
+      submitstatus = msg.SUBMITTED
     }
     if (!submitted && diffMin < 0) {
       diffColor = "red";
@@ -58,10 +61,10 @@ export function StudentTestCard({ test }: { test: TestWithSubmitStatus }){
                 {test.test.title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {"Start: " + test.test.startDate.toLocaleString()}
+                { msg.START + " : " + test.test.startDate.toLocaleString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {"End : " + test.test.endDate.toLocaleString()}
+                { msg.END + " : " + test.test.endDate.toLocaleString()}
               </Typography>
               <Typography variant="body2" color={diffColor}>
                 {submitstatus+" "+diffstr}
