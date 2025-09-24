@@ -96,7 +96,7 @@ export default function JoinClient() {
             sx={{ p: 2, marginTop: "50px" }}
         >
             <Typography variant="h5" component="h1" gutterBottom>
-                {msg.JOINCLASS}
+                {msg.JOIN_CLASS}
             </Typography>
             <Typography marginY={2}>
                 {msg.ENTER_CODE}

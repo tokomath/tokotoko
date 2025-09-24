@@ -25,6 +25,10 @@ import { useUser } from '@clerk/nextjs'
 import { useEffect, useState } from "react";
 import { Test } from "@prisma/client"
 
+import YAML from 'yaml'
+const msg_yaml = require("../msg-ja.yaml") as string
+const msg = YAML.parse(msg_yaml)
+
 interface props{
     testData: Test[]
 }
@@ -45,12 +49,12 @@ export function TestCards({testData}:props) {
                 <CardContent>
                     <Typography variant="h5" component="div">{testData.title} </Typography>
                     <Typography variant="h6">{testData.summary}</Typography>
-                    <Typography>開始:{testData.startDate.toLocaleString()}</Typography>
-                    <Typography>終了:{testData.endDate.toLocaleString()}</Typography>
+                    <Typography>{msg.START + " : " + testData.startDate.toLocaleString()}</Typography>
+                    <Typography>{msg.END + " : " + testData.endDate.toLocaleString()}</Typography>
                 </CardContent>
                 <CardActions>
-                    <Button size="large" onClick={solveButtonFunction}>解答</Button>
-                    <Button size="large" onClick={gradingTestButtonFunction}>採点</Button>
+                    <Button size="large" onClick={solveButtonFunction}>{msg.SOLVE}</Button>
+                    <Button size="large" onClick={gradingTestButtonFunction}>{msg.GRADING}</Button>
                 </CardActions>
             </Card>
         );

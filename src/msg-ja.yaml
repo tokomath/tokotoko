@@ -15,9 +15,9 @@
     "YES" : "はい",
     "NO" : "いいえ",
     "OK" : "OK",
+    "MANAGE" : "管理",
     "LOADING" : "読み込み中...",
-    "CLASS" : "クラス",
-    "TEST" : "テスト",
+
 
     #クラス参加ページ
     #/join/JoinClient.tsx
@@ -25,18 +25,24 @@
     "JOIN_ERROR":"クラスへの参加に失敗しました。",
     "EXIST":" が存在します。",
     "NOT_EXIST":"このクラスコードは存在しません。",
-    "JOINCLASS":"クラスに参加",
+    "JOIN_CLASS":"クラスに参加",
     "ENTER_CODE":"参加するクラスのコードを入力してください。",
     "CLASSCODE" : "クラスコード",
     "JOIN":"参加",
 
-    #マイページ
+    #マイページ 一部上より流用有
     #/mypage/student/page.tsx
+    #/mypage/teacher/page.tsx
     "NO_TEST" : "テストはありません",
-    "SUBMITTED" : "提出済",
-    "NOT_SUBMITTED" : "未提出"
-    
+    "CLASS" : "クラス",
+    "TEST" : "テスト",
+    "CREATE_CLASS" : "新規クラスを作成",
+    "CREATE_TEST" : "新規テストを作成",
     #マイページ用テストカード
     #/compornents/StudentTestCard.tsx
-
+    "SUBMITTED" : "提出済",
+    "NOT_SUBMITTED" : "未提出",
+    #/compornents/TestCards.tsx
+    "SOLVE" : "解答",
+    "GRADING" : "採点",
 }

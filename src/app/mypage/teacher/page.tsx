@@ -23,6 +23,11 @@ import { Test, User } from "@prisma/client";
 import { getTestsByUserId } from "@/app/api/test/getTestsByUserId";
 import { getClassByUserId } from "@/app/api/class/getClass";
 
+//UIテキスト yaml集約
+import YAML from 'yaml'
+const msg_yaml = require("../../../msg-ja.yaml") as string
+const msg = YAML.parse(msg_yaml)
+
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;
 
@@ -114,8 +119,8 @@ export default function MyPage() {
                         aria-label="menu"
                         sx={{ width: "100%", mt: 1 }}
                     >
-                        <Tab icon={<ClassIcon />} label="Class" {...a11yProps(0)} sx={{ textTransform: "none" }} />
-                        <Tab icon={<EditNoteIcon />} label="Test" {...a11yProps(1)} sx={{ textTransform: "none" }} />
+                        <Tab icon={<ClassIcon />} label={msg.CLASS} {...a11yProps(0)} sx={{ textTransform: "none" }} />
+                        <Tab icon={<EditNoteIcon />} label={msg.TEST} {...a11yProps(1)} sx={{ textTransform: "none" }} />
                     </Tabs>
                 </Box>
                 <Box
@@ -135,8 +140,8 @@ export default function MyPage() {
                             height: "50px",
                             gap: 2
                         }}>
-                            <Button variant="contained" onClick={joinClassButtonEvent}>クラスに参加</Button>
-                            <Button variant="contained" onClick={createClassButtonEvent}>新規クラスを作成</Button>
+                            <Button variant="contained" onClick={joinClassButtonEvent}>{msg.JOIN_CLASS}</Button>
+                            <Button variant="contained" onClick={createClassButtonEvent}>{msg.CREATE_CLASS}</Button>
                         </Box>
                     </TabPanel>
                     <TabPanel value={value} index={1}>
@@ -148,7 +153,7 @@ export default function MyPage() {
                             right: "20px",
                             height: "50px"
                         }}>
-                            <Button variant="contained" onClick={createTestButtonEvent}>新規テストを作成</Button>
+                            <Button variant="contained" onClick={createTestButtonEvent}>{msg.CREATE_TEST}</Button>
 
                         </Box>
                     </TabPanel>
