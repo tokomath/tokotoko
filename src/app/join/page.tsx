@@ -1,10 +1,7 @@
-// app/join/page.tsx (新しく作成するファイル)
-
 import { Suspense } from 'react';
-import JoinClient from './JoinClient'; // 下で作成するクライアントコンポーネント
+import JoinClient from './JoinClient'; 
 import { Box, CircularProgress } from '@mui/material';
 
-// ローディング中に表示するUI
 const Loading = () => {
     return (
         <Box
