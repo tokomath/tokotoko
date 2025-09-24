@@ -1,0 +1,15 @@
+{
+    #クラス参加ページ
+    #app/join/JoinClient.tsx
+    "JOINED":"に参加しました。",
+    "JOIN_ERROR":"クラスへの参加に失敗しました。",
+    "EXIST":" が存在します。",
+    "NOT_EXIST":"このクラスコードは存在しません。",
+    "JOINCLASS":"クラスに参加する",
+    "ENTER_CODE":"参加するクラスのコードを入力してください。",
+    "CLASSCODE" : "クラスコード",
+    "JOIN":"参加",
+
+    #
+    "" : ""
+}

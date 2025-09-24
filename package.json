@@ -31,6 +31,7 @@
     "react-mathquill": "^1.0.3",
     "react-table": "^7.8.0",
     "svix": "^1.67.0",
+    "yaml": "^2.8.1",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
