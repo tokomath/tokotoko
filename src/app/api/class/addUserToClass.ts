@@ -19,6 +19,43 @@ export const addUserToClass = async (classFrame: ClassFrame) => {
 
 export const joinUserToClass = async (classId: string, userId: string): Promise<boolean> => {
   try {
+    // Verify the user exists before allowing them to join
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    
+    if (!user) {
+      console.error(`User ${userId} does not exist`);
+      return false;
+    }
+    
+    // Verify the class exists before allowing join
+    const classExists = await prisma.class.findUnique({
+      where: { id: classId }
+    });
+    
+    if (!classExists) {
+      console.error(`Class ${classId} does not exist`);
+      return false;
+    }
+    
+    // Check if user is already in the class
+    const existingMembership = await prisma.class.findFirst({
+      where: {
+        id: classId,
+        users: {
+          some: {
+            id: userId
+          }
+        }
+      }
+    });
+    
+    if (existingMembership) {
+      console.log(`User ${userId} is already in class ${classId}`);
+      return true; // Already a member, consider it success
+    }
+    
     await prisma.class.update({
       where: { id: classId },
       data: {

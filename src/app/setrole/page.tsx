@@ -9,17 +9,21 @@ export default function Page() {
     const router = useRouter();
     const setRoleTeacher = () => {
         if (user)
-            changeRole(user?.id, 0).then((ok) => {
+            changeRole(user?.id, 0, user?.id).then((ok) => {
                 if(ok == 0)
                     alert("OK");
+                else
+                    alert("Error: Only teachers can change user roles");
             });
         router.push("mypage");
     }
     const setRoleStudent = () => {
         if (user)
-            changeRole(user?.id, 1).then((ok) => {
+            changeRole(user?.id, 1, user?.id).then((ok) => {
                 if(ok == 0)
                     alert("OK");
+                else
+                    alert("Error: Only teachers can change user roles");
             });
         router.push("mypage");
     }

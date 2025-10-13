@@ -302,7 +302,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   }, []);
 
   const savebuttonHandle = useCallback(async () => {
-    if (!submissionData) return;
+    if (!submissionData || !user?.id) return;
 
     let send_data: Array<Point> = [];
     submissionData.forEach((submission, dataIndex) => {
@@ -312,13 +312,13 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       });
     });
 
-    const send_res = await setAnswerPoints(send_data);
+    const send_res = await setAnswerPoints(send_data, user.id);
     if (send_res === 0) {
       alert("Saved grading data successfully.");
     } else {
       alert("An Error has occurred.");
     }
-  }, [submissionData, points]);
+  }, [submissionData, points, user]);
 
   const exportbutonHandle = useCallback(() => {
     if (!Test_ || !submissionData) return;
