@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Class {
-  id    String @id @unique @db.VarChar(6)
+  id    String @id @unique
   name  String
   tests Test[] @relation("ClassToTest")
   users User[] @relation("ClassToUser")
