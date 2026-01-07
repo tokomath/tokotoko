@@ -14,7 +14,7 @@ function proxyMiddleware(req: NextRequest): NextResponse | null {
     proxyHeaders.set('X-Forwarded-For', forwardedFor)
 
     const proxyUrl = new URL(req.url)
-    proxyUrl.host = process.env.NEXT_PUBLIC_CLERK_FRONTEND_API_URL || 'frontend-api.clerk.dev'
+    proxyUrl.host = process.env.NEXT_PUBLIC_CLERK_FRONTEND_API_URL || 'frontend-api.clerk.services'
     proxyUrl.port = '443'
     proxyUrl.protocol = 'https'
     proxyUrl.pathname = proxyUrl.pathname.replace('/__clerk', '')
