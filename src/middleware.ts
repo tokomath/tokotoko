@@ -1,18 +1,51 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextRequest } from 'next/server'
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)','/api(.*)']);
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api(.*)'])
 
-export default clerkMiddleware(async (auth, request) => {
-  // sign-in, sign-up 以外は認証ページにリダイレクト
-  if (!isPublicRoute(request)) {
-    await auth.protect()
+
+function proxyMiddleware(req: NextRequest): NextResponse | null {
+  if (req.nextUrl.pathname.match('__clerk')) {
+    const proxyHeaders = new Headers(req.headers)
+    proxyHeaders.set('Clerk-Proxy-Url', process.env.NEXT_PUBLIC_CLERK_PROXY_URL || '')
+    proxyHeaders.set('Clerk-Secret-Key', process.env.CLERK_SECRET_KEY || '')
+    
+    const forwardedFor = req.headers.get('x-forwarded-for') || req.headers.get('X-Forwarded-For') || ''
+    proxyHeaders.set('X-Forwarded-For', forwardedFor)
+
+    const proxyUrl = new URL(req.url)
+    proxyUrl.host = 'frontend-api.clerk.dev'
+    proxyUrl.port = '443'
+    proxyUrl.protocol = 'https'
+    proxyUrl.pathname = proxyUrl.pathname.replace('/__clerk', '')
+
+    return NextResponse.rewrite(proxyUrl, {
+      request: {
+        headers: proxyHeaders,
+      },
+    })
   }
-})
+
+  return null
+}
+
+export default function middleware(req : any, evt : any) {
+  const proxyResponse = proxyMiddleware(req)
+  if (proxyResponse) {
+    return proxyResponse
+  }
+
+  return clerkMiddleware(async (auth, request) => {
+    if (!isPublicRoute(request)) {
+      await auth.protect()
+    }
+  })(req, evt)
+}
+
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
+    '/(api|trpc|__clerk)(.*)',
   ],
-};
+}

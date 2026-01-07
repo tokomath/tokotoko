@@ -27,6 +27,11 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { StudentTestCard } from "@/compornents/StudentTestCard";
 
+//UIテキスト yaml集約
+import YAML from 'yaml'
+const msg_yaml = require("../../../msg-ja.yaml") as string
+const msg = YAML.parse(msg_yaml)
+
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;
 
@@ -73,7 +78,7 @@ export default function Mypage() {
   const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser();
 
-  if (!isLoaded) return <>Loading</>;
+  if (!isLoaded) return <>{msg.LOADING}</>;
   if (isSignedIn && user) return <Page />;
   router.push("/sign-in");
 }
@@ -106,8 +111,8 @@ function ClassCard({ classData }: ClassCardProp) {
                       <Typography width="50%">{classData.tests.at(i)?.test?.title}</Typography>
                       {
                         classData.tests.at(i)?.submitted ?
-                          <Typography width="50%" textAlign="right" color="rgba(0,200,64,0.7)">提出済み</Typography> :
-                          <Typography width="50%" textAlign="right" color="rgba(255,0,0,0.9)" fontWeight="bold">未提出</Typography>
+                          <Typography width="50%" textAlign="right" color="rgba(0,200,64,0.7)">{msg.SUBMITTED}</Typography> :
+                          <Typography width="50%" textAlign="right" color="rgba(255,0,0,0.9)" fontWeight="bold">{msg.NOT_SUBMITTED}</Typography>
                       }
                     </Box>
                   );
@@ -140,7 +145,7 @@ function ClassCard({ classData }: ClassCardProp) {
           </Typography>
 
           {classData.tests.length === 0 ? (
-            <Typography color="text.secondary">テストはありません</Typography>
+            <Typography color="text.secondary">{msg.NO_TEST}</Typography>
           ) : (
             <Grid container spacing={2}>
               {classData.tests.map((t, id) => (
@@ -229,8 +234,8 @@ const Page = () => {
           aria-label="menu"
           sx={{ width: "100%", mt: 1 }}
         >
-          <Tab icon={<ClassIcon />} label="Class" {...a11yProps(0)} />
-          <Tab icon={<EditNoteIcon />} label="Test" {...a11yProps(1)} />
+          <Tab icon={<ClassIcon />} label={msg.CLASS} {...a11yProps(0)} />
+          <Tab icon={<EditNoteIcon />} label={msg.TEST} {...a11yProps(1)} />
         </Tabs>
       </Box>
 
@@ -252,7 +257,7 @@ const Page = () => {
             right: "20px",
             height: "50px"
           }}>
-            <Button variant="contained" onClick={joinClassButtonEvent}>クラスに参加</Button>
+            <Button variant="contained" onClick={joinClassButtonEvent}>{msg.JOINCLASS}</Button>
           </Box>
         </TabPanel>
 

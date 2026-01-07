@@ -1,6 +1,5 @@
-// app/join/JoinClient.tsx (元のpage.tsxからリネームして修正)
-
 "use client"
+
 import React, { useEffect, useState } from "react";
 import { Button, Box, Typography, TextField, CircularProgress } from "@mui/material";
 
@@ -11,7 +10,14 @@ import { joinUserToClass } from "../api/class/addUserToClass";
 import { getClassByClassId } from "../api/class/getClass";
 import { Class } from "@prisma/client"
 
-export default function JoinClient() { // コンポーネント名をPageからJoinClientに変更
+//UIテキスト yaml集約
+import YAML from 'yaml'
+const msg_yaml = require("../../msg-ja.yaml") as string
+const msg = YAML.parse(msg_yaml)
+
+
+
+export default function JoinClient() { 
     const { user } = useUser();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -33,10 +39,10 @@ export default function JoinClient() { // コンポーネント名をPageからJ
             console.log("Joining class with ID:", classId);
             const res = await joinUserToClass(classId, user?.id || "")
             if (res) {
-                alert(`クラス「${classData?.name}」に参加しました。`);
+                alert(`${classData?.name}`+msg.JOINED);
                 router.push("/mypage");
             } else {
-                alert("クラスへの参加に失敗しました。")
+                alert(msg.JOIN_ERROR)
             }
         }
 
@@ -58,9 +64,9 @@ export default function JoinClient() { // コンポーネント名をPageからJ
                 setClassData(fetchedClass);
 
                 if (fetchedClass) {
-                    setClassExistsMessage(`クラス「${fetchedClass.name}」が存在します。`);
+                    setClassExistsMessage(`${fetchedClass.name}`+ msg.EXIST);
                 } else {
-                    setClassExistsMessage("このクラスコードは存在しません。");
+                    setClassExistsMessage(msg.NOT_EXIST);
                 }
                 setIsChecking(false);
             } else {
@@ -90,10 +96,10 @@ export default function JoinClient() { // コンポーネント名をPageからJ
             sx={{ p: 2, marginTop: "50px" }}
         >
             <Typography variant="h5" component="h1" gutterBottom>
-                クラスに参加する
+                {msg.JOIN_CLASS}
             </Typography>
             <Typography marginY={2}>
-                参加するクラスのコードを入力してください。
+                {msg.ENTER_CODE}
             </Typography>
 
             <Box
@@ -112,7 +118,7 @@ export default function JoinClient() { // コンポーネント名をPageからJ
                     <TextField
                         required
                         id="outlined-required"
-                        label="クラスコード"
+                        label={msg.CLASSCODE}
                         value={classId}
                         onChange={(e) => setClassId(e.target.value.trim())}
                         fullWidth
@@ -125,7 +131,7 @@ export default function JoinClient() { // コンポーネント名をPageからJ
                         disabled={!classId || classId.length !== 6 || !classData || isChecking}
                         sx={{ width: "200px" }}
                     >
-                        参加
+                        {msg.JOIN}
                     </Button>
                 </Box>
 

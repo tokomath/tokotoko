@@ -28,6 +28,10 @@ import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import { useRouter } from "next/navigation";
 import { TeacherGuard } from "@/lib/guard"
 
+import YAML from 'yaml'
+const msg_yaml = require("../msg-ja.yaml") as string
+const msg = YAML.parse(msg_yaml)
+
 interface ClassData{
     id: string,
     name: string,
@@ -86,8 +90,8 @@ export function TeacherClassCards({classes} : props) {
                     </Box>
                 </CardContent>
                 <CardActions>
-                    <Button size="large" onClick={manageButtonFunction}>管理</Button>
-                    <Button size="large" onClick={createTestButtonFunction}>テスト作成</Button>
+                    <Button size="large" onClick={manageButtonFunction}>{msg.MANAGE}</Button>
+                    <Button size="large" onClick={createTestButtonFunction}>{msg.CREATE_TEST}</Button>
                 </CardActions>
             </Card>
         );

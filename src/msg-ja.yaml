@@ -1,0 +1,48 @@
+{
+    #汎用
+    "DAY" : "日",
+    "HOUR" : "時間",
+    "MINUTE" : "分",
+    "SECOND" : "秒",
+    "BEFORE" : "前",
+    "AFTER" : "後",
+    "REST_OF" : "残り",
+    "START" : "開始",
+    "END" : "終了",
+    "CANCEL" : "キャンセル",
+    "SUBMIT" : "提出",
+    "BACK" : "戻る",
+    "YES" : "はい",
+    "NO" : "いいえ",
+    "OK" : "OK",
+    "MANAGE" : "管理",
+    "LOADING" : "読み込み中...",
+
+
+    #クラス参加ページ
+    #/join/JoinClient.tsx
+    "JOINED":"に参加しました。",
+    "JOIN_ERROR":"クラスへの参加に失敗しました。",
+    "EXIST":" が存在します。",
+    "NOT_EXIST":"このクラスコードは存在しません。",
+    "JOIN_CLASS":"クラスに参加",
+    "ENTER_CODE":"参加するクラスのコードを入力してください。",
+    "CLASSCODE" : "クラスコード",
+    "JOIN":"参加",
+
+    #マイページ 一部上より流用有
+    #/mypage/student/page.tsx
+    #/mypage/teacher/page.tsx
+    "NO_TEST" : "テストはありません",
+    "CLASS" : "クラス",
+    "TEST" : "テスト",
+    "CREATE_CLASS" : "新規クラスを作成",
+    "CREATE_TEST" : "新規テストを作成",
+    #マイページ用テストカード
+    #/compornents/StudentTestCard.tsx
+    "SUBMITTED" : "提出済",
+    "NOT_SUBMITTED" : "未提出",
+    #/compornents/TestCards.tsx
+    "SOLVE" : "解答",
+    "GRADING" : "採点",
+}
