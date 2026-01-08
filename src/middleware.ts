@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 
 const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api(.*)'])
 
+
 function proxyMiddleware(req: NextRequest): NextResponse | null {
   if (req.nextUrl.pathname.match('__clerk')) {
     const proxyHeaders = new Headers(req.headers)
@@ -14,12 +15,10 @@ function proxyMiddleware(req: NextRequest): NextResponse | null {
     proxyHeaders.set('X-Forwarded-For', forwardedFor)
 
     const proxyUrl = new URL(req.url)
-    proxyUrl.host = process.env.NEXT_PUBLIC_CLERK_FRONTEND_API_URL || 'frontend-api.clerk.services'
+    proxyUrl.host = 'frontend-api.clerk.dev'
     proxyUrl.port = '443'
     proxyUrl.protocol = 'https'
     proxyUrl.pathname = proxyUrl.pathname.replace('/__clerk', '')
-
-    proxyHeaders.set('Host', proxyUrl.host)
 
     return NextResponse.rewrite(proxyUrl, {
       request: {
@@ -31,7 +30,7 @@ function proxyMiddleware(req: NextRequest): NextResponse | null {
   return null
 }
 
-export default function middleware(req: any, evt: any) {
+export default function middleware(req : any, evt : any) {
   const proxyResponse = proxyMiddleware(req)
   if (proxyResponse) {
     return proxyResponse
