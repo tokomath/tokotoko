@@ -66,7 +66,7 @@ export default function Question({ id, number, question, answer,insertType,inser
   const AnswerBox = () => {
     if (answer) {
       return (
-        <Latex>{"$"+answer+"$"}</Latex>
+        <Latex>{answer}</Latex>
       )
     } else {
       return (
