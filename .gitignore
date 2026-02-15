@@ -41,3 +41,7 @@ prisma/migrations*
 *.db-journal
 
 .idea
+
+# clerk configuration (can include secrets)
+/.clerk/
+.env
