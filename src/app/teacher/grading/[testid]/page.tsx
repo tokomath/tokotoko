@@ -15,7 +15,6 @@ import { TeacherGuard } from "@/lib/guard";
 
 import styles from "./styles.module.css";
 
-//#region APIのデータ用
 interface Point {
   answerId: number;
   point: number;
@@ -121,7 +120,7 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, userIndex, qu
   return (<>
     <TableCell onClick={click_handle} onKeyDown={keydown_handle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
       <div className={((point === -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
-      <div className={styles.matharea}><Latex>{"$"+String(answer)+"$"}</Latex></div>
+      <div className={styles.matharea}><Latex>{String(answer)}</Latex></div>
     </TableCell>
   </>)
 });
@@ -171,23 +170,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   const [submission_index, setSubmissionIndex] = useState<Record<number, number>>({});
   const [cursorImage, setCursorImage] = useState("");
 
-  // 1. URLのクエリパラメータからclassIdを抽出し、ステートに反映する
   useEffect(() => {
     const paramClassId = searchParams.get("classid");
     if (paramClassId) {
       setClassId(paramClassId);
     } else {
-      // URLにclassidがない場合、後でデフォルト値を設定するためnullにする
       setClassId(null);
     }
   }, [searchParams]);
 
-  // 2. ページロード時に一度だけカーソル画像を生成
   useEffect(() => {
     setCursorImage(generateCursor());
   }, []);
 
-  // 3. testidとuser情報に基づいてテスト基本情報を取得
   useEffect(() => {
     if (!testid || !isSignedIn || !user?.id) return;
 
@@ -199,22 +194,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     fetchTest();
   }, [testid, isSignedIn, user?.id]);
 
-  // 4. Test_情報が取得され、classIdが未設定の場合、デフォルト値を設定しURLを更新
   useEffect(() => {
     if (Test_ && Test_.classes?.length > 0 && classId === null) {
       const defaultClassId = Test_.classes[0].id;
-      // router.replaceでURLを更新。これにより1のuseEffectが走り、classIdが設定される
       router.replace(`/teacher/grading/${testid}?classid=${defaultClassId}`);
     }
   }, [Test_, classId, testid, router]);
 
 
-  // 5. classIdが確定したら、そのクラスの提出物を取得・処理
   useEffect(() => {
     if (!testid || classId === null || !user?.id || !Test_) return;
 
     const fetchSubmissions = async () => {
-      try { // tryブロックを開始
+      try { 
         const foundClassIndex = Test_.classes.findIndex((a_class: Class) => a_class.id == classId);
 
         if (foundClassIndex === -1) {
@@ -234,12 +226,11 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           classId: String(classId)
         });
 
-        // 提出物がない場合 (null または 空配列)
         if (!allSubmissionsForClass || allSubmissionsForClass.length === 0) {
           setSubmissionData([]);
           setPoints({});
           setSubmissionIndex({});
-          return; // この時点で処理を終了し、空の採点表を表示
+          return; 
         }
 
         const newSubmissionData: SubmissionWithRelations[] = [];
@@ -268,9 +259,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         setPoints(newPoints);
         setSubmissionIndex(newSubmissionIndex);
 
-      } catch (error) { // catchブロックを追加
+      } catch (error) { 
         console.error("Failed to fetch submissions:", error);
-        // エラーが発生した場合でも、UIが壊れないように空の状態で初期化する
         setSubmissionData([]);
         setPoints({});
         setSubmissionIndex({});
@@ -278,7 +268,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     };
 
     fetchSubmissions();
-  }, [testid, classId, user?.id, Test_, router]);// routerを依存配列に追加
+  }, [testid, classId, user?.id, Test_, router]);
 
   const selectClassHandle = useCallback((event: React.ChangeEvent<{ value: unknown }>) => {
     const selectedClassID = event.target.value as string;
@@ -503,7 +493,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                         <TableCell key={"question" + question.id} sx={{ textAlign: "center" }}>
                           <Latex>{question.question}</Latex>
                           <hr />
-                          <Latex>{"$"+question.answer+"$"}</Latex>
+                          <Latex>{question.answer}</Latex>
                         </TableCell>
                       )
                     }
