@@ -43,4 +43,6 @@ prisma/migrations*
 .idea
 
 
+# clerk configuration (can include secrets)
+/.clerk/
 .env
