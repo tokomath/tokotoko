@@ -50,8 +50,8 @@
   "CREATE_NEW_TEST": "新規テスト作成",
   "PUBLISH_TEST": "テストを公開",
   "SUCCESS_CREATE_TEST": "テストの作成が完了しました",
-  "OPEN_JSON": "JSONを開く",
-  "SAVE_JSON": "JSONを保存",
+  "OPEN_JSON": "テストを開く",
+  "SAVE_JSON": "テストを保存",
   
   #バリデーション・エラー
   "ERROR_START_AFTER_END": "開始日が締め切りより後です",
