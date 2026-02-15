@@ -302,7 +302,7 @@ function ClientSearchParamWrapper() {
         display: "flex",
         flexDirection: "column",
         pt: 2,
-        pb: 2,
+        pb: 0,
         overflow: "hidden"
       }}
     >
@@ -317,7 +317,7 @@ function ClientSearchParamWrapper() {
             startIcon={<FileUploadIcon />}
             onClick={() => fileInputRef.current?.click()}
           >
-            Open JSON
+            {msg.OPEN_JSON}
           </Button>
           <input
             type="file"
@@ -332,7 +332,7 @@ function ClientSearchParamWrapper() {
             startIcon={<FileDownloadIcon />}
             onClick={handleSaveJson}
           >
-            Save JSON
+            {msg.SAVE_JSON}
           </Button>
 
           <Button
