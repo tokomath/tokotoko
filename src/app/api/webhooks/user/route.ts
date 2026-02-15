@@ -79,7 +79,8 @@ export async function POST(req: Request) {
                 const name:string = first_name+" "+last_name;
                 if(id && name)
                 {
-                    await updateUser(id,name,email_addresses[0].email_address);
+                    // Webhook is a trusted system call, user is updating their own profile
+                    await updateUser(id,name,email_addresses[0].email_address, id);
                     return NextResponse.json({message: 'Update user info'},{status:200});
                 }
             }

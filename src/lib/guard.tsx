@@ -6,20 +6,32 @@ import { useUser } from '@clerk/nextjs'
 
 export const StudentGuard = ({ children }: any) => {
     const { user, isSignedIn } = useUser();
-
     const router = useRouter()
-    if (isSignedIn && user.id) {
-        studentAuth(user.id).then((ok) => {
-            if (ok) {
-                return <>{children}</>
+    const [auth, setAuth] = useState("loading")
+
+    useEffect(() => {
+        const f = async () => {
+            if (isSignedIn && user.id) {
+                const ok = await studentAuth(user.id)
+                if (ok) {
+                    setAuth("ok")
+                } else {
+                    setAuth("ng")
+                }
             } else {
-                router.push('/')
-                return null
+                setAuth("ng")
             }
-        })
+        }
+        f()
+    }, [isSignedIn, user])
+
+    if (auth === "ok")
+        return <>{children}</>
+    if (auth === "ng") {
+        router.push('/')
+        return null
     }
-    router.push('/')
-    return null
+    return null // Loading state
 }
 export const TeacherGuard = ({ children }: any) => {
     const { user, isSignedIn } = useUser();    const router = useRouter()
