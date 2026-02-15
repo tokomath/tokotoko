@@ -45,4 +45,54 @@
     #/compornents/TestCards.tsx
     "SOLVE" : "解答",
     "GRADING" : "採点",
+    #テスト作成ページ
+  #/teacher/create/page.tsx
+  "CREATE_NEW_TEST": "新規テスト作成",
+  "PUBLISH_TEST": "テストを公開",
+  "SUCCESS_CREATE_TEST": "テストの作成が完了しました",
+  "OPEN_JSON": "JSONを開く",
+  "SAVE_JSON": "JSONを保存",
+  
+  #バリデーション・エラー
+  "ERROR_START_AFTER_END": "開始日が締め切りより後です",
+  "ERROR_NO_CLASS": "クラスが選択されていません",
+  "ERROR_CONTENT_MISSING": "コンテンツが挿入されていません",
+  "WARNING_START_DATE_PAST": "開始日が現在日より前です",
+
+  #メタデータタブ
+  "METADATA": "基本設定",
+  "BASIC_INFO": "基本情報",
+  "TEST_TITLE": "テストタイトル",
+  "TEST_SUMMARY": "説明 / 概要",
+  "SCHEDULE": "スケジュール",
+  "START_DATE": "開始日",
+  "END_DATE": "終了日", 
+  "ASSIGNMENT": "割り当て",
+  "TARGET_CLASS": "対象クラス",
+
+  #セクションタブ
+  "SECTION_NUMBER": "セクション",
+  "ADD_SECTION": "セクション追加",
+  "SECTION_SETTINGS": "設定", 
+  "DELETE_SECTION": "セクションを削除",
+  "SECTION_SUMMARY_LABEL": "セクション概要",
+  "PREVIEW": "プレビュー",
+  "QUESTIONS_LIST": "問題一覧",
+  "ADD_QUESTION": "問題を追加",
+  "ADD_ANOTHER_QUESTION": "次の問題を追加",
+  "NO_QUESTIONS_ALERT": "問題がまだ追加されていません。「問題を追加」をクリックして開始してください。",
+
+  #問題カード
+  "QUESTION_NUMBER_PREFIX": "問",
+  "QUESTION_TEXT_LABEL": "問題文 ",
+  "QUESTION_PREVIEW": "問題プレビュー",
+  "MEDIA_ATTACHMENT": "メディア添付",
+  "ATTACHMENT_TYPE": "添付タイプ",
+  "NO_ATTACHMENT": "添付なし",
+  "UPLOAD_FILE": "アップロード", 
+  "FILE_UPLOADED": "ファイルアップロード済",
+  "ATTACHMENT_PREVIEW": "添付プレビュー",
+  "ANSWER_KEY": "解答設定",
+  "ANSWER_FORMULA_LABEL": "正答 (LaTeX)",
+  "ANSWER_PLACEHOLDER": "例: x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}"
 }
