@@ -21,7 +21,7 @@ interface QuestionProps {
   changeAnswer: (answer: string) => void;
 }
 
-export default function Question({ id, number, question, answer,insertType,insertContent, changeAnswer }: QuestionProps) {
+export default function Question({ id, number, question, answer, insertType, insertContent, changeAnswer }: QuestionProps) {
   const inputRef = React.useRef<HTMLInputElement>();
 
   const [selectionStart, setSelectionStart] = React.useState(0);
@@ -47,9 +47,23 @@ export default function Question({ id, number, question, answer,insertType,inser
 
     const before = answer.slice(0, selectionStart);
     const after = answer.slice(selectionEnd);
-    changeAnswer(before + command + after);
-    setSelectionStart(selectionStart + start);
-    setSelectionEnd(selectionStart + end);
+
+    const dollarCount = (before.match(/\$/g) || []).length;
+    const isInsideMath = dollarCount % 2 === 1;
+
+    let textToInsert = command;
+    let newCursorOffsetStart = start;
+    let newCursorOffsetEnd = end;
+
+    if (!isInsideMath) {
+      textToInsert = `$${command}$`;
+      newCursorOffsetStart += 1;
+      newCursorOffsetEnd += 1;
+    }
+
+    changeAnswer(before + textToInsert + after);
+    setSelectionStart(selectionStart + newCursorOffsetStart);
+    setSelectionEnd(selectionStart + newCursorOffsetEnd);
     setCur(!cur);
   }
 
@@ -66,7 +80,7 @@ export default function Question({ id, number, question, answer,insertType,inser
   const AnswerBox = () => {
     if (answer) {
       return (
-        <Latex>{"$"+answer+"$"}</Latex>
+        <Latex>{answer}</Latex>
       )
     } else {
       return (
@@ -78,13 +92,12 @@ export default function Question({ id, number, question, answer,insertType,inser
   return (
 
     <Stack spacing={0}>
-      {/* 横に並べる */}
       <Box display="flex" alignItems="center">
         <Typography variant="h2" fontSize={17}>({number})　</Typography>
         <Latex>{question}</Latex>
       </Box>
       <Box>
-        <InsertFrame insertType={insertType} insertContent={insertContent}/>
+        <InsertFrame insertType={insertType} insertContent={insertContent} />
       </Box>
       <Box
         display="flex"
