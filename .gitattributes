@@ -1,2 +1,2 @@
-src/middleware.ts merge=ours
 .gitattributes merge=ours
+src/middleware.ts merge=ours
