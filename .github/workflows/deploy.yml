@@ -17,12 +17,16 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 55126
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
             cd /home/${{ secrets.SERVER_USER }}/tokotoko
             git pull origin deploy/sakura
             yarn install
             export NODE_OPTIONS="--max-old-space-size=2048"
             yarn build --webpack
-            pm2 restart tokotoko
+            
+            npx pm2 restart ff
 
       - name: Notify to Discord
         if: always()
