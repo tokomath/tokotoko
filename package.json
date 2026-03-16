@@ -4,27 +4,30 @@
   "private": true,
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.22.0",
+    "@clerk/backend": "^3.2.0",
+    "@clerk/nextjs": "^7.0.4",
     "@emotion/cache": "^11.11.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
-    "@mui/icons-material": "^5.15.20",
-    "@mui/material": "^5.15.15",
-    "@mui/material-nextjs": "^5.15.11",
-    "@mui/x-data-grid": "^7.12.1",
-    "@mui/x-date-pickers": "^7.7.1",
+    "@mui/base": "^5.0.0-beta.70",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
+    "@mui/material-nextjs": "^7.3.9",
+    "@mui/x-data-grid": "^8.27.5",
+    "@mui/x-date-pickers": "^8.27.2",
     "@prisma/client": "^6.10.1",
     "dayjs": "^1.11.11",
+    "js-yaml-loader": "^1.2.2",
     "nerdamer": "^1.1.13",
-    "next": "^15.3.4",
-    "react": "^18",
-    "react-dom": "^18",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "react-is": "^18.3.1",
     "react-katex": "^3.0.1",
     "react-latex-next": "^3.0.0",
@@ -34,6 +37,14 @@
     "yaml": "^2.8.1",
     "zustand": "^4.5.2"
   },
+  "resolutions": {
+    "cross-spawn": "^7.0.5",
+    "minimatch": "^9.0.7",
+    "glob": "^10.5.0",
+    "nanoid": "^3.3.8",
+    "js-yaml": "^4.1.1",
+    "flatted": "^3.4.0"
+  },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
@@ -42,6 +53,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.2",
     "prisma": "^5.12.1",
+    "raw-loader": "^4.0.2",
     "typescript": "^5"
   }
 }

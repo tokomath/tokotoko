@@ -16,12 +16,11 @@ import {
   Paper,
   DialogContent,
 } from "@mui/material";
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
 import { useEffect, useState } from "react";
 import ClassIcon from '@mui/icons-material/Class';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import { Class, User } from "@prisma/client";
-import { NumberInput } from "@mui/base/Unstable_NumberInput/NumberInput";
 import AddIcon from "@mui/icons-material/Add";
 
 import { getAllClass, getClassByUserId } from "@/app/api/class/getClass";
@@ -66,7 +65,6 @@ const YourClassList = () => {
   useEffect(() => {
     const fetchClass = async () => {
       const tmpClassList = await getClassByUserId(teacherId)
-      // const tmpClassList = await getAllClass()
       setClasses(tmpClassList)
     }
 
@@ -88,12 +86,6 @@ const YourClassList = () => {
       const columns: GridColDef<(typeof studentList)[number]>[] = [
         { field: 'id', headerName: 'ID', width: 90 },
         { field: 'name', headerName: "Name", width: 150 },
-        //{
-        //  field: "role",
-        //  headerName: "Role",
-        //  type: "number",
-        //  width: 110,
-        //},
       ]
       const addStudentHandler = () => {
         if (modifiedClass != null) {
@@ -111,8 +103,9 @@ const YourClassList = () => {
             pageSizeOptions={[5]}
             checkboxSelection
             disableRowSelectionOnClick
-            onRowSelectionModelChange={(RowId) => {
-              const selectedUser = studentList.filter((s) => RowId.includes(s.id))
+            onRowSelectionModelChange={(RowId: GridRowSelectionModel) => {
+              const ids = RowId as unknown as any[];
+              const selectedUser = studentList.filter((s) => ids.includes(s.id))
               setSelectedStudent(selectedUser)
             }}
           />
@@ -143,7 +136,7 @@ const YourClassList = () => {
 
   return (
     <Stack alignItems={"center"}>
-
+        <AddStudentDialog />
     </Stack>
   )
 }

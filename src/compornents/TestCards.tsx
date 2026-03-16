@@ -63,7 +63,7 @@ export function TestCards({testData}:props) {
     return (
         <Grid container spacing={2}>
             {testData.map((t) => (
-                <Grid item xs={12} sm={6} md={3} key={t.id}>
+                <Grid size={{xs:12,sm:6,md:3}} key={t.id}>
                     <TestCards key={t.id} testData={t} />
                 </Grid>
             ))}
