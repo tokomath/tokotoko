@@ -1,0 +1,60 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - deploy/sakura
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 55126
+          script: |
+            cd /home/${{ secrets.SERVER_USER }}/tokotoko
+            git pull origin deploy/sakura
+            yarn install
+            export NODE_OPTIONS="--max-old-space-size=2048"
+            yarn build --webpack
+            pm2 restart tokotoko
+
+      - name: Notify to Discord
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            COLOR=5763719
+          elif [ "${{ job.status }}" = "failure" ]; then
+            COLOR=15548997
+          else
+            COLOR=10070709
+          fi
+
+          curl -H "Content-Type: application/json" -X POST -d '{
+            "embeds": [{
+              "title": "Deploy Process Finished",
+              "color": '$COLOR',
+              "fields": [
+                {
+                  "name": "Status",
+                  "value": "`${{ job.status }}`",
+                  "inline": true
+                },
+                {
+                  "name": "Branch",
+                  "value": "`${{ github.ref_name }}`",
+                  "inline": true
+                },
+                {
+                  "name": "Triggered by",
+                  "value": "`${{ github.actor }}`",
+                  "inline": true
+                }
+              ]
+            }]
+          }' ${{ secrets.DISCORD_WEBHOOK_URL }}
