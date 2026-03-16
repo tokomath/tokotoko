@@ -102,7 +102,7 @@ export function TeacherClassCards({classes} : props) {
             <TeacherGuard>
                 <Grid container spacing={2}>
                     {classes.map((c) => (
-                        <Grid item xs={12} sm={6} md={3} key={c.id}>
+                        <Grid size={{xs:12,sm:6,md:3}}key={c.id}>
                             <ClassCards key={c.id} classData={c} />
                         </Grid>
                     ))}

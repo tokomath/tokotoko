@@ -97,7 +97,7 @@ function ClassCard({ classData }: ClassCardProp) {
   });
 
   return (
-    <Grid item xs={12} sm={6} md={3}>
+    <Grid size={{xs:12, sm:6, md:3}}>
       <Card>
         <CardActionArea onClick={(e) => setAnchorEl(e.currentTarget)}>
           <CardContent>

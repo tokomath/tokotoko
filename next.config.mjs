@@ -1,20 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    modularizeImports: {
-        '@mui/material': {
-            transform: '@mui/material/{{member}}',
-        },
-        '@mui/icons-material': {
-            transform: '@mui/icons-material/{{member}}',
-        },
+
+  turbopack: {
+    rules: {
+      '.yaml': { as: 'string', loaders: ['raw-loader'] },
+      '.yml': { as: 'string', loaders: ['raw-loader'] },
     },
-    webpack: (config) => {
+  },
+
+  experimental: {
+    optimizePackageImports: [
+      '@mui/material',
+      '@mui/icons-material'
+    ],
+  },
+
+  webpack: (config) => {
     config.module.rules.push({
       test: /\.y?aml$/,
       type: 'asset/source',
-    })
-    return config
-  }
+    });
+    return config;
+  },
 };
 
 export default nextConfig;

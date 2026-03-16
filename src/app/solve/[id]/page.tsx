@@ -56,7 +56,6 @@ export default function Page({ params }: { params: Promise<{id:number}>}) {
   const testId = use(params).id;
   const { user, isSignedIn } = useUser();
   
-  /* TODO: next-authからの移行 */
   let session = {
     user: {
       name: user?.firstName + " " + user?.lastName || "",
