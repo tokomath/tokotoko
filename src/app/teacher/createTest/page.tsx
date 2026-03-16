@@ -525,7 +525,7 @@ const MetaDataPage = ({
           <CardContent>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
+                <Grid size={{xs:12,md:6}}>
                   <DateTimePicker
                     label={msg.START_DATE}
                     sx={{ width: '100%' }}
@@ -536,7 +536,7 @@ const MetaDataPage = ({
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid size={{xs:12, md:6}}>
                   <DateTimePicker
                     label={msg.END_DATE}
                     sx={{ width: '100%' }}
@@ -547,7 +547,7 @@ const MetaDataPage = ({
                     }}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={{xs:12}}>
                   {dateWarning()}
                 </Grid>
               </Grid>
@@ -653,7 +653,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
         <Divider />
         <CardContent>
           <Grid container spacing={3} alignItems="stretch">
-            <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
               <TextField
                 label={msg.SECTION_SUMMARY_LABEL}
                 fullWidth
@@ -670,7 +670,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
               <Paper
                 variant="outlined"
                 sx={{
@@ -781,7 +781,7 @@ const QuestionPage = ({
       />
       <CardContent>
         <Grid container spacing={3} alignItems="stretch">
-          <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
             <TextField
               label={msg.QUESTION_TEXT_LABEL}
               fullWidth
@@ -798,7 +798,7 @@ const QuestionPage = ({
               }}
             />
           </Grid>
-          <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
             <Paper
               variant="outlined"
               sx={{
@@ -820,11 +820,11 @@ const QuestionPage = ({
             </Paper>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{xs:12}}>
             <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">{msg.MEDIA_ATTACHMENT}</Typography></Divider>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{xs:12}}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
               <Autocomplete
                 disablePortal
@@ -916,11 +916,11 @@ const QuestionPage = ({
             )}
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{xs:12}}>
             <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">{msg.ANSWER_KEY}</Typography></Divider>
           </Grid>
 
-          <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
             <TextField
               label={msg.ANSWER_FORMULA_LABEL}
               fullWidth
@@ -930,7 +930,7 @@ const QuestionPage = ({
               sx={{ flexGrow: 1 }}
             />
           </Grid>
-          <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
             <Paper
               variant="outlined"
               sx={{

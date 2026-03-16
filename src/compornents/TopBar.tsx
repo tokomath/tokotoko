@@ -1,57 +1,61 @@
 "use client"
+
 import { AccountCircle, ExitToAppSharp } from "@mui/icons-material";
 import { AppBar, Button, Toolbar, Typography, Paper, Box } from "@mui/material";
 import React from "react";
-import { useUser } from '@clerk/nextjs'
-import { useRouter } from "next/navigation"
-import {
-  ClerkProvider,
-  SignInButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs'
+import { useRouter } from "next/navigation";
+
+import { useUser, SignInButton, UserButton } from '@clerk/nextjs';
+
 interface QuestionProps {
-  page_name: string;
+  page_name?: string;
 }
 
 export default function TopBar({ page_name = "" }: QuestionProps) {
-  const { user, isSignedIn } = useUser();
+  const { user, isSignedIn, isLoaded } = useUser();
   const router = useRouter();
+
   const titleEvent = () => {
     router.push("/");
   }
+
   let name: string = "";
-  if (isSignedIn)
-    name = user?.firstName + " " + user?.lastName;
+  if (isSignedIn && user) {
+    name = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+  }
+
   return (
     <>
       <Toolbar style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
         <Typography variant="h6" component="div" width="calc(100%/3)" textAlign="left">
-          <Button variant="text" onClick={titleEvent} sx={{ color: "white", fontSize: "22px" }}>Formula Form</Button>
+          <Button variant="text" onClick={titleEvent} sx={{ color: "white", fontSize: "22px" }}>
+            Formula Form
+          </Button>
         </Typography>
         <Box width="calc(100%/3)" textAlign="center">
           <Typography variant="h4">{page_name}</Typography>
         </Box>
         <Box width="calc(100%/3)" textAlign="right" >
           <Box display="flex" justifyContent="flex-end" alignItems="center">
-            <Typography marginRight="5px" alignItems="center" sx={{ display: "flex", alignItems: "center" }}>
+            <Typography marginRight="5px" sx={{ display: "flex", alignItems: "center" }}>
               {name}
             </Typography>
-            <SignedOut>
+            
+            {isLoaded && !isSignedIn && (
               <div className="h-fit ml-4 bg-blue-500 w-fit rounded-md text-white text-sm font-semibold">
-                <UserButton />
+                <SignInButton />
               </div>
-            </SignedOut>
-            <SignedIn>
+            )}
+
+            {isLoaded && isSignedIn && (
               <div className="h-fit ml-4 w-fit">
                 <UserButton />
               </div>
-            </SignedIn>
+            )}
+            
           </Box>
         </Box>
       </Toolbar>
-    </ >
+    </>
   )
 }
-
