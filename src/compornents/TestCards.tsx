@@ -44,6 +44,10 @@ export function TestCards({testData}:props) {
             router.push("/teacher/grading/" + testData.id)
         }
 
+        const editTestButtonFunction = () => {
+            router.push("/teacher/createTest?testId=" + testData.id)
+        }
+
         return (
             <Card sx={{ height: "auto", textAlign: "left", }}>
                 <CardContent>
@@ -55,6 +59,7 @@ export function TestCards({testData}:props) {
                 <CardActions>
                     <Button size="large" onClick={solveButtonFunction}>{msg.SOLVE}</Button>
                     <Button size="large" onClick={gradingTestButtonFunction}>{msg.GRADING}</Button>
+                    <Button size="large" onClick={editTestButtonFunction}>{msg.EDIT}</Button>
                 </CardActions>
             </Card>
         );
