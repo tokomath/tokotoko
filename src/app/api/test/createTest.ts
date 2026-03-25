@@ -1,14 +1,7 @@
 "use server";
 
-import {
-  Class,
-  Prisma,
-  Question,
-  Section,
-  Test,
-} from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/app/api/prisma_client";
-
 import { TestFrame } from "@/app/api/test/testFrames";
 
 export const createTest = async (props: TestFrame) => {
@@ -17,6 +10,7 @@ export const createTest = async (props: TestFrame) => {
     summary: props.test.summary,
     startDate: props.test.startDate,
     endDate: props.test.endDate,
+    isPublished: props.test.isPublished,
     sections: {
       create: props.sections.map((section) => {
         return {
@@ -44,6 +38,7 @@ export const createTest = async (props: TestFrame) => {
       }),
     },
   };
-  console.log(JSON.stringify(test.sections));
-  await prisma.test.create({ data: test });
+  
+  const createdTest = await prisma.test.create({ data: test });
+  return createdTest.id;
 };

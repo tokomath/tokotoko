@@ -183,7 +183,8 @@ const Page = () => {
         await Promise.all(
           classes.map(async (c) => {
             const ts = await getTestByClass(c.id);
-            return ts.map<TestInterface>((t) => ({ test: t, class: c }));
+            const publishedTests = ts.filter((t) => t.isPublished);
+            return publishedTests.map<TestInterface>((t) => ({ test: t, class: c }));
           })
         )
       ).flat();

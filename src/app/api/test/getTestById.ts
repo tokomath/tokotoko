@@ -5,7 +5,9 @@ import { prisma } from "@/app/api/prisma_client"
 import { SectionFrame, TestFrame } from "./testFrames";
 
 export async function getTestById(testId: number, userid: string) {
-  // todo need to check user has access
+  const user = await prisma.user.findUnique({ where: { id: userid } });
+  if (!user) return null;
+
   const res = await prisma.test.findUnique({
     where: { id: testId },
     include: {
@@ -25,6 +27,14 @@ export async function getTestById(testId: number, userid: string) {
       return u.id === userid
     })
   });
-  if (ok) return res
-  else return null
+  
+  if (!ok) return null;
+
+
+  const isStudent = user.role === 1; 
+  if (isStudent && res.isPublished === false) {
+    return null; 
+  }
+
+  return res;
 }
