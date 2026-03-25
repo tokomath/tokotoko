@@ -30,6 +30,7 @@ model Test {
   summary     String
   startDate   DateTime     @default(now())
   endDate     DateTime     @default(now())
+  isPublished Boolean      @default(false)
   sections    Section[]
   submissions Submission[]
   classes     Class[]      @relation("ClassToTest")

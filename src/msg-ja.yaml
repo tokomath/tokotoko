@@ -45,6 +45,7 @@
     #/compornents/TestCards.tsx
     "SOLVE" : "解答",
     "GRADING" : "採点",
+    "EDIT" : "編集",
     #テスト作成ページ
   #/teacher/create/page.tsx
   "CREATE_NEW_TEST": "新規テスト作成",

@@ -24,6 +24,8 @@ import {
   Paper,
   Divider,
   Grid,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
 
@@ -42,6 +44,8 @@ import {
   SectionFrame,
 } from "@/app/api/test/testFrames";
 import { createTest } from "@/app/api/test/createTest";
+import { getTestById } from "@/app/api/test/getTestById";
+import { updateTest } from "@/app/api/test/updateTest";
 
 import { Test, Section, Question, Class } from "@prisma/client";
 import dayjs, { Dayjs } from "dayjs";
@@ -68,13 +72,17 @@ function ClientSearchParamWrapper() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const param_classId = searchParams.get("classId");
+  const param_testId = searchParams.get("testId");
 
   const [sections, setSections] = useState<SectionFrame[]>([]);
   const [testTitle, setTestTitle] = useState("");
   const [testSummary, setTestSummary] = useState("");
   const [value, setValue] = React.useState(0);
-  
+
   const [dataVersion, setDataVersion] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isCurrentPublished, setIsCurrentPublished] = useState(false);
+  const [currentTestId, setCurrentTestId] = useState<number | null>(param_testId ? Number(param_testId) : null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,16 +104,45 @@ function ClientSearchParamWrapper() {
   const teacherId = useUser().user?.id || "";
 
   useEffect(() => {
-    const fetchClasses = async () => {
+    const fetchClassesAndTest = async () => {
       if (teacherId) {
         const classes: Class[] = await getClassByUserId(teacherId);
         setClassList(classes);
-        const initialAssignedClass = classes.filter((c: Class) => c.id.toString() === param_classId);
-        setAssignedClass(initialAssignedClass);
+
+        if (param_testId) {
+          setIsEditing(true);
+          const existingTest = await getTestById(Number(param_testId), teacherId);
+          if (existingTest) {
+            setTestTitle(existingTest.title);
+            setTestSummary(existingTest.summary || "");
+            setStartDate(dayjs(existingTest.startDate));
+            setEndDate(dayjs(existingTest.endDate));
+            setIsCurrentPublished(existingTest.isPublished);
+
+            const mappedSections: SectionFrame[] = existingTest.sections.map((s: any) => ({
+              section: {
+                id: s.id,
+                testId: s.testId,
+                summary: s.summary,
+                number: s.number,
+              },
+              questions: s.questions
+            }));
+            setSections(mappedSections);
+            setAssignedClass(existingTest.classes);
+            setDataVersion(prev => prev + 1);
+          } else {
+            alert("指定されたテストが見つからないか、アクセス権限がありません。");
+            router.push('/mypage/teacher');
+          }
+        } else if (param_classId) {
+          const initialAssignedClass = classes.filter((c: Class) => c.id.toString() === param_classId);
+          setAssignedClass(initialAssignedClass);
+        }
       }
     };
-    fetchClasses();
-  }, [teacherId, param_classId]);
+    fetchClassesAndTest();
+  }, [teacherId, param_classId, param_testId]);
 
   const handleSaveJson = () => {
     const dataToSave = {
@@ -152,7 +189,7 @@ function ClientSearchParamWrapper() {
         }
 
         setDataVersion(prev => prev + 1);
-        setValue(0); 
+        setValue(0);
       } catch (error) {
         console.error("JSON Parse Error:", error);
         alert("ファイルの読み込みに失敗しました。形式を確認してください。");
@@ -172,6 +209,7 @@ function ClientSearchParamWrapper() {
     });
     setSections(newS);
   };
+
   const handleRemove = (index: number) => {
     if (sections.length === value) {
       setValue(value - 1);
@@ -181,8 +219,8 @@ function ClientSearchParamWrapper() {
     );
     const newS2: SectionFrame[] = newS.map((q: SectionFrame, i: number) => {
       const section: Section = {
-        id: 1,
-        testId: 1,
+        id: q.section.id || 1,
+        testId: q.section.testId || 1,
         summary: q.section.summary,
         number: i + 1,
       };
@@ -190,6 +228,7 @@ function ClientSearchParamWrapper() {
     });
     setSections(newS2);
   };
+
   const handleAdd = () => {
     const section: Section = {
       id: 1,
@@ -199,23 +238,45 @@ function ClientSearchParamWrapper() {
     };
     setSections([...sections].concat({ section: section, questions: [] }));
   };
-  
-  const createTestButtonFunction = async () => {
-    const newTest: Test = {
-      id: 1,
+
+
+  const saveTestButtonFunction = async (newPublishState?: boolean) => {
+    const publishStateToSave = newPublishState !== undefined ? newPublishState : isCurrentPublished;
+
+    const testData: Test = {
+      id: currentTestId ? currentTestId : 1,
       title: testTitle,
       summary: testSummary,
       startDate: startDate.toDate(),
       endDate: endDate.toDate(),
+      isPublished: publishStateToSave,
     };
-    const newTestFrame: TestFrame = {
-      test: newTest,
+
+    const testFrame: TestFrame = {
+      test: testData,
       sections: sections,
       classes: assignedClass,
     };
-    await createTest(newTestFrame);
-    alert(msg.SUCCESS_CREATE_TEST);
-    router.push('/mypage/teacher');
+
+    if (isEditing) {
+      await updateTest(testFrame);
+      alert("テストを保存しました");
+    } else {
+      const newId = await createTest(testFrame);
+      if (newId) {
+        setCurrentTestId(newId);
+        setIsEditing(true);
+        router.replace(window.location.pathname + "?testId=" + newId);
+      }
+      alert("テストを作成しました");
+    }
+  };
+
+
+  const handleTogglePublish = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newChecked = event.target.checked;
+    setIsCurrentPublished(newChecked);
+    await saveTestButtonFunction(newChecked);
   };
 
   const handleChange = (event: any, newValue: any) => {
@@ -249,7 +310,7 @@ function ClientSearchParamWrapper() {
         section.questions.map((question) => {
           if (question.insertType != "None" && question.insertContent == "") {
             missing_content = true;
-            missing_content_list += msg.SECTION_NUMBER+(count + 1).toString() + "-"+msg.QUESTION_NUMBER_PREFIX+question.number.toString() + ",";
+            missing_content_list += msg.SECTION_NUMBER + (count + 1).toString() + "-" + msg.QUESTION_NUMBER_PREFIX + question.number.toString() + ",";
           }
         })
       })
@@ -307,11 +368,19 @@ function ClientSearchParamWrapper() {
       }}
     >
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} sx={{ flexShrink: 0 }}>
-        <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
-          {msg.CREATE_NEW_TEST}
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
+            {isEditing ? "テストの編集" : msg.CREATE_NEW_TEST}
+          </Typography>
 
-        <Stack direction="row" spacing={2}>
+          <Chip
+            label={isCurrentPublished ? "公開中" : "非公開"}
+            color={isCurrentPublished ? "success" : "default"}
+            sx={{ verticalAlign: 'middle', fontWeight: 'normal' }}
+          />
+        </Stack>
+
+        <Stack direction="row" spacing={2} alignItems="center">
           <Button
             variant="outlined"
             startIcon={<FileUploadIcon />}
@@ -336,15 +405,28 @@ function ClientSearchParamWrapper() {
           </Button>
 
           <Button
-            variant={"contained"}
+            variant="contained"
             size="large"
             startIcon={<SaveIcon />}
-            onClick={createTestButtonFunction}
+            onClick={() => saveTestButtonFunction()}
             disabled={checkDataError()}
             sx={{ px: 4 }}
           >
-            {msg.PUBLISH_TEST}
+            保存
           </Button>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isCurrentPublished}
+                onChange={handleTogglePublish}
+                color="success"
+                disabled={checkDataError()}
+              />
+            }
+            label={isCurrentPublished ? "公開" : "非公開"}
+            sx={{ ml: 1 }}
+          />
         </Stack>
       </Stack>
 
@@ -362,7 +444,7 @@ function ClientSearchParamWrapper() {
           }}
         >
           <Tabs
-            key={`tabs-${dataVersion}`} 
+            key={`tabs-${dataVersion}`}
             value={value}
             onChange={handleChange}
             orientation="vertical"
@@ -525,7 +607,7 @@ const MetaDataPage = ({
           <CardContent>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Grid container spacing={3}>
-                <Grid size={{xs:12,md:6}}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <DateTimePicker
                     label={msg.START_DATE}
                     sx={{ width: '100%' }}
@@ -536,7 +618,7 @@ const MetaDataPage = ({
                     }}
                   />
                 </Grid>
-                <Grid size={{xs:12, md:6}}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <DateTimePicker
                     label={msg.END_DATE}
                     sx={{ width: '100%' }}
@@ -547,7 +629,7 @@ const MetaDataPage = ({
                     }}
                   />
                 </Grid>
-                <Grid size={{xs:12}}>
+                <Grid size={{ xs: 12 }}>
                   {dateWarning()}
                 </Grid>
               </Grid>
@@ -653,7 +735,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
         <Divider />
         <CardContent>
           <Grid container spacing={3} alignItems="stretch">
-            <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
               <TextField
                 label={msg.SECTION_SUMMARY_LABEL}
                 fullWidth
@@ -670,7 +752,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 }}
               />
             </Grid>
-            <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
               <Paper
                 variant="outlined"
                 sx={{
@@ -781,7 +863,7 @@ const QuestionPage = ({
       />
       <CardContent>
         <Grid container spacing={3} alignItems="stretch">
-          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <TextField
               label={msg.QUESTION_TEXT_LABEL}
               fullWidth
@@ -798,7 +880,7 @@ const QuestionPage = ({
               }}
             />
           </Grid>
-          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <Paper
               variant="outlined"
               sx={{
@@ -820,11 +902,11 @@ const QuestionPage = ({
             </Paper>
           </Grid>
 
-          <Grid size={{xs:12}}>
+          <Grid size={{ xs: 12 }}>
             <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">{msg.MEDIA_ATTACHMENT}</Typography></Divider>
           </Grid>
 
-          <Grid size={{xs:12}}>
+          <Grid size={{ xs: 12 }}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
               <Autocomplete
                 disablePortal
@@ -916,11 +998,11 @@ const QuestionPage = ({
             )}
           </Grid>
 
-          <Grid size={{xs:12}}>
+          <Grid size={{ xs: 12 }}>
             <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">{msg.ANSWER_KEY}</Typography></Divider>
           </Grid>
 
-          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <TextField
               label={msg.ANSWER_FORMULA_LABEL}
               fullWidth
@@ -930,7 +1012,7 @@ const QuestionPage = ({
               sx={{ flexGrow: 1 }}
             />
           </Grid>
-          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <Paper
               variant="outlined"
               sx={{

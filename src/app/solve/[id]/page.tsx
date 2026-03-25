@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, use} from "react";
+import React, { useEffect, useState, use } from "react";
 import {
   Box,
   Button,
@@ -50,12 +50,12 @@ function a11yProps(index: number) {
   };
 }
 
-export default function Page({ params }: { params: Promise<{id:number}>}) {
+export default function Page({ params }: { params: Promise<{ id: number }> }) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
   const testId = use(params).id;
   const { user, isSignedIn } = useUser();
-  
+
   let session = {
     user: {
       name: user?.firstName + " " + user?.lastName || "",
@@ -92,7 +92,7 @@ export default function Page({ params }: { params: Promise<{id:number}>}) {
         </>
       )
     }
-  }else {
+  } else {
     return <>Cant open page</>
   }
 }
@@ -127,7 +127,7 @@ function Solve(
 
   useEffect(() => {
     const fetchForm = async () => {
-      const res = await getTestById(Number(id),(user != null && user != undefined) ? user.id : "" );
+      const res = await getTestById(Number(id), (user != null && user != undefined) ? user.id : "");
       if (res) {
         const test: TestFrame = {
           test: {
@@ -135,7 +135,8 @@ function Solve(
             title: res.title,
             summary: res.summary,
             startDate: res.startDate,
-            endDate: res.endDate
+            endDate: res.endDate,
+            isPublished: res.isPublished
           },
           sections: res.sections.map(
             (s) => {
@@ -159,7 +160,7 @@ function Solve(
         }
         setTestData(test)
       } else {
-        setTestData(null) // データが取得できなかったとき
+        setTestData(null)
       }
     };
 
