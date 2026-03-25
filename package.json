@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@clerk/backend": "^3.2.0",
+    "@clerk/localizations": "^4.2.3",
     "@clerk/nextjs": "^7.0.4",
     "@emotion/cache": "^11.11.0",
     "@emotion/react": "^11.11.4",
@@ -23,6 +24,7 @@
     "@mui/x-date-pickers": "^8.27.2",
     "@prisma/client": "^6.10.1",
     "dayjs": "^1.11.11",
+    "install": "^0.13.0",
     "js-yaml-loader": "^1.2.2",
     "nerdamer": "^1.1.13",
     "next": "^16.1.6",
