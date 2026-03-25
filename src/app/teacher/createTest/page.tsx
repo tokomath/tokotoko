@@ -24,6 +24,8 @@ import {
   Paper,
   Divider,
   Grid,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
 
@@ -76,9 +78,10 @@ function ClientSearchParamWrapper() {
   const [testTitle, setTestTitle] = useState("");
   const [testSummary, setTestSummary] = useState("");
   const [value, setValue] = React.useState(0);
-  
+
   const [dataVersion, setDataVersion] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+  const [isCurrentPublished, setIsCurrentPublished] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,7 +116,8 @@ function ClientSearchParamWrapper() {
             setTestSummary(existingTest.summary || "");
             setStartDate(dayjs(existingTest.startDate));
             setEndDate(dayjs(existingTest.endDate));
-            
+            setIsCurrentPublished(existingTest.isPublished);
+
             const mappedSections: SectionFrame[] = existingTest.sections.map((s: any) => ({
               section: {
                 id: s.id,
@@ -126,6 +130,9 @@ function ClientSearchParamWrapper() {
             setSections(mappedSections);
             setAssignedClass(existingTest.classes);
             setDataVersion(prev => prev + 1);
+          } else {
+            alert("指定されたテストが見つからないか、アクセス権限がありません。");
+            router.push('/mypage/teacher');
           }
         } else if (param_classId) {
           const initialAssignedClass = classes.filter((c: Class) => c.id.toString() === param_classId);
@@ -181,7 +188,7 @@ function ClientSearchParamWrapper() {
         }
 
         setDataVersion(prev => prev + 1);
-        setValue(0); 
+        setValue(0);
       } catch (error) {
         console.error("JSON Parse Error:", error);
         alert("ファイルの読み込みに失敗しました。形式を確認してください。");
@@ -201,7 +208,7 @@ function ClientSearchParamWrapper() {
     });
     setSections(newS);
   };
-  
+
   const handleRemove = (index: number) => {
     if (sections.length === value) {
       setValue(value - 1);
@@ -220,7 +227,7 @@ function ClientSearchParamWrapper() {
     });
     setSections(newS2);
   };
-  
+
   const handleAdd = () => {
     const section: Section = {
       id: 1,
@@ -230,15 +237,20 @@ function ClientSearchParamWrapper() {
     };
     setSections([...sections].concat({ section: section, questions: [] }));
   };
-  
-  const saveTestButtonFunction = async () => {
+
+
+  const saveTestButtonFunction = async (newPublishState?: boolean) => {
+    const publishStateToSave = newPublishState !== undefined ? newPublishState : isCurrentPublished;
+
     const testData: Test = {
       id: param_testId ? Number(param_testId) : 1,
       title: testTitle,
       summary: testSummary,
       startDate: startDate.toDate(),
       endDate: endDate.toDate(),
+      isPublished: publishStateToSave,
     };
+
     const testFrame: TestFrame = {
       test: testData,
       sections: sections,
@@ -247,12 +259,17 @@ function ClientSearchParamWrapper() {
 
     if (isEditing) {
       await updateTest(testFrame);
-      alert("テストを更新しました");
     } else {
       await createTest(testFrame);
-      alert(msg.SUCCESS_CREATE_TEST);
+      alert("テストを作成しました");
     }
-    router.push('/mypage/teacher');
+
+
+  };
+  const handleTogglePublish = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newChecked = event.target.checked;
+    setIsCurrentPublished(newChecked);
+    await saveTestButtonFunction(newChecked);
   };
 
   const handleChange = (event: any, newValue: any) => {
@@ -286,7 +303,7 @@ function ClientSearchParamWrapper() {
         section.questions.map((question) => {
           if (question.insertType != "None" && question.insertContent == "") {
             missing_content = true;
-            missing_content_list += msg.SECTION_NUMBER+(count + 1).toString() + "-"+msg.QUESTION_NUMBER_PREFIX+question.number.toString() + ",";
+            missing_content_list += msg.SECTION_NUMBER + (count + 1).toString() + "-" + msg.QUESTION_NUMBER_PREFIX + question.number.toString() + ",";
           }
         })
       })
@@ -344,11 +361,19 @@ function ClientSearchParamWrapper() {
       }}
     >
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} sx={{ flexShrink: 0 }}>
-        <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
-          {isEditing ? "テストの編集" : msg.CREATE_NEW_TEST}
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
+            {isEditing ? "テストの編集" : msg.CREATE_NEW_TEST}
+          </Typography>
 
-        <Stack direction="row" spacing={2}>
+          <Chip
+            label={isCurrentPublished ? "公開中" : "非公開"}
+            color={isCurrentPublished ? "success" : "default"}
+            sx={{ verticalAlign: 'middle', fontWeight: 'normal' }}
+          />
+        </Stack>
+
+        <Stack direction="row" spacing={2} alignItems="center">
           <Button
             variant="outlined"
             startIcon={<FileUploadIcon />}
@@ -373,15 +398,28 @@ function ClientSearchParamWrapper() {
           </Button>
 
           <Button
-            variant={"contained"}
+            variant="contained"
             size="large"
             startIcon={<SaveIcon />}
-            onClick={saveTestButtonFunction}
+            onClick={() => saveTestButtonFunction()}
             disabled={checkDataError()}
             sx={{ px: 4 }}
           >
-            {isEditing ? "テストを更新" : msg.PUBLISH_TEST}
+            保存
           </Button>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isCurrentPublished}
+                onChange={handleTogglePublish}
+                color="success"
+                disabled={checkDataError()}
+              />
+            }
+            label={isCurrentPublished ? "公開" : "非公開"}
+            sx={{ ml: 1 }}
+          />
         </Stack>
       </Stack>
 
@@ -399,7 +437,7 @@ function ClientSearchParamWrapper() {
           }}
         >
           <Tabs
-            key={`tabs-${dataVersion}`} 
+            key={`tabs-${dataVersion}`}
             value={value}
             onChange={handleChange}
             orientation="vertical"
@@ -562,7 +600,7 @@ const MetaDataPage = ({
           <CardContent>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Grid container spacing={3}>
-                <Grid size={{xs:12,md:6}}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <DateTimePicker
                     label={msg.START_DATE}
                     sx={{ width: '100%' }}
@@ -573,7 +611,7 @@ const MetaDataPage = ({
                     }}
                   />
                 </Grid>
-                <Grid size={{xs:12, md:6}}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <DateTimePicker
                     label={msg.END_DATE}
                     sx={{ width: '100%' }}
@@ -584,7 +622,7 @@ const MetaDataPage = ({
                     }}
                   />
                 </Grid>
-                <Grid size={{xs:12}}>
+                <Grid size={{ xs: 12 }}>
                   {dateWarning()}
                 </Grid>
               </Grid>
@@ -690,7 +728,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
         <Divider />
         <CardContent>
           <Grid container spacing={3} alignItems="stretch">
-            <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
               <TextField
                 label={msg.SECTION_SUMMARY_LABEL}
                 fullWidth
@@ -707,7 +745,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 }}
               />
             </Grid>
-            <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
               <Paper
                 variant="outlined"
                 sx={{
@@ -818,7 +856,7 @@ const QuestionPage = ({
       />
       <CardContent>
         <Grid container spacing={3} alignItems="stretch">
-          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <TextField
               label={msg.QUESTION_TEXT_LABEL}
               fullWidth
@@ -835,7 +873,7 @@ const QuestionPage = ({
               }}
             />
           </Grid>
-          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <Paper
               variant="outlined"
               sx={{
@@ -857,11 +895,11 @@ const QuestionPage = ({
             </Paper>
           </Grid>
 
-          <Grid size={{xs:12}}>
+          <Grid size={{ xs: 12 }}>
             <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">{msg.MEDIA_ATTACHMENT}</Typography></Divider>
           </Grid>
 
-          <Grid size={{xs:12}}>
+          <Grid size={{ xs: 12 }}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
               <Autocomplete
                 disablePortal
@@ -953,11 +991,11 @@ const QuestionPage = ({
             )}
           </Grid>
 
-          <Grid size={{xs:12}}>
+          <Grid size={{ xs: 12 }}>
             <Divider sx={{ my: 1 }}><Typography variant="caption" color="text.secondary">{msg.ANSWER_KEY}</Typography></Divider>
           </Grid>
 
-          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <TextField
               label={msg.ANSWER_FORMULA_LABEL}
               fullWidth
@@ -967,7 +1005,7 @@ const QuestionPage = ({
               sx={{ flexGrow: 1 }}
             />
           </Grid>
-          <Grid size={{xs:12, md:6}} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <Paper
               variant="outlined"
               sx={{

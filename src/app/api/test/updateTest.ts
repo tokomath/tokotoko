@@ -14,6 +14,7 @@ export const updateTest = async (props: TestFrame) => {
       summary: props.test.summary,
       startDate: props.test.startDate,
       endDate: props.test.endDate,
+      isPublished: props.test.isPublished,
       classes: {
         set: [],
         connect: props.classes.map((i) => ({ id: i.id })),

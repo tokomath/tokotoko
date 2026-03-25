@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useMemo, useCallback, use } from "react";
-import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem } from "@mui/material";
+import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip } from "@mui/material";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
 
@@ -188,11 +188,16 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
     const fetchTest = async () => {
       const test_res = await getTestById(Number(testid), String(user.id));
-      setTest(test_res || null);
+      if (test_res) {
+        setTest(test_res);
+      } else {
+        alert("指定されたテストが見つからないか、アクセス権限がありません。");
+        router.push('/teacher');
+      }
     };
 
     fetchTest();
-  }, [testid, isSignedIn, user?.id]);
+  }, [testid, isSignedIn, user?.id, router]);
 
   useEffect(() => {
     if (Test_ && Test_.classes?.length > 0 && classId === null) {
@@ -206,7 +211,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     if (!testid || classId === null || !user?.id || !Test_) return;
 
     const fetchSubmissions = async () => {
-      try { 
+      try {
         const foundClassIndex = Test_.classes.findIndex((a_class: Class) => a_class.id == classId);
 
         if (foundClassIndex === -1) {
@@ -230,7 +235,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           setSubmissionData([]);
           setPoints({});
           setSubmissionIndex({});
-          return; 
+          return;
         }
 
         const newSubmissionData: SubmissionWithRelations[] = [];
@@ -259,7 +264,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         setPoints(newPoints);
         setSubmissionIndex(newSubmissionIndex);
 
-      } catch (error) { 
+      } catch (error) {
         console.error("Failed to fetch submissions:", error);
         setSubmissionData([]);
         setPoints({});
@@ -436,6 +441,13 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
             <Box width="100%">
               <Typography variant="h4" sx={{ ml: 2, mt: 2 }} width="100%">
                 {Test_?.title}
+                {Test_ && (
+                  <Chip
+                    label={Test_.isPublished ? "公開中" : "下書き"}
+                    color={Test_.isPublished ? "success" : "default"}
+                    sx={{ ml: 2, verticalAlign: 'middle', fontWeight: 'normal' }}
+                  />
+                )}
               </Typography>
               <hr />
               <Typography variant="h6" sx={{ ml: 2 }}>
