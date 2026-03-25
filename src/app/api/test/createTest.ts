@@ -38,5 +38,7 @@ export const createTest = async (props: TestFrame) => {
       }),
     },
   };
-  await prisma.test.create({ data: test });
+  
+  const createdTest = await prisma.test.create({ data: test });
+  return createdTest.id;
 };

@@ -82,6 +82,7 @@ function ClientSearchParamWrapper() {
   const [dataVersion, setDataVersion] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [isCurrentPublished, setIsCurrentPublished] = useState(false);
+  const [currentTestId, setCurrentTestId] = useState<number | null>(param_testId ? Number(param_testId) : null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -243,7 +244,7 @@ function ClientSearchParamWrapper() {
     const publishStateToSave = newPublishState !== undefined ? newPublishState : isCurrentPublished;
 
     const testData: Test = {
-      id: param_testId ? Number(param_testId) : 1,
+      id: currentTestId ? currentTestId : 1,
       title: testTitle,
       summary: testSummary,
       startDate: startDate.toDate(),
@@ -259,13 +260,19 @@ function ClientSearchParamWrapper() {
 
     if (isEditing) {
       await updateTest(testFrame);
+      alert("テストを保存しました");
     } else {
-      await createTest(testFrame);
+      const newId = await createTest(testFrame);
+      if (newId) {
+        setCurrentTestId(newId);
+        setIsEditing(true);
+        router.replace(window.location.pathname + "?testId=" + newId);
+      }
       alert("テストを作成しました");
     }
-
-
   };
+
+
   const handleTogglePublish = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
     setIsCurrentPublished(newChecked);
