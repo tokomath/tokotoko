@@ -42,6 +42,8 @@ import {
   SectionFrame,
 } from "@/app/api/test/testFrames";
 import { createTest } from "@/app/api/test/createTest";
+import { getTestById } from "@/app/api/test/getTestById";
+import { updateTest } from "@/app/api/test/updateTest";
 
 import { Test, Section, Question, Class } from "@prisma/client";
 import dayjs, { Dayjs } from "dayjs";
@@ -68,6 +70,7 @@ function ClientSearchParamWrapper() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const param_classId = searchParams.get("classId");
+  const param_testId = searchParams.get("testId");
 
   const [sections, setSections] = useState<SectionFrame[]>([]);
   const [testTitle, setTestTitle] = useState("");
@@ -75,6 +78,7 @@ function ClientSearchParamWrapper() {
   const [value, setValue] = React.useState(0);
   
   const [dataVersion, setDataVersion] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,16 +100,41 @@ function ClientSearchParamWrapper() {
   const teacherId = useUser().user?.id || "";
 
   useEffect(() => {
-    const fetchClasses = async () => {
+    const fetchClassesAndTest = async () => {
       if (teacherId) {
         const classes: Class[] = await getClassByUserId(teacherId);
         setClassList(classes);
-        const initialAssignedClass = classes.filter((c: Class) => c.id.toString() === param_classId);
-        setAssignedClass(initialAssignedClass);
+
+        if (param_testId) {
+          setIsEditing(true);
+          const existingTest = await getTestById(Number(param_testId), teacherId);
+          if (existingTest) {
+            setTestTitle(existingTest.title);
+            setTestSummary(existingTest.summary || "");
+            setStartDate(dayjs(existingTest.startDate));
+            setEndDate(dayjs(existingTest.endDate));
+            
+            const mappedSections: SectionFrame[] = existingTest.sections.map((s: any) => ({
+              section: {
+                id: s.id,
+                testId: s.testId,
+                summary: s.summary,
+                number: s.number,
+              },
+              questions: s.questions
+            }));
+            setSections(mappedSections);
+            setAssignedClass(existingTest.classes);
+            setDataVersion(prev => prev + 1);
+          }
+        } else if (param_classId) {
+          const initialAssignedClass = classes.filter((c: Class) => c.id.toString() === param_classId);
+          setAssignedClass(initialAssignedClass);
+        }
       }
     };
-    fetchClasses();
-  }, [teacherId, param_classId]);
+    fetchClassesAndTest();
+  }, [teacherId, param_classId, param_testId]);
 
   const handleSaveJson = () => {
     const dataToSave = {
@@ -172,6 +201,7 @@ function ClientSearchParamWrapper() {
     });
     setSections(newS);
   };
+  
   const handleRemove = (index: number) => {
     if (sections.length === value) {
       setValue(value - 1);
@@ -181,8 +211,8 @@ function ClientSearchParamWrapper() {
     );
     const newS2: SectionFrame[] = newS.map((q: SectionFrame, i: number) => {
       const section: Section = {
-        id: 1,
-        testId: 1,
+        id: q.section.id || 1,
+        testId: q.section.testId || 1,
         summary: q.section.summary,
         number: i + 1,
       };
@@ -190,6 +220,7 @@ function ClientSearchParamWrapper() {
     });
     setSections(newS2);
   };
+  
   const handleAdd = () => {
     const section: Section = {
       id: 1,
@@ -200,21 +231,27 @@ function ClientSearchParamWrapper() {
     setSections([...sections].concat({ section: section, questions: [] }));
   };
   
-  const createTestButtonFunction = async () => {
-    const newTest: Test = {
-      id: 1,
+  const saveTestButtonFunction = async () => {
+    const testData: Test = {
+      id: param_testId ? Number(param_testId) : 1,
       title: testTitle,
       summary: testSummary,
       startDate: startDate.toDate(),
       endDate: endDate.toDate(),
     };
-    const newTestFrame: TestFrame = {
-      test: newTest,
+    const testFrame: TestFrame = {
+      test: testData,
       sections: sections,
       classes: assignedClass,
     };
-    await createTest(newTestFrame);
-    alert(msg.SUCCESS_CREATE_TEST);
+
+    if (isEditing) {
+      await updateTest(testFrame);
+      alert("テストを更新しました");
+    } else {
+      await createTest(testFrame);
+      alert(msg.SUCCESS_CREATE_TEST);
+    }
     router.push('/mypage/teacher');
   };
 
@@ -308,7 +345,7 @@ function ClientSearchParamWrapper() {
     >
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} sx={{ flexShrink: 0 }}>
         <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
-          {msg.CREATE_NEW_TEST}
+          {isEditing ? "テストの編集" : msg.CREATE_NEW_TEST}
         </Typography>
 
         <Stack direction="row" spacing={2}>
@@ -339,11 +376,11 @@ function ClientSearchParamWrapper() {
             variant={"contained"}
             size="large"
             startIcon={<SaveIcon />}
-            onClick={createTestButtonFunction}
+            onClick={saveTestButtonFunction}
             disabled={checkDataError()}
             sx={{ px: 4 }}
           >
-            {msg.PUBLISH_TEST}
+            {isEditing ? "テストを更新" : msg.PUBLISH_TEST}
           </Button>
         </Stack>
       </Stack>
