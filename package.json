@@ -22,7 +22,7 @@
     "@mui/material-nextjs": "^7.3.9",
     "@mui/x-data-grid": "^8.27.5",
     "@mui/x-date-pickers": "^8.27.2",
-    "@prisma/client": "^6.10.1",
+    "@prisma/client": "^7.5.0",
     "dayjs": "^1.11.11",
     "install": "^0.13.0",
     "js-yaml-loader": "^1.2.2",
@@ -54,7 +54,7 @@
     "@types/react-katex": "^3.0.4",
     "eslint": "^8",
     "eslint-config-next": "14.2.2",
-    "prisma": "^5.12.1",
+    "prisma": "^7.5.0",
     "raw-loader": "^4.0.2",
     "typescript": "^5"
   }
