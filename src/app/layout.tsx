@@ -1,5 +1,6 @@
 import './globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
+import { jaJP } from "@clerk/localizations";
 import type { ReactNode } from 'react'
 import { Geist, Geist_Mono } from 'next/font/google'
 import TopBar from '@/compornents/TopBar'
@@ -11,7 +12,7 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin']
 const HEADER_HEIGHT = 64;
 
 const RootLayout = ({ children }: { children: ReactNode }) => (
-  <ClerkProvider>
+  <ClerkProvider localization={jaJP}>
     <html lang="ja" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body
         style={{
