@@ -15,37 +15,7 @@ export interface DeleteTestProps {
 }
 
 export const removeTest = async (props: DeleteTestProps) => {
-  await prisma.section
-    .findMany({
-      where: {
-        testId: props.id,
-      },
-      select: {
-        id: true,
-      },
-    })
-    .then(async (section) => {
-      section.map(async () => {
-        return await prisma.question
-          .deleteMany({
-            where: {
-              sectionId: {
-                in: section.map((j) => {
-                  return j.id;
-                }),
-              },
-            },
-          }).then(async () => {
-            prisma.section.deleteMany({
-              where: {
-                testId: props.id,
-              },
-            }).then(async () => {
-              prisma.test.deleteMany({
-                where: { id: props.id },
-              });
-            });
-          })
-      })
-    })
-}
+  await prisma.test.delete({
+    where: { id: props.id },
+  });
+};

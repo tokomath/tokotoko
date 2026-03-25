@@ -443,7 +443,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                 {Test_?.title}
                 {Test_ && (
                   <Chip
-                    label={Test_.isPublished ? "公開中" : "下書き"}
+                    label={Test_.isPublished ? "公開中" : "非公開"}
                     color={Test_.isPublished ? "success" : "default"}
                     sx={{ ml: 2, verticalAlign: 'middle', fontWeight: 'normal' }}
                   />
