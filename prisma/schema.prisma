@@ -11,6 +11,7 @@ datasource db {
 model Class {
   id    String @id @unique
   name  String
+  icon  String?
   tests Test[] @relation("ClassToTest")
   users User[] @relation("ClassToUser")
 }

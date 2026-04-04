@@ -12,6 +12,7 @@ import {
   CardActionArea,
   CardContent,
   Popover,
+  Avatar,
 } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import ClassIcon from "@mui/icons-material/Class";
@@ -31,6 +32,15 @@ import { msg } from "@/msg-ja";
 
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;
+
+const stringToBrightColor = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i += 1) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 80%, 65%)`;
+};
 
 interface TestInterface {
   test: Test;
@@ -94,11 +104,25 @@ function ClassCard({ classData }: ClassCardProp) {
   });
 
   return (
-    <Grid size={{xs:12, sm:6, md:3}}>
+    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
       <Card>
         <CardActionArea onClick={(e) => setAnchorEl(e.currentTarget)}>
           <CardContent>
-            <Typography variant="h5">{classData.name}</Typography>
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <Avatar
+                src={classData.icon || undefined}
+                variant="rounded"
+                sx={{
+                  width: 56,
+                  height: 56,
+                  bgcolor: !classData.icon && classData.name ? stringToBrightColor(classData.name) : "#e0e0e0",
+                  fontSize: "1.5rem",
+                }}
+              >
+                {!classData.icon && classData.name ? classData.name.charAt(0).toUpperCase() : ""}
+              </Avatar>
+              <Typography variant="h5">{classData.name}</Typography>
+            </Box>
             <>{function () {
               let comp: JSX.Element[] = [];
               for (let i = 0; i < 3; i++) {

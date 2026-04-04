@@ -25,5 +25,8 @@ export const getClassByClassId = async (classId: string) => {
     where: {
       id: classId,
     },
+    include: {
+      users: true,
+    },
   });
 }

@@ -11,7 +11,7 @@ export const addUserToClass = async (classFrame: ClassFrame) => {
     where: { id: classData.id },
     data: {
       users: {
-        connect: user.map((t) => ({ id: t.id })),
+        set: user.map((t) => ({ id: t.id })),
       },
     },
   });
@@ -27,11 +27,9 @@ export const joinUserToClass = async (classId: string, userId: string): Promise<
         },
       },
     });
-    // 処理が成功した場合
     console.log(`Successfully connected user ${userId} to class ${classId}`);
     return true;
   } catch (error) {
-    // 処理が失敗した場合
     console.error(`Failed to connect user ${userId} to class ${classId}:`, error);
     return false;
   }
