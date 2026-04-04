@@ -25,9 +25,10 @@ import {
   Avatar,
   Stack,
   Tooltip,
-  Paper
+  Paper,
+  Snackbar
 } from "@mui/material";
-import { Clear, Upload, ContentCopy, QrCode2 } from "@mui/icons-material";
+import { Clear, Upload, ContentCopy } from "@mui/icons-material";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TeacherGuard } from "@/lib/guard";
 import { msg } from "@/msg-ja";
@@ -47,6 +48,7 @@ export default function DualRoleUserSelectors() {
   const [className, setClassName] = useState<string>("");
   const [icon, setIcon] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -167,7 +169,11 @@ export default function DualRoleUserSelectors() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert(msg.COPIED);
+    setSnackbarOpen(true);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -180,96 +186,104 @@ export default function DualRoleUserSelectors() {
         <Card variant="outlined">
           <CardContent>
             <Typography variant="h6" gutterBottom>{msg.CLASS_INFO}</Typography>
-            <Stack direction="row" spacing={3} alignItems="flex-start">
-              <Box position="relative">
-                <Avatar
-                  src={icon || undefined}
-                  sx={{
-                    width: 128,
-                    height: 128,
-                    bgcolor: !icon && className ? stringToBrightColor(className) : "#e0e0e0",
-                    fontSize: "3rem",
-                  }}
-                  variant="rounded"
-                >
-                  {!icon && className ? className.charAt(0).toUpperCase() : ""}
-                </Avatar>
-                {icon && (
-                  <IconButton
-                    size="small"
-                    onClick={handleRemoveIcon}
-                    sx={{ position: "absolute", top: -8, right: -8, bgcolor: "white", boxShadow: 1 }}
-                  >
-                    <Clear sx={{ color: "red", fontSize: 16 }} />
-                  </IconButton>
-                )}
-              </Box>
-              <Box display="flex" flexDirection="column" gap={2} flex={1}>
-                <TextField
-                  fullWidth
-                  value={className}
-                  label={msg.CLASS_NAME}
-                  onChange={(e) => setClassName(e.target.value)}
-                />
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    style={{ display: "none" }}
-                    onChange={handleImageUpload}
-                  />
-                  <Button
-                    variant="outlined"
-                    startIcon={<Upload />}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {msg.UPLOAD_ICON}
-                  </Button>
-
-                  {isEditMode && classId && (
-                    <Box display="flex" alignItems="center" bgcolor="#f5f5f5" px={2} py={0.5} borderRadius={1}>
-                      <Typography variant="body2" color="textSecondary" mr={1}>
-                        {msg.CLASS_ID}: {classId}
-                      </Typography>
-                      <IconButton size="small" onClick={() => copyToClipboard(classId)}>
-                        <ContentCopy fontSize="small" />
+            
+            <Stack direction={{ xs: "column", lg: "row" }} spacing={4}>
+              <Box flex={1}>
+                <Stack direction="row" spacing={3} alignItems="flex-start">
+                  <Box position="relative">
+                    <Avatar
+                      src={icon || undefined}
+                      sx={{
+                        width: 128,
+                        height: 128,
+                        bgcolor: !icon && className ? stringToBrightColor(className) : "#e0e0e0",
+                        fontSize: "3rem",
+                      }}
+                      variant="rounded"
+                    >
+                      {!icon && className ? className.charAt(0).toUpperCase() : ""}
+                    </Avatar>
+                    {icon && (
+                      <IconButton
+                        size="small"
+                        onClick={handleRemoveIcon}
+                        sx={{ position: "absolute", top: -8, right: -8, bgcolor: "white", boxShadow: 1 }}
+                      >
+                        <Clear sx={{ color: "red", fontSize: 16 }} />
                       </IconButton>
-                    </Box>
-                  )}
+                    )}
+                  </Box>
+                  <Box display="flex" flexDirection="column" gap={2} flex={1}>
+                    <TextField
+                      fullWidth
+                      value={className}
+                      label={msg.CLASS_NAME}
+                      onChange={(e) => setClassName(e.target.value)}
+                    />
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        onChange={handleImageUpload}
+                      />
+                      <Button
+                        variant="outlined"
+                        startIcon={<Upload />}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        {msg.UPLOAD_ICON}
+                      </Button>
+
+                      {isEditMode && classId && (
+                        <Box display="flex" alignItems="center" bgcolor="#f5f5f5" px={2} py={0.5} borderRadius={1}>
+                          <Typography variant="body2" color="textSecondary" mr={1}>
+                            {msg.CLASS_ID}: {classId}
+                          </Typography>
+                          <Tooltip title={msg.COPIED}>
+                            <IconButton size="small" onClick={() => copyToClipboard(classId)}>
+                              <ContentCopy fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      )}
+                    </Stack>
+                  </Box>
                 </Stack>
               </Box>
+
+              {isEditMode && classId && (
+                <Box flex={1} display="flex" flexDirection="column" justifyContent="center">
+                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                    {msg.INVITATION_QR}
+                  </Typography>
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }}>
+                    <Paper variant="outlined" sx={{ p: 1.5, display: 'inline-block' }}>
+                      <QRCodeCanvas value={joinUrl} size={100} />
+                    </Paper>
+                    <Box flex={1} width="100%">
+                      <Typography variant="caption" color="textSecondary" gutterBottom>
+                        {msg.INVITATION_URL}
+                      </Typography>
+                      <Box display="flex" alignItems="center" gap={1} bgcolor="#f5f5f5" p={1} borderRadius={1}>
+                        <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
+                          {joinUrl}
+                        </Typography>
+                        <Tooltip title={msg.COPY_URL}>
+                          <IconButton onClick={() => copyToClipboard(joinUrl)}>
+                            <ContentCopy fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                  </Stack>
+                </Box>
+              )}
             </Stack>
+
           </CardContent>
         </Card>
-
-        {isEditMode && classId && (
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h6" gutterBottom>{msg.INVITATION_QR}</Typography>
-              <Stack direction="row" spacing={4} alignItems="center">
-                <Paper variant="outlined" sx={{ p: 2, display: 'inline-block' }}>
-                  <QRCodeCanvas value={joinUrl} size={160} />
-                </Paper>
-                <Box flex={1}>
-                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                    {msg.INVITATION_URL}
-                  </Typography>
-                  <Box display="flex" alignItems="center" gap={1} bgcolor="#f5f5f5" p={1.5} borderRadius={1}>
-                    <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
-                      {joinUrl}
-                    </Typography>
-                    <Tooltip title={msg.COPY_URL}>
-                      <IconButton onClick={() => copyToClipboard(joinUrl)}>
-                        <ContentCopy />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        )}
 
         <Grid container spacing={3}>
           <Grid size={12}>
@@ -357,6 +371,14 @@ export default function DualRoleUserSelectors() {
           </Button>
         </Box>
       </Box>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        message={msg.COPIED}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </TeacherGuard>
   );
 }
