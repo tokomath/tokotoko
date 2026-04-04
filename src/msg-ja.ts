@@ -125,6 +125,8 @@ export const msg = {
     "TRUE_ANS" : "正答",
     "PREV_PART" : "前のパート",
     "NEXT_PART" : "次のパート",
+    "SCORE" : "点数",
+    "POINTS" : "点",
 
     // 解答ページ
     // /test/[id]/page.tsx

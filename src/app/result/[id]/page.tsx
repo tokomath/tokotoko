@@ -3,7 +3,6 @@ import React, { useEffect, useState, use } from "react";
 import {
   Box,
   Button,
-  Link,
   Paper,
   Tab,
   Tabs,
@@ -12,17 +11,11 @@ import {
 } from "@mui/material";
 import "katex/dist/katex.min.css";
 import Stack from "@mui/material/Stack";
-import Question from "@/compornents/Question";
-import SendIcon from "@mui/icons-material/Send";
 import Latex from "react-latex-next";
-import { SectionFrame, TestFrame } from "@/app/api/test/testFrames";
-import { getTestById } from "@/app/api/test/getTestById";
-import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
-import { Answer } from "@prisma/client";
-import { useUser } from '@clerk/nextjs'
-
+import { useUser } from '@clerk/nextjs';
+import { getSubmission } from "@/app/api/test/result";
+import InsertFrame from "@/compornents/InsertFrame";
 import { msg } from "@/msg-ja";
-
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -53,197 +46,66 @@ function a11yProps(index: number) {
 }
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
-  const { user, isSignedIn } = useUser();
+  const { user, isSignedIn, isLoaded } = useUser();
   const testId = use(params).id;
 
-  const [loading, setLoading] = useState(true);
-  const [alreadySubmit, setAlreadySubmit] = useState(true);
-
-  useEffect(() => {
-    const fetchSubmitStatus = async () => {
-      if (isSignedIn === true && user?.id) {
-        try {
-          const result = await isAlreadySubmit({ userId: user.id, testId: Number(testId) });
-          setAlreadySubmit(result);
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setLoading(false);
-        }
-      } else if (isSignedIn === false) {
-        setLoading(false);
-      }
-    };
-    fetchSubmitStatus();
-  }, [isSignedIn, user?.id, testId]);
-
-  if (loading || isSignedIn === undefined) {
-    return <>{msg.LOADING || "Loading..."}</>;
+  if (!isLoaded) {
+    return <>{msg.LOADING}</>;
   }
 
-  if (isSignedIn === true && user?.id) {
-    if (alreadySubmit) {
-      return <Completed id={testId} />;
-    } else {
-      const userName = user.firstName || user.lastName
-        ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
-        : "ユーザー";
-
-      return (
-        <Solve
-          id={testId}
-          username={userName}
-          setAlreadySubmit={() => setAlreadySubmit(true)}
-        />
-      );
-    }
+  if (isSignedIn && user?.id) {
+    return <Result id={testId} userid={user.id} />;
   }
 
   return <>{msg.CANT_OPEN_PAGE}</>;
 }
 
-function Completed({ id }: { id: string }) {
-  let url = "/result/" + id
-  return (
-    <Stack sx={{ margin: 2 }} textAlign={"center"} >
-      <Typography variant="h4" marginY={5}>{msg.SUBMISSION_COMPLETED}</Typography>
-      <Link href={url} fontSize={20} marginY={5}>{msg.CHECK_RESULTS}</Link>
-    </Stack >
-  )
-}
-
-function Solve(
-  { id,
-    username,
-    setAlreadySubmit
-  }: {
-    id: string,
-    username: string,
-    setAlreadySubmit: () => void
-  }) {
-  const { user, isSignedIn } = useUser();
-  const [testData, setTestData] = useState<TestFrame | null | undefined>(undefined);
-
-  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+function Result({ id, userid }: { id: string, userid: string }) {
+  const [data, setData] = useState<any | null | undefined>(undefined);
   const [partIndex, setPartIndex] = useState(0);
-
-  const [sendingStatus, setSendingStatus] = useState(false);
-
-  useEffect(() => {
-    const fetchForm = async () => {
-      const res = await getTestById(Number(id), (user != null && user != undefined) ? user.id : "");
-      if (res) {
-        const test: TestFrame = {
-          test: {
-            id: res.id,
-            title: res.title,
-            summary: res.summary,
-            startDate: res.startDate,
-            endDate: res.endDate,
-            isPublished: res.isPublished
-          },
-          sections: res.sections.map(
-            (s) => {
-              return {
-                section: { id: s.id, testId: s.testId, number: s.number, summary: s.summary },
-                questions: s.questions.map((q) => {
-                  return {
-                    id: q.id,
-                    sectionId: q.sectionId,
-                    number: q.number,
-                    question: q.question,
-                    insertType: q.insertType,
-                    insertContent: q.insertContent,
-                    answer: q.answer,
-                  }
-                })
-              }
-            }
-          ),
-          classes: res.classes,
-        }
-        setTestData(test)
-      } else {
-        setTestData(null)
-      }
-    };
-
-    fetchForm();
-  }, []);
-
-  const changeAnswer = (questionId: number, answer: string) => {
-    setAnswers((prevAnswers) => ({
-      ...prevAnswers,
-      [questionId]: answer,
-    }));
-  };
-
-  const handleSubmit = async () => {
-    setSendingStatus(true);
-
-    if (!testData) {
-      alert(msg.ERROR)
-      setSendingStatus(false);
-      return
-    }
-
-    const ans = { ...answers };
-    const answerList = testData.sections.map((section: SectionFrame) => {
-      return section.questions.map((question: any) => {
-        if (ans[question.id.toString()]) {
-          return { id: Number(question.id), text: ans[question.id.toString()] }
-        } else {
-          return { id: Number(question.id), text: "" }
-        }
-      })
-    }).flat()
-
-    let submitdata: submitProps = {
-      userId: user?.id || "",
-      testId: Number(id),
-      answerList: answerList as Answer[],
-    };
-
-    console.log(answerList)
-
-    const res = await submitTest(submitdata)
-      .then((res) => {
-        alert(msg.SENT);
-        setAlreadySubmit();
-      })
-      .catch((err) => {
-        alert(msg.SEND_FAILED + "\n");
-        alert(err)
-      });
-
-    setSendingStatus(false);
-  };
+  const [point, setPoint] = useState(0);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setPartIndex(newValue);
   };
 
   useEffect(() => {
-    if (testData) {
-      const initialAnswers: { [key: string]: string } = {};
-      testData.sections.forEach((section) => {
-        section.questions.forEach((question) => {
-          initialAnswers[question.id] = "";
+    const fetch = async () => {
+      const res = await getSubmission({ testId: Number(id), userid: userid });
+      if (res) {
+        setData(res);
+        let i = 0;
+        let p = 0;
+        let misaiten = false;
+        res.test.sections.forEach((sec: any) => {
+          sec.questions.forEach((q: any) => {
+            q["ans"] = res.answers[i];
+            if (res.answers[i].point >= 0) {
+              p += res.answers[i].point;
+            } else {
+              misaiten = true;
+            }
+            i += 1;
+          });
         });
-      });
-      setAnswers(initialAnswers);
-    }
-  }, [testData]);
+        if (misaiten) {
+          setPoint(-1);
+        } else {
+          setPoint(p);
+        }
+      } else {
+        setData(null);
+      }
+    };
+    fetch();
+  }, [id, userid]);
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [partIndex]);
-
-  if (testData === null) {
-    return <div>{msg.NO_TEST_FOUND}</div>
+  if (data === undefined) {
+    return <>{msg.LOADING}</>;
   }
-  if (testData === undefined) {
-    return <div>{msg.LOADING}</div>;
+
+  if (data === null) {
+    return <>{msg.NO_TEST_FOUND}</>;
   }
 
   return (
@@ -257,86 +119,74 @@ function Solve(
           alignItems="center"
           justifyContent="flex-end"
         >
-          <Link
-            href="https://katex.org/docs/supported.html"
-            target="_blank"
-            rel="noopener"
-            marginX={1}
-          >
-            KaTeXヘルプ
-          </Link>
           <Typography fontFamily="monospace" marginX={1}>
             {msg.FORM_ID}{id}
           </Typography>
         </Box>
-        <Box maxWidth={800} margin="auto">
+        <Box maxWidth={640} margin="auto">
           <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
             <Typography variant="h1" fontSize={30}>
-              {testData.test.title}
+              {data.test.title}
             </Typography>
-            <Typography>{testData.test.summary}</Typography>
+            <Typography>{data.test.summary}</Typography>
             <Typography>
-              {msg.START_DATE + ": " + testData.test.startDate.getFullYear() + "/" + (testData.test.startDate.getMonth() + 1) + "/" + testData.test.startDate.getDate() + " " +
-                testData.test.startDate.getHours() + ":" + testData.test.startDate.getMinutes() +
-                " (UTC+" + testData.test.startDate.getTimezoneOffset() / -60 + "h)"
-              }
-            </Typography>
-            <Typography>
-              {msg.END_DATE + ": " + testData.test.endDate.getFullYear() + "/" + (testData.test.endDate.getMonth() + 1) + "/" + testData.test.endDate.getDate() + " " +
-                testData.test.endDate.getHours() + ":" + testData.test.endDate.getMinutes() +
-                " (UTC+" + testData.test.endDate.getTimezoneOffset() / -60 + "h)"
-              }
+              {msg.START_DATE}:{new Date(data.test.startDate).toLocaleString()} → {msg.END_DATE}:{new Date(data.test.endDate).toLocaleString()}
             </Typography>
           </Stack>
         </Box>
       </Paper>
 
-      <Box maxWidth={800} margin="auto">
+      <Box maxWidth={640} margin="auto">
+        <Box alignContent="center" padding={2}>
+          {point === -1 ? (
+            <div>{msg.NOT_GRADED}</div>
+          ) : (
+            <div>{msg.SCORE}: {point} {msg.POINTS}</div>
+          )}
+        </Box>
         <Tabs
           value={partIndex}
           onChange={handleChange}
           aria-label="Tabs of each PART"
         >
-          {testData.sections.map((s, index) => (
+          {data.test.sections.map((section: any, index: number) => (
             <Tab
-              key={s.section.number}
-              label={`${msg.SECTION_NUMBER} ${s.section.number}`}
+              key={section.number}
+              label={`${msg.SECTION_NUMBER} ${section.number}`}
               {...a11yProps(index)}
             />
           ))}
         </Tabs>
-
-        {testData.sections.map((s, index) => (
+        {data.test.sections.map((section: any, i1: number) => (
           <CustomTabPanel
-            key={s.section.number}
+            key={section.number}
             value={partIndex}
-            index={index}
+            index={i1}
           >
-            <Paper
-              key={s.section.number}
-              sx={{ marginTop: 2, padding: 2 }}
-            >
+            <Box margin={2}>
               <Typography variant="h6">
-                {msg.SECTION_NUMBER} {s.section.number}
+                {msg.SECTION_NUMBER} {section.number}
               </Typography>
-              <Latex>{s.section.summary}</Latex>
-              {s.questions.map((question) => (
-                <React.Fragment key={question.id}>
-                  <Divider sx={{ my: 1 }} />
-                  <Question
-                    id={question.id.toString()}
-                    number={question.number.toString()}
-                    question={question.question}
-                    insertType={question.insertType}
-                    insertContent={question.insertContent}
-                    answer={answers[question.id]}
-                    changeAnswer={(answer) =>
-                      changeAnswer(question.id, answer)
-                    }
-                  />
-                </React.Fragment>
-              ))}
-            </Paper>
+              <Latex>{section.summary}</Latex>
+            </Box>
+            {section.questions.map((question: any) => {
+              return (
+                <Paper key={question.id} sx={{ marginTop: 2, padding: 2 }}>
+                  <React.Fragment key={question.id}>
+                    <Question
+                      id={question.id.toString()}
+                      number={question.number.toString()}
+                      question={question.question}
+                      myAns={question.ans.text}
+                      insertType={question.insertType}
+                      insertContent={question.insertContent}
+                      trueAns={question.answer}
+                      point={question.ans.point}
+                    />
+                  </React.Fragment>
+                </Paper>
+              );
+            })}
           </CustomTabPanel>
         ))}
 
@@ -350,13 +200,11 @@ function Solve(
           <Next
             index={partIndex}
             setIndex={setPartIndex}
-            maxIndex={testData.sections.length}
-            handleSubmit={handleSubmit}
-            sendingStatus={sendingStatus}
+            maxIndex={data.test.sections.length}
           />
         </Box>
       </Box>
-    </main >
+    </main>
   );
 }
 
@@ -377,27 +225,13 @@ function Next({
   index,
   setIndex,
   maxIndex,
-  handleSubmit,
-  sendingStatus
 }: {
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
   maxIndex: number;
-  handleSubmit: () => void;
-  sendingStatus: boolean;
 }) {
-  if (index === maxIndex - 1 && !sendingStatus) {
-    return (
-      <Button variant="contained" endIcon={<SendIcon />} onClick={handleSubmit}>
-        {msg.SEND}
-      </Button>
-    );
-  } else if (sendingStatus) {
-    return (
-      <Button disabled>
-        {msg.SENDING}
-      </Button>
-    )
+  if (index === maxIndex - 1) {
+    return <></>;
   }
 
   return (
@@ -408,5 +242,49 @@ function Next({
     >
       {msg.NEXT_PART}
     </Button>
+  );
+}
+
+function Question({ id, number, question, insertType, insertContent, myAns, trueAns, point }: any) {
+  return (
+    <Stack spacing={2}>
+      <Box display="flex" alignItems="center">
+        <Typography variant="h2" fontSize={17}>({number})</Typography>
+        <Box width="10px"></Box>
+        <Latex>{question}</Latex>
+      </Box>
+      {insertType !== "None" ? (
+        <>
+          <Divider />
+          <InsertFrame insertType={insertType} insertContent={insertContent} />
+        </>
+      ) : <></>}
+
+      <Divider />
+      <Box
+        display="flex"
+        minHeight={40}
+        alignItems="center"
+        paddingX={2}
+      >
+        <Latex>{myAns}</Latex>
+      </Box>
+      <Divider />
+      <Box
+        display="flex"
+        minHeight={40}
+        alignItems="center"
+        paddingX={2}
+      >
+        <Typography>{msg.TRUE_ANS}</Typography>
+        <Box minWidth={20} />
+        <Latex>{trueAns}</Latex>
+      </Box>
+      {point === -1 ? (
+        <div>{msg.NOT_GRADED}</div>
+      ) : (
+        <div>{msg.SCORE}: {point} {msg.POINTS}</div>
+      )}
+    </Stack>
   );
 }
