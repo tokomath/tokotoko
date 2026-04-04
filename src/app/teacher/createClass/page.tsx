@@ -28,6 +28,7 @@ import { Clear } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { TeacherGuard } from "@/lib/guard"
 
+import { msg } from "@/msg-ja";
 
 export default function DualRoleUserSelectors() {
   const [teachers, setTeachers] = useState<User[]>([]);
@@ -37,11 +38,11 @@ export default function DualRoleUserSelectors() {
 
   const createClassButtonFunction = () => {
     if (!className) {
-      alert("クラス名を入力してください。");
+      alert(msg.ERROR_NO_CLASS_NAME);
       return;
     }
     if (teachers.length === 0) {
-      alert("最低一人の教師を追加してください。");
+      alert(msg.ERROR_NO_TEACHER);
       return;
     }
     const newClass: Class = {
@@ -55,7 +56,7 @@ export default function DualRoleUserSelectors() {
     };
 
     createClass(data);
-    alert("Class Created");
+    alert(msg.CLASS_CREATED);
     router.push("/mypage"); // クラス作成後にマイページへリダイレクト
   };
 
@@ -81,18 +82,18 @@ export default function DualRoleUserSelectors() {
       <Box display="flex" flexDirection="column" gap={2} padding={2}>
         <TextField
           value={className}
-          label={"Class Name"}
+          label={msg.CLASS_NAME}
           onChange={(e) => {
             setClassName(e.target.value);
           }}
         />
         <Box display="flex" flexDirection="column" gap={2}>
-          <h3>学生検索</h3>
+          <h3>{msg.SEARCH_STUDENT}</h3>
           <UserSelector
             role={1}
             onAddUser={(user) => addUserToList(students, setStudents, user)}
           />
-          <h4>追加された学生</h4>
+          <h4>{msg.ADDED_STUDENTS}</h4>
           <ul>
             {students.map((user) => (
               <li key={user.email} style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -100,7 +101,7 @@ export default function DualRoleUserSelectors() {
                 <IconButton
                   onClick={() => removeUserFromList(students, setStudents, user.email)}
                   style={{ marginLeft: "auto", cursor: "pointer" }}
-                  aria-label={`Delete ${user.name}`}
+                  aria-label={`${msg.DELETE_USER} ${user.name}`}
                 >
                   <Clear sx={{ color: "red" }} />
                 </IconButton>
@@ -109,14 +110,13 @@ export default function DualRoleUserSelectors() {
           </ul>
         </Box>
 
-        {/* Role 1 */}
         <Box display={"flex"} flexDirection={"column"} gap={2}>
-          <h3>教師検索</h3>
+          <h3>{msg.SEARCH_TEACHER}</h3>
           <UserSelector
             role={0}
             onAddUser={(user) => addUserToList(teachers, setTeachers, user)}
           />
-          <h4>追加された教師一覧</h4>
+          <h4>{msg.ADDED_TEACHERS}</h4>
           <ul>
             {teachers.map((user) => (
               <li key={user.email} style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -124,7 +124,7 @@ export default function DualRoleUserSelectors() {
                 <IconButton
                   onClick={() => removeUserFromList(teachers, setTeachers, user.email)}
                   style={{ marginLeft: "auto", cursor: "pointer" }}
-                  aria-label={`Delete ${user.name}`}
+                  aria-label={`${msg.DELETE_USER} ${user.name}`}
                 >
                   <Clear sx={{ color: "red" }} />
                 </IconButton>
@@ -133,7 +133,7 @@ export default function DualRoleUserSelectors() {
           </ul>
         </Box>
         <Button variant={"contained"} onClick={createClassButtonFunction}>
-          クラスを作成
+          {msg.CREATE_CLASS}
         </Button>
       </Box>
     </TeacherGuard>

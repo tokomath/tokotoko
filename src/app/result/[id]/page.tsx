@@ -11,14 +11,11 @@ import {
 } from "@mui/material";
 import "katex/dist/katex.min.css";
 import Stack from "@mui/material/Stack";
-import SendIcon from "@mui/icons-material/Send";
-import { isAlreadySubmit } from "@/app/api/test/submit";
-import { getSubmission } from "@/app/api/test/result";
 import Latex from "react-latex-next";
-
-import TopBar from "@/compornents/TopBar";
+import { useUser } from '@clerk/nextjs';
+import { getSubmission } from "@/app/api/test/result";
 import InsertFrame from "@/compornents/InsertFrame";
-import { useUser } from '@clerk/nextjs'
+import { msg } from "@/msg-ja";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -49,40 +46,21 @@ function a11yProps(index: number) {
 }
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
-  const [loading, setLoading] = useState(true);
-  const [alreadySubmit, setAlreadySubmit] = useState(true);
-  const { user, isSignedIn } = useUser();
+  const { user, isSignedIn, isLoaded } = useUser();
   const testId = use(params).id;
-  let session = {
-    user: {
-      name: user?.firstName + " " + user?.lastName || "",
-      id: user?.id || ""
-    },
-    satus: isSignedIn
+
+  if (!isLoaded) {
+    return <>{msg.LOADING}</>;
   }
 
-  useEffect(() => {
-    const a = async () => {
-      if (session.satus && session.user.id) {
-        setAlreadySubmit(await isAlreadySubmit({ userId: session.user.id, testId: Number(testId) }))
-        setLoading(false);
-      }
-    }
-    a()
-  }, [session])
+  if (isSignedIn && user?.id) {
+    return <Result id={testId} userid={user.id} />;
+  }
 
-  if (!loading && session && session.user.name && alreadySubmit) {
-    return <>
-      <Result params={{ id: testId, userid: session.user.id }} />
-    </>
-  }
-  else {
-    return <>Cant open page</>
-  }
+  return <>{msg.CANT_OPEN_PAGE}</>;
 }
 
-function Result({ params }: { params: { id: string, userid: string } }) {
-  // undefined before init , null when unable to access form TODO
+function Result({ id, userid }: { id: string, userid: string }) {
   const [data, setData] = useState<any | null | undefined>(undefined);
   const [partIndex, setPartIndex] = useState(0);
   const [point, setPoint] = useState(0);
@@ -93,44 +71,45 @@ function Result({ params }: { params: { id: string, userid: string } }) {
 
   useEffect(() => {
     const fetch = async () => {
-      const data = await getSubmission({ testId: Number(params.id), userid: params.userid })
-      if (data) {
-        setData(data)
+      const res = await getSubmission({ testId: Number(id), userid: userid });
+      if (res) {
+        setData(res);
         let i = 0;
         let p = 0;
         let misaiten = false;
-        data.test.sections.forEach((sec) => {
-          sec.questions.forEach((q) => {
-            //@ts-ignore
-            q["ans"] = data.answers[i];
-            if (data.answers[i].point >= 0) {
-              p += data.answers[i].point;
+        res.test.sections.forEach((sec: any) => {
+          sec.questions.forEach((q: any) => {
+            q["ans"] = res.answers[i];
+            if (res.answers[i].point >= 0) {
+              p += res.answers[i].point;
             } else {
               misaiten = true;
             }
             i += 1;
-          })
-        })
+          });
+        });
         if (misaiten) {
-          setPoint(-1)
+          setPoint(-1);
         } else {
-          setPoint(p)
+          setPoint(p);
         }
-        console.log(data)
       } else {
-        setData(null)
+        setData(null);
       }
     };
     fetch();
-  }, []);
+  }, [id, userid]);
 
-  if (!data) {
-    return <>loading</>
+  if (data === undefined) {
+    return <>{msg.LOADING}</>;
+  }
+
+  if (data === null) {
+    return <>{msg.NO_TEST_FOUND}</>;
   }
 
   return (
     <main>
-      {/* ヘッダー部分 */}
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
         <Box
           paddingTop={1}
@@ -141,7 +120,7 @@ function Result({ params }: { params: { id: string, userid: string } }) {
           justifyContent="flex-end"
         >
           <Typography fontFamily="monospace" marginX={1}>
-            FormID:{params.id}
+            {msg.FORM_ID}{id}
           </Typography>
         </Box>
         <Box maxWidth={640} margin="auto">
@@ -151,19 +130,19 @@ function Result({ params }: { params: { id: string, userid: string } }) {
             </Typography>
             <Typography>{data.test.summary}</Typography>
             <Typography>
-              Start:{data.test.startDate.toString()} → Deadline:
-              {data.test.endDate.toString()}
+              {msg.START_DATE}:{new Date(data.test.startDate).toLocaleString()} → {msg.END_DATE}:{new Date(data.test.endDate).toLocaleString()}
             </Typography>
           </Stack>
         </Box>
       </Paper>
 
-      {/* 問題部分 */}
       <Box maxWidth={640} margin="auto">
         <Box alignContent="center" padding={2}>
-          {
-            point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + " points"}</div>
-          }
+          {point === -1 ? (
+            <div>{msg.NOT_GRADED}</div>
+          ) : (
+            <div>{msg.SCORE}: {point} {msg.POINTS}</div>
+          )}
         </Box>
         <Tabs
           value={partIndex}
@@ -173,7 +152,7 @@ function Result({ params }: { params: { id: string, userid: string } }) {
           {data.test.sections.map((section: any, index: number) => (
             <Tab
               key={section.number}
-              label={`Part ${section.number}`}
+              label={`${msg.SECTION_NUMBER} ${section.number}`}
               {...a11yProps(index)}
             />
           ))}
@@ -186,24 +165,27 @@ function Result({ params }: { params: { id: string, userid: string } }) {
           >
             <Box margin={2}>
               <Typography variant="h6">
-                PART {section.number}
+                {msg.SECTION_NUMBER} {section.number}
               </Typography>
               <Latex>{section.summary}</Latex>
             </Box>
             {section.questions.map((question: any) => {
-              return <Paper key={question.id} sx={{ marginTop: 2, padding: 2 }}><React.Fragment key={question.id}>
-                <Question
-                  id={question.id.toString()}
-                  number={question.number.toString()}
-                  question={question.question}
-                  myAns={question.ans.text}
-                  insertType={question.insertType}
-                  insertContent={question.insertContent}
-                  trueAns={question.answer}
-                  point={question.ans.point}
-                />
-              </React.Fragment>
-              </Paper>
+              return (
+                <Paper key={question.id} sx={{ marginTop: 2, padding: 2 }}>
+                  <React.Fragment key={question.id}>
+                    <Question
+                      id={question.id.toString()}
+                      number={question.number.toString()}
+                      question={question.question}
+                      myAns={question.ans.text}
+                      insertType={question.insertType}
+                      insertContent={question.insertContent}
+                      trueAns={question.answer}
+                      point={question.ans.point}
+                    />
+                  </React.Fragment>
+                </Paper>
+              );
             })}
           </CustomTabPanel>
         ))}
@@ -236,7 +218,7 @@ function Previous({
   if (index === 0) {
     return <div></div>;
   }
-  return <Button onClick={() => setIndex(index - 1)}>Previous Part</Button>;
+  return <Button onClick={() => setIndex(index - 1)}>{msg.PREV_PART}</Button>;
 }
 
 function Next({
@@ -249,9 +231,7 @@ function Next({
   maxIndex: number;
 }) {
   if (index === maxIndex - 1) {
-    return (
-      <></>
-    );
+    return <></>;
   }
 
   return (
@@ -260,7 +240,7 @@ function Next({
         setIndex(index + 1);
       }}
     >
-      Next Part
+      {msg.NEXT_PART}
     </Button>
   );
 }
@@ -268,18 +248,17 @@ function Next({
 function Question({ id, number, question, insertType, insertContent, myAns, trueAns, point }: any) {
   return (
     <Stack spacing={2}>
-      {/* 横に並べる */}
       <Box display="flex" alignItems="center">
         <Typography variant="h2" fontSize={17}>({number})</Typography>
         <Box width="10px"></Box>
         <Latex>{question}</Latex>
       </Box>
-      {insertType != "None" ?
-        <><Divider />
+      {insertType !== "None" ? (
+        <>
+          <Divider />
           <InsertFrame insertType={insertType} insertContent={insertContent} />
         </>
-        : <></>
-      }
+      ) : <></>}
 
       <Divider />
       <Box
@@ -297,14 +276,15 @@ function Question({ id, number, question, insertType, insertContent, myAns, true
         alignItems="center"
         paddingX={2}
       >
-        <Typography>正答</Typography>
+        <Typography>{msg.TRUE_ANS}</Typography>
         <Box minWidth={20} />
         <Latex>{trueAns}</Latex>
       </Box>
-      {
-        point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + " points"}</div>
-      }
+      {point === -1 ? (
+        <div>{msg.NOT_GRADED}</div>
+      ) : (
+        <div>{msg.SCORE}: {point} {msg.POINTS}</div>
+      )}
     </Stack>
-
-  )
+  );
 }

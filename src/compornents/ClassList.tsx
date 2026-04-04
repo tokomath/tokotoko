@@ -28,9 +28,7 @@ import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import { useRouter } from "next/navigation";
 import { TeacherGuard } from "@/lib/guard"
 
-import YAML from 'yaml'
-const msg_yaml = require("../msg-ja.yaml") as string
-const msg = YAML.parse(msg_yaml)
+import { msg } from "@/msg-ja";
 
 interface ClassData{
     id: string,

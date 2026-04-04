@@ -27,10 +27,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { StudentTestCard } from "@/compornents/StudentTestCard";
 
-//UIテキスト yaml集約
-import YAML from 'yaml'
-const msg_yaml = require("../../../msg-ja.yaml") as string
-const msg = YAML.parse(msg_yaml)
+import { msg } from "@/msg-ja";
 
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;
@@ -141,7 +138,7 @@ function ClassCard({ classData }: ClassCardProp) {
         <Box sx={{ p: 2, width: "70vw" }}>
 
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Tests
+            {msg.TESTS_IN_CLASS}
           </Typography>
 
           {classData.tests.length === 0 ? (
@@ -258,7 +255,7 @@ const Page = () => {
             right: "20px",
             height: "50px"
           }}>
-            <Button variant="contained" onClick={joinClassButtonEvent}>{msg.JOINCLASS}</Button>
+            <Button variant="contained" onClick={joinClassButtonEvent}>{msg.JOIN_CLASS}</Button>
           </Box>
         </TabPanel>
 

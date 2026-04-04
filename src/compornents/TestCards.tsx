@@ -31,9 +31,8 @@ import { useEffect, useState } from "react";
 import { Test } from "@prisma/client"
 import { removeTest } from "@/app/api/test/removeTest";
 
-import YAML from 'yaml'
-const msg_yaml = require("../msg-ja.yaml") as string
-const msg = YAML.parse(msg_yaml)
+import { msg } from "@/msg-ja";
+
 
 interface DeleteTestButtonProps {
     testId: number;

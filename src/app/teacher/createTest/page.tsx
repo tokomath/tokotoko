@@ -62,9 +62,7 @@ import { getClassByUserId } from "@/app/api/class/getClass";
 import InsertFrame from "@/compornents/InsertFrame";
 import { TeacherGuard } from "@/lib/guard"
 
-import YAML from 'yaml'
-const msg_yaml = require("../../../msg-ja.yaml") as string
-const msg = YAML.parse(msg_yaml)
+import { msg } from "@/msg-ja";
 
 const insert_options = ["None", "Image", "HTML"];
 
@@ -132,7 +130,7 @@ function ClientSearchParamWrapper() {
             setAssignedClass(existingTest.classes);
             setDataVersion(prev => prev + 1);
           } else {
-            alert("指定されたテストが見つからないか、アクセス権限がありません。");
+            alert(msg.ERROR_TEST_NOT_FOUND);
             router.push('/mypage/teacher');
           }
         } else if (param_classId) {
@@ -192,7 +190,7 @@ function ClientSearchParamWrapper() {
         setValue(0);
       } catch (error) {
         console.error("JSON Parse Error:", error);
-        alert("ファイルの読み込みに失敗しました。形式を確認してください。");
+        alert(msg.ERROR_FILE_LOAD);
       }
     };
     reader.readAsText(file);
@@ -260,7 +258,7 @@ function ClientSearchParamWrapper() {
 
     if (isEditing) {
       await updateTest(testFrame);
-      alert("テストを保存しました");
+      alert(msg.SUCCESS_SAVE_TEST);
     } else {
       const newId = await createTest(testFrame);
       if (newId) {
@@ -268,7 +266,7 @@ function ClientSearchParamWrapper() {
         setIsEditing(true);
         router.replace(window.location.pathname + "?testId=" + newId);
       }
-      alert("テストを作成しました");
+      alert(msg.SUCCESS_CREATE_TEST);
     }
   };
 
@@ -370,11 +368,11 @@ function ClientSearchParamWrapper() {
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} sx={{ flexShrink: 0 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
-            {isEditing ? "テストの編集" : msg.CREATE_NEW_TEST}
+            {isEditing ? msg.EDIT_TEST : msg.CREATE_NEW_TEST}
           </Typography>
 
           <Chip
-            label={isCurrentPublished ? "公開中" : "非公開"}
+            label={isCurrentPublished ? msg.PUBLISHED : msg.UNPUBLISHED}
             color={isCurrentPublished ? "success" : "default"}
             sx={{ verticalAlign: 'middle', fontWeight: 'normal' }}
           />
@@ -412,7 +410,7 @@ function ClientSearchParamWrapper() {
             disabled={checkDataError()}
             sx={{ px: 4 }}
           >
-            保存
+            {msg.SAVE}
           </Button>
 
           <FormControlLabel
@@ -424,7 +422,7 @@ function ClientSearchParamWrapper() {
                 disabled={checkDataError()}
               />
             }
-            label={isCurrentPublished ? "公開" : "非公開"}
+            label={isCurrentPublished ? msg.PUBLISHED : msg.UNPUBLISHED}
             sx={{ ml: 1 }}
           />
         </Stack>
