@@ -45,7 +45,7 @@ export function TeacherClassCards({classes} : props) {
         const router = useRouter();
 
         const manageButtonFunction = () => {
-            router.push("/teacher/manageClass?classId=" + classData.id);
+            router.push("/teacher/createClass?classId=" + classData.id);
         }
         const createTestButtonFunction = () => {
             router.push("/teacher/createTest?classId=" + classData.id);
