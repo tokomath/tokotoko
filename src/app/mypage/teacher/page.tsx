@@ -76,7 +76,7 @@ export default function MyPage() {
     };
 
     const [tests, setTests] = useState<Test[]>([]);
-    const [classes, setClasses] = useState<(Class & { users: User[] })[]>([]);
+    const [classes, setClasses] = useState<(Class & { users: User[]; icon: string | null })[]>([]);
 
     const userId = user?.id || "";
 
@@ -88,7 +88,7 @@ export default function MyPage() {
 
         const fetchClass = async () => {
             const tmpClassList = await getClassByUserId(userId);
-            setClasses(tmpClassList);
+            setClasses(tmpClassList.map((classData) => ({ ...classData, icon: null })));
         };
 
         fetchTest();

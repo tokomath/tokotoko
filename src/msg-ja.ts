@@ -36,8 +36,8 @@ export const msg = {
     "CLASS": "クラス",
     "TEST": "テスト",
     "CLASS_NAME": "クラス名",
-    "CREATE_CLASS": "新規クラスを作成",
-    "CREATE_TEST": "新規テストを作成",
+    "CREATE_CLASS": "クラスを作成",
+    "CREATE_TEST": "テストを作成",
     "TESTS_IN_CLASS": "テスト一覧",
     "CLASS_CREATED": "クラスを作成しました",
     "ERROR_NO_CLASS_NAME": "クラス名を入力してください。",
@@ -58,7 +58,7 @@ export const msg = {
 
     // テスト作成ページ
     // /teacher/create/page.tsx
-    "CREATE_NEW_TEST": "新規テスト作成",
+    "CREATE_NEW_TEST": "テスト作成",
     "EDIT_TEST": "テストの編集",
     "PUBLISH_TEST": "テストを公開",
     "PUBLISHED": "公開中",
@@ -158,8 +158,8 @@ export const msg = {
     "ADDED_STUDENTS": "追加済みの学生",
     "ADDED_TEACHERS": "追加済みの教師",
     "CLASS_INFO": "クラス基本情報",
-    "STUDENT_SECTION": "学生の管理",
-    "TEACHER_SECTION": "教師の管理",
+    "STUDENT_SECTION": "学生",
+    "TEACHER_SECTION": "教師",
     "SEARCH_PLACEHOLDER_STUDENT": "名前やメールアドレスで学生を検索",
     "SEARCH_PLACEHOLDER_TEACHER": "名前やメールアドレスで教師を検索",
     "CURRENT_MEMBERS": "現在のメンバー",
@@ -170,4 +170,17 @@ export const msg = {
     "INVITATION_QR": "招待用QRコード",
     "INVITATION_URL": "招待用URL",
     "COPY_URL": "URLをコピー",
+    //ClassDetail
+    "CLASS_DETAILS": "クラス詳細",
+    "TEST_LIST": "テスト一覧",
+    "MEMBERS": "メンバー",
+    "SUBMISSION_STATUS": "提出状況",
+    "NO_TESTS_IN_CLASS": "このクラスにはまだテストがありません",
+    "VIEW_DETAILS": "詳細",
+    "SUBMITTED_STUDENTS": "提出済みの学生",
+    "UNSUBMITTED_STUDENTS": "未提出の学生",
+    "ERROR_INVALID_URL": "無効なURLです",
+    "GRADE": "採点",
+    "TAKE_TEST": "解答する",
+    "VIEW_RESULT": "結果を見る"
 }

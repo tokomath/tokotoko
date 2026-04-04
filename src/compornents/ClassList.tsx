@@ -3,6 +3,7 @@
 import {
     Box,
     Card,
+    CardActionArea,
     Button,
     Grid,
     ListItem,
@@ -42,6 +43,9 @@ export function TeacherClassCards({ classes }: Props) {
     const ClassCards = ({ classData }: { classData: ClassData }) => {
         const router = useRouter();
 
+        const detailButtonFunction = () => {
+            router.push("/classDetail?classId=" + classData.id);
+        }
         const manageButtonFunction = () => {
             router.push("/teacher/createClass?classId=" + classData.id);
         }
@@ -51,55 +55,58 @@ export function TeacherClassCards({ classes }: Props) {
 
         return (
             <Card sx={{ height: "auto", textAlign: "left", }}>
-                <CardContent>
-                    <Box display="flex" alignItems="center" gap={2} mb={2}>
-                        <Avatar
-                            src={classData.icon || undefined}
-                            sx={{
-                                width: 56,
-                                height: 56,
-                                bgcolor: !classData.icon && classData.name ? stringToBrightColor(classData.name) : "#e0e0e0",
-                                fontSize: "1.5rem",
-                            }}
-                            variant="rounded"
-                        >
-                            {!classData.icon && classData.name ? classData.name.charAt(0).toUpperCase() : ""}
-                        </Avatar>
-                        <Typography variant="h5" component="div">
-                            {classData.name}
-                        </Typography>
-                    </Box>
-                    <Box>
-                        <>
-                            {(function () {
-                                let comp: JSX.Element[] = [];
-                                for (let i = 0; i < 5; i++) {
-                                    const u = classData.users[i];
-                                    if (u && classData.users.length > 6 && i == 4) {
+                <CardActionArea onClick={detailButtonFunction}>
+                    <CardContent>
+                        <Box display="flex" alignItems="center" gap={2} mb={2}>
+                            <Avatar
+                                src={classData.icon || undefined}
+                                sx={{
+                                    width: 56,
+                                    height: 56,
+                                    bgcolor: !classData.icon && classData.name ? stringToBrightColor(classData.name) : "#e0e0e0",
+                                    fontSize: "1.5rem",
+                                }}
+                                variant="rounded"
+                            >
+                                {!classData.icon && classData.name ? classData.name.charAt(0).toUpperCase() : ""}
+                            </Avatar>
+                            <Typography variant="h5" component="div">
+                                {classData.name}
+                            </Typography>
+                        </Box>
+                        <Box>
+                            <>
+                                {(function () {
+                                    let comp: JSX.Element[] = [];
+                                    for (let i = 0; i < 5; i++) {
+                                        const u = classData.users[i];
+                                        if (u && classData.users.length > 6 && i == 4) {
+                                            comp.push(
+                                                <ListItem key={i} sx={{ py: 0, px: 0 }}>
+                                                    <ListItemText primary={"︙"} />
+                                                </ListItem>);
+                                            break;
+                                        }
+                                        if (!u) {
+                                            comp.push(
+                                                <ListItem key={i} sx={{ py: 0, px: 0 }}>
+                                                    <ListItemText primary={"　"} />
+                                                </ListItem>);
+                                            continue;
+                                        }
                                         comp.push(
-                                            <ListItem key={i} sx={{ py: 0, px: 0 }}>
-                                                <ListItemText primary={"︙"} />
+                                            <ListItem key={u.id + i} sx={{ py: 0, px: 0 }}>
+                                                <ListItemText primary={u.name} />
                                             </ListItem>);
-                                        break;
                                     }
-                                    if (!u) {
-                                        comp.push(
-                                            <ListItem key={i} sx={{ py: 0, px: 0 }}>
-                                                <ListItemText primary={"　"} />
-                                            </ListItem>);
-                                        continue;
-                                    }
-                                    comp.push(
-                                        <ListItem key={u.id + i} sx={{ py: 0, px: 0 }}>
-                                            <ListItemText primary={u.name} />
-                                        </ListItem>);
-                                }
-                                return comp;
-                            })()}
-                        </>
-                    </Box>
-                </CardContent>
+                                    return comp;
+                                })()}
+                            </>
+                        </Box>
+                    </CardContent>
+                </CardActionArea>
                 <CardActions>
+                    <Button size="large" onClick={detailButtonFunction}>{msg.VIEW_DETAILS}</Button>
                     <Button size="large" onClick={manageButtonFunction}>{msg.MANAGE}</Button>
                     <Button size="large" onClick={createTestButtonFunction}>{msg.CREATE_TEST}</Button>
                 </CardActions>
