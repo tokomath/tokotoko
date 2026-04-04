@@ -164,4 +164,6 @@ export const msg = {
     "SEARCH_PLACEHOLDER_TEACHER": "名前やメールアドレスで教師を検索",
     "CURRENT_MEMBERS": "現在のメンバー",
     "NO_MEMBERS": "メンバーが追加されていません",
+    "UPLOAD_ICON": "アイコン画像を選択",
+    "DELETE_ICON": "アイコンを削除",
 }
