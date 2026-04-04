@@ -51,7 +51,7 @@ import {
 import { createTest } from "@/app/api/test/createTest";
 import { getTestById } from "@/app/api/test/getTestById";
 import { getSubmissionsByTestId } from "@/app/api/test/submit";
-import { updateTest, updateTestPublishStatus } from "@/app/api/test/updateTest";
+import { updateTest, updateTestPublishStatus, updateTestMetadata } from "@/app/api/test/updateTest";
 
 import { Test, Section, Question, Class } from "@prisma/client";
 import dayjs, { Dayjs } from "dayjs";
@@ -91,6 +91,7 @@ function ClientSearchParamWrapper() {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialSectionsRef = useRef<string>("");
 
   const getInitialStartDate = () => {
     const now = dayjs();
@@ -137,6 +138,10 @@ function ClientSearchParamWrapper() {
             setSections(mappedSections);
             setAssignedClass(existingTest.classes);
             setDataVersion(prev => prev + 1);
+
+            const sectionsJson = JSON.stringify(mappedSections);
+            setSections(mappedSections);
+            initialSectionsRef.current = sectionsJson;
           } else {
             alert(msg.ERROR_TEST_NOT_FOUND);
             router.push('/mypage/teacher');
@@ -169,7 +174,15 @@ function ClientSearchParamWrapper() {
     };
 
     if (isEditing) {
-      await updateTest(testFrame);
+      const currentSectionsJson = JSON.stringify(sections);
+      const isStructureChanged = currentSectionsJson !== initialSectionsRef.current;
+
+      if (isStructureChanged) {
+        await updateTest(testFrame);
+        initialSectionsRef.current = currentSectionsJson; 
+      } else {
+        await updateTestMetadata(testFrame);
+      }
       alert(msg.SUCCESS_SAVE_TEST);
     } else {
       const newId = await createTest(testFrame);
@@ -185,10 +198,14 @@ function ClientSearchParamWrapper() {
 
   const handleSaveClick = async () => {
     if (isEditing && currentTestId) {
+      const isStructureChanged = JSON.stringify(sections) !== initialSectionsRef.current;
       const submissions = await getSubmissionsByTestId(currentTestId);
-      if (submissions.length > 0) {
-        setIsConfirmDialogOpen(true);
-        return;
+      if (isStructureChanged) {
+        const submissions = await getSubmissionsByTestId(currentTestId);
+        if (submissions.length > 0) {
+          setIsConfirmDialogOpen(true);
+          return;
+        }
       }
     }
     await performSave();
