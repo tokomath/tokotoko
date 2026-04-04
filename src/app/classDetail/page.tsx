@@ -154,7 +154,21 @@ function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTe
           )
         }
       >
-        <ListItemText primary={test.title} secondary={test.summary} />
+        <ListItemText 
+          primary={
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="body1">{test.title}</Typography>
+              {!test.isPublished && isTeacher && (
+                <Chip 
+                  label={msg.UNPUBLISHED} 
+                  size="small" 
+                  sx={{ height: "20px", fontSize: "0.75rem", bgcolor: "#9e9e9e", color: "white" }} 
+                />
+              )}
+            </Box>
+          } 
+          secondary={test.summary} 
+        />
       </ListItem>
       <Divider />
 
@@ -199,6 +213,7 @@ function ClassDetailContent() {
       const fetchedClass = await getClassByClassId(classId);
       if (fetchedClass) {
         setClassData(fetchedClass as any);
+        // API側で role 判定が行われ、安全にフィルタリングされた結果が返ってくる
         const fetchedTests = await getTestByClass(classId);
         setTests(fetchedTests);
       }
@@ -236,11 +251,10 @@ function ClassDetailContent() {
             <Box flex={1}>
               <Stack direction="row" spacing={3} alignItems="flex-start">
                 <Avatar
-                  src={classData.icon || undefined}
                   variant="rounded"
-                  sx={{ width: 128, height: 128, bgcolor: !classData.icon ? stringToBrightColor(classData.name) : "#e0e0e0", fontSize: "3rem" }}
+                  sx={{ width: 128, height: 128, bgcolor: stringToBrightColor(classData.name), fontSize: "3rem" }}
                 >
-                  {!classData.icon && classData.name.charAt(0).toUpperCase()}
+                  {classData.name.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box flex={1}>
                   <Typography variant="h4" gutterBottom>{classData.name}</Typography>
