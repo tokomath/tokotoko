@@ -45,7 +45,7 @@ import {
 } from "@/app/api/test/testFrames";
 import { createTest } from "@/app/api/test/createTest";
 import { getTestById } from "@/app/api/test/getTestById";
-import { updateTest } from "@/app/api/test/updateTest";
+import { updateTest, updateTestPublishStatus } from "@/app/api/test/updateTest";
 
 import { Test, Section, Question, Class } from "@prisma/client";
 import dayjs, { Dayjs } from "dayjs";
@@ -274,7 +274,12 @@ function ClientSearchParamWrapper() {
   const handleTogglePublish = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
     setIsCurrentPublished(newChecked);
-    await saveTestButtonFunction(newChecked);
+
+    if (isEditing && currentTestId) {
+      await updateTestPublishStatus(currentTestId, newChecked);
+    } else {
+      await saveTestButtonFunction(newChecked);
+    }
   };
 
   const handleChange = (event: any, newValue: any) => {

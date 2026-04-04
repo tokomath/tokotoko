@@ -1,5 +1,6 @@
 "use server"
 
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "../prisma_client";
 import { Answer, Class, User, Test, Submission } from "@prisma/client";
 import judge from "@/lib/judge";
@@ -69,14 +70,38 @@ export const getClassByClassId = async (classId: string) => {
 }
 
 export const getTestByClass = async (classId: string) => {
-  return prisma.test.findMany({
-    where: {
-      isPublished: true,
-      classes: {
-        some: { id: classId },
-      },
-    },
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const classData = await prisma.class.findUnique({
+    where: { id: classId },
+    include: {
+      users: {
+        where: { id: userId }
+      }
+    }
   });
+
+  const userInClass = classData?.users[0];
+  const isTeacher = userInClass?.role === 0;
+
+  if (isTeacher) {
+    return prisma.test.findMany({
+      where: {
+        classes: { some: { id: classId } },
+      },
+    });
+  } else {
+    return prisma.test.findMany({
+      where: {
+        isPublished: true,
+        classes: { some: { id: classId } },
+      },
+    });
+  }
 };
 
 export const getSubmissionsByTestId = async (testId: number) => {
