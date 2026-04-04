@@ -45,3 +45,10 @@ export const updateTest = async (props: TestFrame) => {
     });
   }
 };
+
+export const updateTestPublishStatus = async (testId: number, isPublished: boolean) => {
+  await prisma.test.update({
+    where: { id: testId },
+    data: { isPublished },
+  });
+};
