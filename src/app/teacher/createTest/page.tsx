@@ -41,8 +41,6 @@ import SaveIcon from "@mui/icons-material/Save";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ImageIcon from "@mui/icons-material/Image";
 import CodeIcon from "@mui/icons-material/Code";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import FileUploadIcon from "@mui/icons-material/FileUpload";
 
 import {
   TestFrame,
@@ -72,7 +70,6 @@ import { msg } from "@/msg-ja";
 
 const insert_options = ["None", "Image", "HTML"];
 
-
 function ClientSearchParamWrapper() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -84,13 +81,11 @@ function ClientSearchParamWrapper() {
   const [testSummary, setTestSummary] = useState("");
   const [value, setValue] = React.useState(0);
 
-  const [dataVersion, setDataVersion] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [isCurrentPublished, setIsCurrentPublished] = useState(false);
   const [currentTestId, setCurrentTestId] = useState<number | null>(param_testId ? Number(param_testId) : null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const initialSectionsRef = useRef<string>("");
 
   const getInitialStartDate = () => {
@@ -106,7 +101,6 @@ function ClientSearchParamWrapper() {
   const [endDate, setEndDate] = useState<Dayjs>(() => getInitialStartDate().add(7, 'day'));
 
   const [assignedClass, setAssignedClass] = useState<Class[]>([]);
-
   const [classList, setClassList] = useState<Class[]>([]);
   const teacherId = useUser().user?.id || "";
 
@@ -137,10 +131,8 @@ function ClientSearchParamWrapper() {
             }));
             setSections(mappedSections);
             setAssignedClass(existingTest.classes);
-            setDataVersion(prev => prev + 1);
 
             const sectionsJson = JSON.stringify(mappedSections);
-            setSections(mappedSections);
             initialSectionsRef.current = sectionsJson;
           } else {
             alert(msg.ERROR_TEST_NOT_FOUND);
@@ -153,7 +145,7 @@ function ClientSearchParamWrapper() {
       }
     };
     fetchClassesAndTest();
-  }, [teacherId, param_classId, param_testId]);
+  }, [teacherId, param_classId, param_testId, router]);
 
   const performSave = async (publishState?: boolean) => {
     const publishStateToSave = publishState !== undefined ? publishState : isCurrentPublished;
@@ -179,7 +171,7 @@ function ClientSearchParamWrapper() {
 
       if (isStructureChanged) {
         await updateTest(testFrame);
-        initialSectionsRef.current = currentSectionsJson; 
+        initialSectionsRef.current = currentSectionsJson;
       } else {
         await updateTestMetadata(testFrame);
       }
@@ -199,7 +191,6 @@ function ClientSearchParamWrapper() {
   const handleSaveClick = async () => {
     if (isEditing && currentTestId) {
       const isStructureChanged = JSON.stringify(sections) !== initialSectionsRef.current;
-      const submissions = await getSubmissionsByTestId(currentTestId);
       if (isStructureChanged) {
         const submissions = await getSubmissionsByTestId(currentTestId);
         if (submissions.length > 0) {
@@ -251,6 +242,7 @@ function ClientSearchParamWrapper() {
         overflow: "hidden"
       }}
     >
+
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} sx={{ flexShrink: 0 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
@@ -286,84 +278,70 @@ function ClientSearchParamWrapper() {
           />
         </Stack>
       </Stack>
+      <Box sx={{ flexGrow: 1, minHeight: 0, p: 1.5, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Paper elevation={3} sx={{ flexGrow: 1, minHeight: 0, display: 'flex', overflow: 'hidden', borderRadius: 2 }}>
+          <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", bgcolor: 'grey.50', overflowY: 'auto' }}>
+            <Tabs
+              value={value}
+              onChange={(_, v) => setValue(v)}
+              orientation="vertical"
+              variant="scrollable"
+            >
+              <Tab label={msg.METADATA} />
+              {sections.map((_, index) => (
+                <Tab label={`${msg.SECTION_NUMBER} ${index + 1}`} key={index} />
+              ))}
+              <Tab icon={<AddIcon />} iconPosition="start" label={msg.ADD_SECTION} onClick={handleAdd} sx={{ color: 'primary.main', fontWeight: 'bold' }} />
+            </Tabs>
+          </Box>
 
-      <Paper elevation={3} sx={{ flexGrow: 1, minHeight: 0, display: 'flex', overflow: 'hidden', borderRadius: 2 }}>
-        <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", bgcolor: 'grey.50', overflowY: 'auto' }}>
-          <Tabs
-            value={value}
-            onChange={(_, v) => setValue(v)}
-            orientation="vertical"
-            variant="scrollable"
-          >
-            <Tab label={msg.METADATA} />
-            {sections.map((_, index) => (
-              <Tab label={`${msg.SECTION_NUMBER} ${index + 1}`} key={index} />
+          <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+            {value === 0 && (
+              <Box sx={{ p: 4, pb: 10 }}>
+                <MetaDataPage
+                  testTitle={testTitle} setTestTitle={setTestTitle}
+                  testSummary={testSummary} setTestSummary={setTestSummary}
+                  startDate={startDate} setStartDate={setStartDate}
+                  endDate={endDate} setEndDate={setEndDate}
+                  asignedClass={assignedClass}
+                  handleClassChange={(e: any) => setAssignedClass(classList.filter(c => e.target.value.includes(c.id)))}
+                  classList={classList}
+                />
+              </Box>
+            )}
+            {sections.map((s, index) => (
+              <Box key={index} hidden={value !== index + 1}>
+                <SectionPage
+                  index={index}
+                  section={s}
+                  setSection={(newS: SectionFrame) => setSections(sections.map((sec, i) => i === index ? newS : sec))}
+                  deleteSection={() => {
+                    const newS = sections.filter((_, i) => i !== index).map((sec, i) => ({ ...sec, section: { ...sec.section, number: i + 1 } }));
+                    setSections(newS);
+                    if (value > newS.length) setValue(newS.length);
+                  }}
+                />
+              </Box>
             ))}
-            <Tab icon={<AddIcon />} iconPosition="start" label={msg.ADD_SECTION} onClick={handleAdd} sx={{ color: 'primary.main', fontWeight: 'bold' }} />
-          </Tabs>
-        </Box>
+          </Box>
+        </Paper>
 
-        <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-          {value === 0 && (
-            <Box p={4}>
-              <MetaDataPage
-                testTitle={testTitle} setTestTitle={setTestTitle}
-                testSummary={testSummary} setTestSummary={setTestSummary}
-                startDate={startDate} setStartDate={setStartDate}
-                endDate={endDate} setEndDate={setEndDate}
-                asignedClass={assignedClass}
-                handleClassChange={(e: any) => setAssignedClass(classList.filter(c => e.target.value.includes(c.id)))}
-                classList={classList}
-              />
-            </Box>
-          )}
-          {sections.map((s, index) => (
-            <Box key={index} hidden={value !== index + 1} p={4}>
-              <SectionPage
-                index={index}
-                section={s}
-                setSection={(newS: SectionFrame) => setSections(sections.map((sec, i) => i === index ? newS : sec))}
-                deleteSection={() => {
-                  const newS = sections.filter((_, i) => i !== index).map((sec, i) => ({ ...sec, section: { ...sec.section, number: i + 1 } }));
-                  setSections(newS);
-                  if (value > newS.length) setValue(newS.length);
-                }}
-              />
-            </Box>
-          ))}
-        </Box>
-      </Paper>
-
-      <Dialog open={isConfirmDialogOpen} onClose={() => setIsConfirmDialogOpen(false)}>
-        <DialogTitle>{msg.CONFIRM_DELETE_SUBMISSIONS_TITLE}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{msg.CONFIRM_DELETE_SUBMISSIONS_MESSAGE}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsConfirmDialogOpen(false)}>{msg.CANCEL}</Button>
-          <Button onClick={() => performSave()} color="error" variant="contained">
-            {msg.PROCEED_SAVE}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Dialog open={isConfirmDialogOpen} onClose={() => setIsConfirmDialogOpen(false)}>
+          <DialogTitle>{msg.CONFIRM_DELETE_SUBMISSIONS_TITLE}</DialogTitle>
+          <DialogContent>
+            <DialogContentText>{msg.CONFIRM_DELETE_SUBMISSIONS_MESSAGE}</DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsConfirmDialogOpen(false)}>{msg.CANCEL}</Button>
+            <Button onClick={() => performSave()} color="error" variant="contained">
+              {msg.PROCEED_SAVE}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </Container>
   );
 }
-
-const TabPanels = (props: any) => {
-  const { children, value, index } = props;
-  return (
-    <Box
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      width={"100%"}
-    >
-      {value === index && <Box p={4}>{children}</Box>}
-    </Box>
-  );
-};
 
 const MetaDataPage = ({
   testTitle,
@@ -379,12 +357,9 @@ const MetaDataPage = ({
   classList,
 }: any) => {
   const dateWarning = () => {
-    const isBeforeWarning = () => {
-      if (startDate.isBefore(dayjs())) {
-        return <Alert severity="warning">{msg.WARNING_START_DATE_PAST}</Alert>;
-      }
-    };
-    return <Box>{isBeforeWarning()}</Box>;
+    if (startDate.isBefore(dayjs())) {
+      return <Alert severity="warning">{msg.WARNING_START_DATE_PAST}</Alert>;
+    }
   };
 
   const ClassAssign = () => {
@@ -522,16 +497,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       if (i === index) {
         return item;
       } else {
-        const question: Question = {
-          id: q.id,
-          sectionId: q.sectionId,
-          question: q.question,
-          number: i + 1,
-          insertType: q.insertType,
-          insertContent: q.insertContent,
-          answer: q.answer,
-        };
-        return question;
+        return { ...q, number: i + 1 };
       }
     });
     setSection({ ...section, questions: newQ });
@@ -540,30 +506,21 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
   const handleRemove = (index: number) => {
     const newQ = section.questions.filter(
       (q: Question, i: number) => i !== index,
-    );
-    const newQ2 = newQ.map((q: Question, i: number) => {
-      return {
-        ...q,
-        number: i + 1
-      };
-    });
-    setSection({ ...section, questions: newQ2 });
+    ).map((q: Question, i: number) => ({ ...q, number: i + 1 }));
+    setSection({ ...section, questions: newQ });
   };
 
   const handleSectionSummaryChange = (newSummary: string) => {
     const newS: Section = {
-      id: section.section.id,
-      testId: section.section.testId,
+      ...section.section,
       summary: newSummary,
-      number: section.section.number,
     };
     setSection({ section: newS, questions: section.questions });
   }
 
-
   return (
-    <Stack spacing={4}>
-      <Card variant="outlined" sx={{ bgcolor: 'grey.50' }}>
+    <Box sx={{ p: 4, pb: 15 }}>
+      <Card variant="outlined" sx={{ bgcolor: 'grey.50', mb: 4 }}>
         <CardHeader
           title={`${msg.SECTION_NUMBER} ${index + 1} ${msg.SECTION_SETTINGS}`}
           action={
@@ -589,13 +546,6 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 minRows={4}
                 value={section.section.summary}
                 onChange={(e) => handleSectionSummaryChange(e.target.value)}
-                sx={{
-                  flexGrow: 1,
-                  "& .MuiInputBase-root": {
-                    height: "100%",
-                    alignItems: "flex-start"
-                  }
-                }}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -638,9 +588,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
               key={index}
               index={index}
               question={q}
-              setQuestion={(q: Question) => {
-                handleQuestionChange(q, index);
-              }}
+              setQuestion={(q: Question) => handleQuestionChange(q, index)}
               deleteQuestion={() => handleRemove(index)}
             />
           ))}
@@ -656,12 +604,12 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           startIcon={<AddIcon />}
           onClick={addQuestion}
           fullWidth
-          sx={{ borderStyle: 'dashed' }}
+          sx={{ borderStyle: 'dashed', mt: 4 }}
         >
           {msg.ADD_ANOTHER_QUESTION}
         </Button>
       )}
-    </Stack>
+    </Box>
   );
 };
 
@@ -679,21 +627,14 @@ const QuestionPage = ({
     setQuestion({ ...question, question: newQues });
   };
 
-  const setInsertType = (insertType: string) => {
-    setQuestion({ ...question, insertType: insertType });
-  };
-
   const setInsertContent = (insertContent: string) => {
     setQuestion({ ...question, insertContent: insertContent });
   };
 
   const contetError = () => {
-    const isnotInsertedError = () => {
-      if (question.insertType != "None" && question.insertContent == "") {
-        return <Alert severity="error">{msg.ERROR_CONTENT_MISSING}</Alert>;
-      }
-    };
-    return <Box>{isnotInsertedError()}</Box>;
+    if (question.insertType !== "None" && question.insertContent === "") {
+      return <Alert severity="error">{msg.ERROR_CONTENT_MISSING}</Alert>;
+    }
   };
 
   return (
@@ -786,8 +727,6 @@ const QuestionPage = ({
                       acceptFileType = ".html";
                       icon = <CodeIcon />;
                       break;
-                    default:
-                      return (<></>)
                   }
 
                   return (
