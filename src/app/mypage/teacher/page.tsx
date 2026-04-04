@@ -23,10 +23,7 @@ import { Test, User } from "@prisma/client";
 import { getTestsByUserId } from "@/app/api/test/getTestsByUserId";
 import { getClassByUserId } from "@/app/api/class/getClass";
 
-//UIテキスト yaml集約
-import YAML from 'yaml'
-const msg_yaml = require("../../../msg-ja.yaml") as string
-const msg = YAML.parse(msg_yaml)
+import { msg } from "@/msg-ja";
 
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;

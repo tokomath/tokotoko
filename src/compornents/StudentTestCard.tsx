@@ -2,9 +2,7 @@ import { Tab, Tabs, Box, Card, CardContent, Typography, CardActionArea, Grid } f
 import dayjs from "dayjs";
 import { Test, Class } from "@prisma/client";
 
-import YAML from 'yaml'
-const msg_yaml = require("../msg-ja.yaml") as string
-const msg = YAML.parse(msg_yaml)
+import { msg } from "@/msg-ja";
 
 interface TestInterface {
   test: Test;

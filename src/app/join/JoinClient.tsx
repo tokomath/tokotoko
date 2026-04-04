@@ -10,10 +10,7 @@ import { joinUserToClass } from "../api/class/addUserToClass";
 import { getClassByClassId } from "../api/class/getClass";
 import { Class } from "@prisma/client"
 
-//UIテキスト yaml集約
-import YAML from 'yaml'
-const msg_yaml = require("../../msg-ja.yaml") as string
-const msg = YAML.parse(msg_yaml)
+import { msg } from "@/msg-ja";
 
 
 
