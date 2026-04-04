@@ -7,6 +7,10 @@ import { TestFrame } from "@/app/api/test/testFrames";
 export const updateTest = async (props: TestFrame) => {
   const testId = props.test.id;
 
+  await prisma.submission.deleteMany({
+    where: { testId: testId },
+  });
+
   await prisma.test.update({
     where: { id: testId },
     data: {
@@ -50,5 +54,23 @@ export const updateTestPublishStatus = async (testId: number, isPublished: boole
   await prisma.test.update({
     where: { id: testId },
     data: { isPublished },
+  });
+};
+
+export const updateTestMetadata = async (props: TestFrame) => {
+  const testId = props.test.id;
+  return await prisma.test.update({
+    where: { id: testId },
+    data: {
+      title: props.test.title,
+      summary: props.test.summary,
+      startDate: props.test.startDate,
+      endDate: props.test.endDate,
+      isPublished: props.test.isPublished,
+      classes: {
+        set: [],
+        connect: props.classes.map((i) => ({ id: i.id })),
+      },
+    },
   });
 };
