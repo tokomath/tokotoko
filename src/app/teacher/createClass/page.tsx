@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { Class, User } from "@prisma/client";
 import { ClassFrame, createClass } from "@/app/api/class/createClass";
 import { UserSelector } from "@/compornents/userSelector";
@@ -42,7 +42,7 @@ const stringToBrightColor = (str: string) => {
   return `hsl(${h}, 80%, 65%)`;
 };
 
-export default function DualRoleUserSelectors() {
+function ClassEditForm() {
   const [teachers, setTeachers] = useState<User[]>([]);
   const [students, setStudents] = useState<User[]>([]);
   const [className, setClassName] = useState<string>("");
@@ -141,10 +141,8 @@ export default function DualRoleUserSelectors() {
 
     if (isEditMode) {
       await addUserToClass(data);
-      alert(msg.SUCCESS_UPDATE);
     } else {
       await createClass(data);
-      alert(msg.CLASS_CREATED);
     }
     
     router.push("/mypage");
@@ -380,5 +378,13 @@ export default function DualRoleUserSelectors() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </TeacherGuard>
+  );
+}
+
+export default function DualRoleUserSelectors() {
+  return (
+    <Suspense fallback={<div>{msg.LOADING}</div>}>
+      <ClassEditForm />
+    </Suspense>
   );
 }
