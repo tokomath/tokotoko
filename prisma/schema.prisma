@@ -26,7 +26,7 @@ model User {
 }
 
 model Test {
-  id          Int          @id @default(autoincrement())
+  id          Int          @id
   title       String
   summary     String
   startDate   DateTime     @default(now())
@@ -74,6 +74,6 @@ model Answer {
   questionId   Int
   point        Int
   text         String
-  question     Question   @relation(fields: [questionId], references: [id])
-  submission   Submission @relation(fields: [submissionId], references: [id])
+  question     Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 }

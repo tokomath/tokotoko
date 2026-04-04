@@ -57,7 +57,7 @@ export const msg = {
     "EDIT": "編集",
 
     // テスト作成ページ
-    // /teacher/create/page.tsx
+    // /teacher/createTest/page.tsx
     "CREATE_NEW_TEST": "テスト作成",
     "EDIT_TEST": "テストの編集",
     "PUBLISH_TEST": "テストを公開",
@@ -113,6 +113,10 @@ export const msg = {
     "ANSWER_KEY": "解答設定",
     "ANSWER_FORMULA_LABEL": "正答 (LaTeX)",
     "ANSWER_PLACEHOLDER": "例: x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}",
+
+    "CONFIRM_DELETE_SUBMISSIONS_TITLE": "提出データの削除確認",
+    "CONFIRM_DELETE_SUBMISSIONS_MESSAGE": "このテストには既に提出データが存在します。保存すると既存の提出データと採点結果はすべて削除されますが、よろしいですか？",
+    "PROCEED_SAVE": "削除して保存",
 
     // 結果ページ
     // /test/[id]/result/page.tsx (等)
