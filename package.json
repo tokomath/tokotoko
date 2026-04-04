@@ -28,6 +28,7 @@
     "js-yaml-loader": "^1.2.2",
     "nerdamer": "^1.1.13",
     "next": "^16.1.6",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-is": "^18.3.1",

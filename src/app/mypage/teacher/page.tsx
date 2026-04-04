@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useCallback, useState, useEffect } from "react";
 import {
     Box,
     Button,
@@ -16,13 +16,11 @@ import EditNoteIcon from "@mui/icons-material/EditNote";
 import { TeacherGuard } from "@/lib/guard";
 import { TeacherClassCards } from "@/compornents/ClassList";
 import { TestCards } from "@/compornents/TestCards"
-import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { Test, User } from "@prisma/client";
+import { Test, User, Class } from "@prisma/client";
 import { getTestsByUserId } from "@/app/api/test/getTestsByUserId";
 import { getClassByUserId } from "@/app/api/class/getClass";
-
 import { msg } from "@/msg-ja";
 
 const TAB_WIDTH = 100;
@@ -33,6 +31,7 @@ interface TabPanelProps {
     index: number;
     value: number;
 }
+
 function TabPanel({ children, value, index, ...other }: TabPanelProps) {
     return (
         <div
@@ -50,6 +49,7 @@ function TabPanel({ children, value, index, ...other }: TabPanelProps) {
         </div>
     );
 }
+
 function a11yProps(index: number) {
     return {
         id: `vertical-tab-${index}`,
@@ -57,44 +57,43 @@ function a11yProps(index: number) {
     };
 }
 
-
 export default function MyPage() {
     const { isLoaded, isSignedIn, user } = useUser();
     const [value, setValue] = useState(0);
     const handleChange = (_: React.SyntheticEvent, newValue: number) => setValue(newValue);
     const router = useRouter();
+
     const createClassButtonEvent = () => {
         router.push("/teacher/createClass");
     };
 
     const createTestButtonEvent = () => {
-        router.push("/teacher/createTest")
+        router.push("/teacher/createTest");
     };
 
     const joinClassButtonEvent = () => {
         router.push("/join");
-    }
+    };
 
     const [tests, setTests] = useState<Test[]>([]);
-    const [classes, setClasses] = useState<{ id: string, name: string, users: User[] }[]>([])
+    const [classes, setClasses] = useState<(Class & { users: User[] })[]>([]);
 
     const userId = user?.id || "";
 
     useEffect(() => {
         const fetchTest = async () => {
             const tmpTestList = await getTestsByUserId(userId);
-            setTests(tmpTestList)
-        }
+            setTests(tmpTestList);
+        };
 
         const fetchClass = async () => {
-            const tmpClassList = await getClassByUserId(userId)
-            setClasses(tmpClassList)
-        }
+            const tmpClassList = await getClassByUserId(userId);
+            setClasses(tmpClassList);
+        };
 
-        fetchTest()
-        fetchClass()
+        fetchTest();
+        fetchClass();
     }, [userId]);
-
 
     return (
         <TeacherGuard>
@@ -151,7 +150,6 @@ export default function MyPage() {
                             height: "50px"
                         }}>
                             <Button variant="contained" onClick={createTestButtonEvent}>{msg.CREATE_TEST}</Button>
-
                         </Box>
                     </TabPanel>
                 </Box>

@@ -1,35 +1,22 @@
+"use client";
 
 import React, { useState, useEffect } from 'react';
-import { Class, User } from "@prisma/client";
-
-
+import { User } from "@prisma/client";
 import {
-  Button,
-  FormControl,
-  InputLabel,
-  Stack,
   TextField,
   Autocomplete,
   CircularProgress,
-  IconButton,
-  Select,
-  MenuItem,
-  OutlinedInput,
-  Chip,
-  Box,
-  SelectChangeEvent,
-  Checkbox,
-  FormControlLabel,
 } from "@mui/material";
-
 import { getUsersFromQuery } from "@/app/api/User/getUsersFromQuery";
+import { msg } from "@/msg-ja";
 
 interface UserSelectorProps {
   role: number;
   onAddUser: (user: User) => void;
+  excludeUsers: User[];
 }
 
-export function UserSelector({ role, onAddUser }: UserSelectorProps) {
+export function UserSelector({ role, onAddUser, excludeUsers }: UserSelectorProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [inputValue, setInputValue] = useState('');
@@ -37,7 +24,10 @@ export function UserSelector({ role, onAddUser }: UserSelectorProps) {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      if (!inputValue) return;
+      if (!inputValue) {
+        setUsers([]);
+        return;
+      }
       setLoading(true);
       try {
         const res = await getUsersFromQuery(inputValue, role);
@@ -53,9 +43,13 @@ export function UserSelector({ role, onAddUser }: UserSelectorProps) {
     return () => clearTimeout(debounce);
   }, [inputValue, role]);
 
+  const filteredOptions = users.filter(
+    (user) => !excludeUsers.some((excluded) => excluded.id === user.id)
+  );
+
   return (
     <Autocomplete
-      options={users}
+      options={filteredOptions}
       getOptionLabel={(option) => `${option.name} (${option.email})`}
       loading={loading}
       onInputChange={(event, newInputValue) => setInputValue(newInputValue)}
@@ -70,7 +64,7 @@ export function UserSelector({ role, onAddUser }: UserSelectorProps) {
       renderInput={(params) => (
         <TextField
           {...params}
-          label={`メールアドレスまたは名前で検索（${role === 0 ? "教師" : "学生"}）`}
+          label={role === 0 ? msg.SEARCH_PLACEHOLDER_TEACHER : msg.SEARCH_PLACEHOLDER_STUDENT}
           variant="outlined"
           InputProps={{
             ...params.InputProps,
