@@ -1,13 +1,15 @@
 "use server"
-import judge from "@/lib/judge";
+
 import { prisma } from "../prisma_client";
-import { Answer } from "@prisma/client";
+import { Answer, Class, User, Test, Submission } from "@prisma/client";
+import judge from "@/lib/judge";
 
 export interface submitProps {
   userId: string;
   testId: number;
   answerList: Answer[];
 }
+
 
 export const submitTest = async (props: submitProps) => {
   const sub = await prisma.submission.create({
@@ -18,9 +20,9 @@ export const submitTest = async (props: submitProps) => {
     },
   });
 
-  const _ = await prisma.answer
+  await prisma.answer
     .createMany({
-      data: await Promise.all(props.answerList.map(async (ans: Answer, _: number) => ({
+      data: await Promise.all(props.answerList.map(async (ans: Answer) => ({
         text: ans.text,
         point: await grading(ans.id, ans.text),
         questionId: ans.id,
@@ -33,34 +35,52 @@ export const submitTest = async (props: submitProps) => {
 };
 
 export const isAlreadySubmit = async (props: { testId: number, userId: string }) => {
-  const a = await prisma.submission.findFirst({ where: { user: { id: props.userId }, testId: props.testId } })
-  if (a) return true;
-  else return false;
+  const a = await prisma.submission.findFirst({ 
+    where: { 
+      studentId: props.userId, 
+      testId: props.testId 
+    } 
+  });
+  return !!a;
 }
 
 export const grading = async (id: number, your_answer: string): Promise<number> => {
-  // 2 Correct, 1 MabyCorrect, 0 Unknown
-  // ID をもとに、正答と回答を取得して比較する
-
-  // 空欄の場合は 0 点
-  if (your_answer === "") {
-    return 0;
-  }
+  if (your_answer === "") return 0;
 
   try {
-    const ans = await prisma.question.findUnique({
-      where: { id: id }
-    });
+    const ans = await prisma.question.findUnique({ where: { id } });
     let correct_answer = ans?.answer || "";
     switch (judge(correct_answer, your_answer)) {
-      case 2:
-        return 1;
-      case 1:
-        return 1;
-      default:
-        return -1;
+      case 2: return 1;
+      case 1: return 1;
+      default: return -1;
     }
   } catch (e) {
     return -1;
   }
 }
+
+
+export const getClassByClassId = async (classId: string) => {
+  return prisma.class.findUnique({
+    where: { id: classId },
+    include: { users: true },
+  });
+}
+
+export const getTestByClass = async (classId: string) => {
+  return prisma.test.findMany({
+    where: {
+      isPublished: true,
+      classes: {
+        some: { id: classId },
+      },
+    },
+  });
+};
+
+export const getSubmissionsByTestId = async (testId: number) => {
+  return prisma.submission.findMany({
+    where: { testId },
+  });
+};
