@@ -26,6 +26,11 @@ import {
   Grid,
   Switch,
   FormControlLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
 
@@ -45,7 +50,8 @@ import {
 } from "@/app/api/test/testFrames";
 import { createTest } from "@/app/api/test/createTest";
 import { getTestById } from "@/app/api/test/getTestById";
-import { updateTest, updateTestPublishStatus } from "@/app/api/test/updateTest";
+import { getSubmissionsByTestId } from "@/app/api/test/submit";
+import { updateTest, updateTestPublishStatus, updateTestMetadata } from "@/app/api/test/updateTest";
 
 import { Test, Section, Question, Class } from "@prisma/client";
 import dayjs, { Dayjs } from "dayjs";
@@ -66,6 +72,7 @@ import { msg } from "@/msg-ja";
 
 const insert_options = ["None", "Image", "HTML"];
 
+
 function ClientSearchParamWrapper() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -81,8 +88,10 @@ function ClientSearchParamWrapper() {
   const [isEditing, setIsEditing] = useState(false);
   const [isCurrentPublished, setIsCurrentPublished] = useState(false);
   const [currentTestId, setCurrentTestId] = useState<number | null>(param_testId ? Number(param_testId) : null);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialSectionsRef = useRef<string>("");
 
   const getInitialStartDate = () => {
     const now = dayjs();
@@ -129,6 +138,10 @@ function ClientSearchParamWrapper() {
             setSections(mappedSections);
             setAssignedClass(existingTest.classes);
             setDataVersion(prev => prev + 1);
+
+            const sectionsJson = JSON.stringify(mappedSections);
+            setSections(mappedSections);
+            initialSectionsRef.current = sectionsJson;
           } else {
             alert(msg.ERROR_TEST_NOT_FOUND);
             router.push('/mypage/teacher');
@@ -142,104 +155,8 @@ function ClientSearchParamWrapper() {
     fetchClassesAndTest();
   }, [teacherId, param_classId, param_testId]);
 
-  const handleSaveJson = () => {
-    const dataToSave = {
-      testTitle,
-      testSummary,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      assignedClassIds: assignedClass.map((c) => c.id),
-      sections,
-    };
-
-    const jsonString = JSON.stringify(dataToSave, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${testTitle || "test_data"}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleLoadJson = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const json = JSON.parse(e.target != null ? e.target.result as string : "");
-
-        if (json.testTitle !== undefined) setTestTitle(json.testTitle);
-        if (json.testSummary !== undefined) setTestSummary(json.testSummary);
-        if (json.startDate) setStartDate(dayjs(json.startDate));
-        if (json.endDate) setEndDate(dayjs(json.endDate));
-        if (json.sections) setSections(json.sections);
-
-        if (json.assignedClassIds && Array.isArray(json.assignedClassIds)) {
-          const restoredClasses = classList.filter((c) =>
-            json.assignedClassIds.includes(c.id)
-          );
-          setAssignedClass(restoredClasses);
-        }
-
-        setDataVersion(prev => prev + 1);
-        setValue(0);
-      } catch (error) {
-        console.error("JSON Parse Error:", error);
-        alert(msg.ERROR_FILE_LOAD);
-      }
-    };
-    reader.readAsText(file);
-    event.target.value = "";
-  };
-
-  const handleSectionChange = (item: SectionFrame, index: number) => {
-    const newS: SectionFrame[] = sections.map((s: SectionFrame, i: number) => {
-      if (i === index) {
-        return item;
-      } else {
-        return { section: s.section, questions: s.questions };
-      }
-    });
-    setSections(newS);
-  };
-
-  const handleRemove = (index: number) => {
-    if (sections.length === value) {
-      setValue(value - 1);
-    }
-    const newS: SectionFrame[] = sections.filter(
-      (q: SectionFrame, i: number) => i !== index,
-    );
-    const newS2: SectionFrame[] = newS.map((q: SectionFrame, i: number) => {
-      const section: Section = {
-        id: q.section.id || 1,
-        testId: q.section.testId || 1,
-        summary: q.section.summary,
-        number: i + 1,
-      };
-      return { section: section, questions: q.questions };
-    });
-    setSections(newS2);
-  };
-
-  const handleAdd = () => {
-    const section: Section = {
-      id: 1,
-      testId: 1,
-      summary: "",
-      number: sections.length + 1,
-    };
-    setSections([...sections].concat({ section: section, questions: [] }));
-  };
-
-
-  const saveTestButtonFunction = async (newPublishState?: boolean) => {
-    const publishStateToSave = newPublishState !== undefined ? newPublishState : isCurrentPublished;
+  const performSave = async (publishState?: boolean) => {
+    const publishStateToSave = publishState !== undefined ? publishState : isCurrentPublished;
 
     const testData: Test = {
       id: currentTestId ? currentTestId : 1,
@@ -257,7 +174,15 @@ function ClientSearchParamWrapper() {
     };
 
     if (isEditing) {
-      await updateTest(testFrame);
+      const currentSectionsJson = JSON.stringify(sections);
+      const isStructureChanged = currentSectionsJson !== initialSectionsRef.current;
+
+      if (isStructureChanged) {
+        await updateTest(testFrame);
+        initialSectionsRef.current = currentSectionsJson; 
+      } else {
+        await updateTestMetadata(testFrame);
+      }
       alert(msg.SUCCESS_SAVE_TEST);
     } else {
       const newId = await createTest(testFrame);
@@ -268,94 +193,50 @@ function ClientSearchParamWrapper() {
       }
       alert(msg.SUCCESS_CREATE_TEST);
     }
+    setIsConfirmDialogOpen(false);
   };
 
+  const handleSaveClick = async () => {
+    if (isEditing && currentTestId) {
+      const isStructureChanged = JSON.stringify(sections) !== initialSectionsRef.current;
+      const submissions = await getSubmissionsByTestId(currentTestId);
+      if (isStructureChanged) {
+        const submissions = await getSubmissionsByTestId(currentTestId);
+        if (submissions.length > 0) {
+          setIsConfirmDialogOpen(true);
+          return;
+        }
+      }
+    }
+    await performSave();
+  };
 
   const handleTogglePublish = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newChecked = event.target.checked;
     setIsCurrentPublished(newChecked);
-
     if (isEditing && currentTestId) {
       await updateTestPublishStatus(currentTestId, newChecked);
     } else {
-      await saveTestButtonFunction(newChecked);
+      await performSave(newChecked);
     }
   };
 
-  const handleChange = (event: any, newValue: any) => {
-    setValue(newValue);
-  };
-
-  const a11yProps = (index: number) => {
-    return {
-      id: `simple-tab-${index}`,
-      "aria-controls": `simple-tabpanel-${index}`,
+  const handleAdd = () => {
+    const section: Section = {
+      id: 1,
+      testId: 1,
+      summary: "",
+      number: sections.length + 1,
     };
-  };
-
-  const CreateError = () => {
-    const isAfterWarning = () => {
-      if (startDate.isAfter(endDate)) {
-        return <Alert severity="error">{msg.ERROR_START_AFTER_END}</Alert>;
-      }
-    };
-
-    const isClassError = () => {
-      if (assignedClass.length === 0) {
-        return <Alert severity="error">{msg.ERROR_NO_CLASS}</Alert>;
-      }
-    };
-
-    const isnotInsertedContentError = () => {
-      let missing_content: boolean = false;
-      let missing_content_list: String = "";
-      sections.map((section, count) => {
-        section.questions.map((question) => {
-          if (question.insertType != "None" && question.insertContent == "") {
-            missing_content = true;
-            missing_content_list += msg.SECTION_NUMBER + (count + 1).toString() + "-" + msg.QUESTION_NUMBER_PREFIX + question.number.toString() + ",";
-          }
-        })
-      })
-      if (missing_content) {
-        return <Alert severity="error">{msg.ERROR_CONTENT_MISSING}<br /> {missing_content_list}</Alert>;
-      }
-    }
-
-    return (
-      <Stack gap={1} mb={2} sx={{ flexShrink: 0 }}>
-        {isAfterWarning()}
-        {isClassError()}
-        {isnotInsertedContentError()}
-      </Stack>
-    );
+    setSections([...sections].concat({ section: section, questions: [] }));
   };
 
   const checkDataError = () => {
-    let isError: boolean = false;
-    if (startDate.isAfter(endDate)) {
-      isError = true;
-    }
-    if (assignedClass.length === 0) {
-      isError = true;
-    }
-
-    sections.forEach((section) => {
-      section.questions.forEach((question) => {
-        if (question.insertType !== "None" && question.insertContent === "") {
-          isError = true;
-        }
-      });
-    });
-
-    return isError;
-  };
-
-  const handleClassChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const values = event.target.value as string[];
-    const select = classList.filter((item) => values.includes(item.id));
-
-    setAssignedClass(select);
+    if (startDate.isAfter(endDate)) return true;
+    if (assignedClass.length === 0) return true;
+    return sections.some(section =>
+      section.questions.some(q => q.insertType !== "None" && q.insertContent === "")
+    );
   };
 
   return (
@@ -375,49 +256,23 @@ function ClientSearchParamWrapper() {
           <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
             {isEditing ? msg.EDIT_TEST : msg.CREATE_NEW_TEST}
           </Typography>
-
           <Chip
             label={isCurrentPublished ? msg.PUBLISHED : msg.UNPUBLISHED}
             color={isCurrentPublished ? "success" : "default"}
-            sx={{ verticalAlign: 'middle', fontWeight: 'normal' }}
           />
         </Stack>
 
         <Stack direction="row" spacing={2} alignItems="center">
           <Button
-            variant="outlined"
-            startIcon={<FileUploadIcon />}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {msg.OPEN_JSON}
-          </Button>
-          <input
-            type="file"
-            accept="application/json"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            onChange={handleLoadJson}
-          />
-
-          <Button
-            variant="outlined"
-            startIcon={<FileDownloadIcon />}
-            onClick={handleSaveJson}
-          >
-            {msg.SAVE_JSON}
-          </Button>
-
-          <Button
             variant="contained"
             size="large"
             startIcon={<SaveIcon />}
-            onClick={() => saveTestButtonFunction()}
+            onClick={handleSaveClick}
             disabled={checkDataError()}
             sx={{ px: 4 }}
           >
             {msg.SAVE}
           </Button>
-
           <FormControlLabel
             control={
               <Switch
@@ -428,81 +283,69 @@ function ClientSearchParamWrapper() {
               />
             }
             label={isCurrentPublished ? msg.PUBLISHED : msg.UNPUBLISHED}
-            sx={{ ml: 1 }}
           />
         </Stack>
       </Stack>
 
-      <CreateError />
-
       <Paper elevation={3} sx={{ flexGrow: 1, minHeight: 0, display: 'flex', overflow: 'hidden', borderRadius: 2 }}>
-        <Box
-          sx={{
-            borderRight: 1,
-            borderColor: "divider",
-            bgcolor: 'grey.50',
-            width: '200px',
-            flexShrink: 0,
-            overflowY: 'auto'
-          }}
-        >
+        <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", bgcolor: 'grey.50', overflowY: 'auto' }}>
           <Tabs
-            key={`tabs-${dataVersion}`}
             value={value}
-            onChange={handleChange}
+            onChange={(_, v) => setValue(v)}
             orientation="vertical"
             variant="scrollable"
-            sx={{
-              '& .MuiTab-root': { alignItems: 'flex-start', textAlign: 'left', pl: 3 },
-            }}
           >
             <Tab label={msg.METADATA} />
-            {sections.map((s: SectionFrame, index: number) => (
-              <Tab label={`${msg.SECTION_NUMBER} ${index + 1}`} {...a11yProps(index)} key={index} />
+            {sections.map((_, index) => (
+              <Tab label={`${msg.SECTION_NUMBER} ${index + 1}`} key={index} />
             ))}
-            <Tab
-              icon={<AddIcon />}
-              iconPosition="start"
-              label={msg.ADD_SECTION}
-              onClick={handleAdd}
-              sx={{ color: 'primary.main', fontWeight: 'bold' }}
-              {...a11yProps(sections.length)}
-            />
+            <Tab icon={<AddIcon />} iconPosition="start" label={msg.ADD_SECTION} onClick={handleAdd} sx={{ color: 'primary.main', fontWeight: 'bold' }} />
           </Tabs>
         </Box>
 
-        <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 0, height: '100%' }}>
-          <TabPanels value={value} index={0}>
-            <MetaDataPage
-              key={`metadata-${dataVersion}`}
-              testTitle={testTitle}
-              setTestTitle={setTestTitle}
-              testSummary={testSummary}
-              setTestSummary={setTestSummary}
-              startDate={startDate}
-              setStartDate={setStartDate}
-              endDate={endDate}
-              setEndDate={setEndDate}
-              asignedClass={assignedClass}
-              handleClassChange={handleClassChange}
-              classList={classList}
-            />
-          </TabPanels>
-          {sections.map((s: SectionFrame, index: number) => (
-            <TabPanels value={value} index={index + 1} key={index + 1}>
+        <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+          {value === 0 && (
+            <Box p={4}>
+              <MetaDataPage
+                testTitle={testTitle} setTestTitle={setTestTitle}
+                testSummary={testSummary} setTestSummary={setTestSummary}
+                startDate={startDate} setStartDate={setStartDate}
+                endDate={endDate} setEndDate={setEndDate}
+                asignedClass={assignedClass}
+                handleClassChange={(e: any) => setAssignedClass(classList.filter(c => e.target.value.includes(c.id)))}
+                classList={classList}
+              />
+            </Box>
+          )}
+          {sections.map((s, index) => (
+            <Box key={index} hidden={value !== index + 1} p={4}>
               <SectionPage
-                key={`section-${index}-${dataVersion}`}
                 index={index}
                 section={s}
-                setSection={(s: SectionFrame) => {
-                  handleSectionChange(s, index);
+                setSection={(newS: SectionFrame) => setSections(sections.map((sec, i) => i === index ? newS : sec))}
+                deleteSection={() => {
+                  const newS = sections.filter((_, i) => i !== index).map((sec, i) => ({ ...sec, section: { ...sec.section, number: i + 1 } }));
+                  setSections(newS);
+                  if (value > newS.length) setValue(newS.length);
                 }}
-                deleteSection={() => handleRemove(index)}
               />
-            </TabPanels>
+            </Box>
           ))}
         </Box>
       </Paper>
+
+      <Dialog open={isConfirmDialogOpen} onClose={() => setIsConfirmDialogOpen(false)}>
+        <DialogTitle>{msg.CONFIRM_DELETE_SUBMISSIONS_TITLE}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{msg.CONFIRM_DELETE_SUBMISSIONS_MESSAGE}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsConfirmDialogOpen(false)}>{msg.CANCEL}</Button>
+          <Button onClick={() => performSave()} color="error" variant="contained">
+            {msg.PROCEED_SAVE}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
