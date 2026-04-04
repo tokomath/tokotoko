@@ -138,4 +138,18 @@ export const msg = {
     "SEND_FAILED" : "提出に失敗しました",
     "SEND" : "提出",
     "SENDING" : "送信中...",
+
+    //  /teacher/grading/[testid]/page.tsx
+    "PART": "Part",
+    "NO_TEST_DATA": "テストデータが見つかりません。",
+    "TOTAL_POINT": "合計点",
+    "UNGRADED_COUNT": "未採点",
+    "SUCCESS_SAVE_GRADING": "採点データを保存しました。",
+    "ERROR_OCCURRED": "エラーが発生しました。",
+    "EXPORT_CSV": "CSVエクスポート",
+    "CLASS_ID": "クラスID",
+    "TEST_ID": "テストID",
+    "CSV_PART_QNUMBER": "Part-QNumber",
+    "CSV_QUESTION": "Question",
+    "CSV_ANSWER": "Answer",
 }

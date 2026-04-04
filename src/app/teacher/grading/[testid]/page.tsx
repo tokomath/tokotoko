@@ -12,6 +12,7 @@ import { setAnswerPoints } from "@/app/api/test/setAnswerPoints";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from '@clerk/nextjs';
 import { TeacherGuard } from "@/lib/guard";
+import { msg } from "@/msg-ja";
 
 import styles from "./styles.module.css";
 
@@ -32,10 +33,7 @@ interface SubmissionWithRelations extends PrismaSubmission {
   };
   answers: Answer[];
 }
-//#endregion
 
-//======================================
-//#region TabPanel等のプロパティ
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -64,10 +62,7 @@ function a11yProps(index0: number) {
     'aria-controls': `simple-tabpanel-${index0}`,
   };
 }
-//======================================
-//#endregion
 
-//#region Sectionのタブ
 interface SectionTabProps {
   sections: Section[]
   sectionValue: number;
@@ -80,7 +75,7 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
       <Tabs value={sectionValue} onChange={sectionHandleChange} aria-label="section tabs" variant="fullWidth">
         {
           sections.map((section, index) => (
-            <Tab label={"Part" + section.number} key={index} {...a11yProps(index)} />
+            <Tab label={msg.SECTION_NUMBER + section.number} key={index} {...a11yProps(index)} />
           ))
         }
       </Tabs>
@@ -96,9 +91,7 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
     </Box>
   );
 }
-//#endregion
 
-//#region Memoized Components
 const AnswerCell = React.memo(function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle, cursorImage }: { answer: string; point: number; userIndex: number; questionIndex: number; answerCellHandle: (newPoint: number, userIndex: number, questionIndex: number) => void; cursorImage: string; }) {
   if (!answer) {
     return null
@@ -153,7 +146,6 @@ function generateCursor(): string {
   }
   return "";
 }
-//#endregion
 
 export default function GradingPage({ params }: { params: Promise<{ testid: number }> }) {
   const searchParams = useSearchParams();
@@ -191,7 +183,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       if (test_res) {
         setTest(test_res);
       } else {
-        alert("指定されたテストが見つからないか、アクセス権限がありません。");
+        alert(msg.ERROR_TEST_NOT_FOUND);
         router.push('/teacher');
       }
     };
@@ -309,9 +301,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
     const send_res = await setAnswerPoints(send_data);
     if (send_res === 0) {
-      alert("Saved grading data successfully.");
+      alert(msg.SUCCESS_SAVE_GRADING);
     } else {
-      alert("An Error has occurred.");
+      alert(msg.ERROR_OCCURRED);
     }
   }, [submissionData, points]);
 
@@ -319,9 +311,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     if (!Test_ || !submissionData) return;
 
     let exportdata_csv: string = "";
-    let r1: string = "Part-QNumber,";
-    let r2: string = "Question,";
-    let r3: string = "Answer,";
+    let r1: string = `${msg.CSV_PART_QNUMBER},`;
+    let r2: string = `${msg.CSV_QUESTION},`;
+    let r3: string = `${msg.CSV_ANSWER},`;
 
     const format_text = (str: string): string => {
       return str.replaceAll("\n", "").replaceAll(",", "，");
@@ -329,7 +321,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
     Test_.sections.forEach((section: any, section_index: number) => {
       section.questions.forEach((question: Question, question_index: number) => {
-        r1 += `Part${section_index + 1}-${question_index + 1},,`;
+        r1 += `${msg.SECTION_NUMBER}${section_index + 1}-${question_index + 1},,`;
         r2 += `${format_text(question.question)},,`;
         r3 += `${format_text(question.answer)},,`;
       })
@@ -443,7 +435,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                 {Test_?.title}
                 {Test_ && (
                   <Chip
-                    label={Test_.isPublished ? "公開中" : "非公開"}
+                    label={Test_.isPublished ? msg.PUBLISHED : msg.UNPUBLISHED}
                     color={Test_.isPublished ? "success" : "default"}
                     sx={{ ml: 2, verticalAlign: 'middle', fontWeight: 'normal' }}
                   />
@@ -470,10 +462,10 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                 }
               </Box>
               <Typography textAlign="right">
-                Class ID: {classId ?? '...'}
+                {msg.CLASS_ID}: {classId ?? '...'}
               </Typography>
               <Typography textAlign="right">
-                Test ID: {testid}
+                {msg.TEST_ID}: {testid}
               </Typography>
             </Box>
           </Box>
@@ -487,7 +479,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               (<SectionTabs sections={Test_.sections} sectionValue={sectionValue} sectionHandleChange={sectionHandleChange} />)
               : (<>
                 <Box textAlign="center" padding={5}>
-                  <Typography>テストデータが見つかりません。</Typography>
+                  <Typography>{msg.NO_TEST_DATA}</Typography>
                 </Box>
               </>)
           }
@@ -498,8 +490,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                   <TableRow>
 
                     <TableCell sx={{ textAlign: "center" }} className={styles.username_cell}></TableCell>
-                    <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>Total Point</TableCell>
-                    <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>Ungraded</TableCell>
+                    <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>{msg.TOTAL_POINT}</TableCell>
+                    <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>{msg.UNGRADED_COUNT}</TableCell>
                     {
                       visibleQuestions.questions.map((question: Question, index: number) =>
                         <TableCell key={"question" + question.id} sx={{ textAlign: "center" }}>
@@ -562,8 +554,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         </Paper>
         {Test_ && (
           <>
-            <Button variant="contained" sx={{ mb: 1, mt: 0 }} className={styles.save_button} onClick={savebuttonHandle}>Save</Button>
-            <Button sx={{ mb: 1, mt: 0 }} className={styles.export_button} onClick={exportbutonHandle}>Export as CSV</Button>
+            <Button variant="contained" sx={{ mb: 1, mt: 0 }} className={styles.save_button} onClick={savebuttonHandle}>{msg.SAVE}</Button>
+            <Button sx={{ mb: 1, mt: 0 }} className={styles.export_button} onClick={exportbutonHandle}>{msg.EXPORT_CSV}</Button>
           </>
         )}
       </Container>
