@@ -37,7 +37,7 @@ export const msg = {
     "TEST": "テスト",
     "CLASS_NAME": "クラス名",
     "CREATE_CLASS": "クラスを作成",
-    "CREATE_TEST": "新規テストを作成",
+    "CREATE_TEST": "テストを作成",
     "TESTS_IN_CLASS": "テスト一覧",
     "CLASS_CREATED": "クラスを作成しました",
     "ERROR_NO_CLASS_NAME": "クラス名を入力してください。",
@@ -58,7 +58,7 @@ export const msg = {
 
     // テスト作成ページ
     // /teacher/create/page.tsx
-    "CREATE_NEW_TEST": "新規テスト作成",
+    "CREATE_NEW_TEST": "テスト作成",
     "EDIT_TEST": "テストの編集",
     "PUBLISH_TEST": "テストを公開",
     "PUBLISHED": "公開中",
@@ -176,7 +176,7 @@ export const msg = {
     "MEMBERS": "メンバー",
     "SUBMISSION_STATUS": "提出状況",
     "NO_TESTS_IN_CLASS": "このクラスにはまだテストがありません",
-    "VIEW_DETAILS": "詳細を見る",
+    "VIEW_DETAILS": "詳細",
     "SUBMITTED_STUDENTS": "提出済みの学生",
     "UNSUBMITTED_STUDENTS": "未提出の学生",
     "ERROR_INVALID_URL": "無効なURLです",

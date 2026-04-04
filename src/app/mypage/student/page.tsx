@@ -11,6 +11,7 @@ import {
   Card,
   CardActionArea,
   CardContent,
+  CardActions,
   Popover,
   Avatar,
 } from "@mui/material";
@@ -96,12 +97,18 @@ interface ClassCardProp {
 function ClassCard({ classData }: ClassCardProp) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const router = useRouter();
+
   let allSubmitted = true;
   classData.tests.forEach(test => {
     if (test.submitted == false) {
       allSubmitted = false;
     }
   });
+
+  const detailButtonFunction = () => {
+    router.push("/classDetail?classId=" + classData.id);
+  };
 
   return (
     <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -148,6 +155,9 @@ function ClassCard({ classData }: ClassCardProp) {
             }()}</>
           </CardContent>
         </CardActionArea>
+        <CardActions>
+          <Button size="large" onClick={detailButtonFunction}>{msg.VIEW_DETAILS}</Button>
+        </CardActions>
       </Card>
 
       <Popover
