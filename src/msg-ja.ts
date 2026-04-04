@@ -166,4 +166,8 @@ export const msg = {
     "NO_MEMBERS": "メンバーが追加されていません",
     "UPLOAD_ICON": "アイコン画像を選択",
     "DELETE_ICON": "アイコンを削除",
+    "COPIED": "クリップボードにコピーしました",
+    "INVITATION_QR": "招待用QRコード",
+    "INVITATION_URL": "招待用URL",
+    "COPY_URL": "URLをコピー",
 }
