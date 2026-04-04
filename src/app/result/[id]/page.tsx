@@ -3,6 +3,7 @@ import React, { useEffect, useState, use } from "react";
 import {
   Box,
   Button,
+  Link,
   Paper,
   Tab,
   Tabs,
@@ -11,14 +12,17 @@ import {
 } from "@mui/material";
 import "katex/dist/katex.min.css";
 import Stack from "@mui/material/Stack";
+import Question from "@/compornents/Question";
 import SendIcon from "@mui/icons-material/Send";
-import { isAlreadySubmit } from "@/app/api/test/submit";
-import { getSubmission } from "@/app/api/test/result";
 import Latex from "react-latex-next";
-
-import TopBar from "@/compornents/TopBar";
-import InsertFrame from "@/compornents/InsertFrame";
+import { SectionFrame, TestFrame } from "@/app/api/test/testFrames";
+import { getTestById } from "@/app/api/test/getTestById";
+import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
+import { Answer } from "@prisma/client";
 import { useUser } from '@clerk/nextjs'
+
+import { msg } from "@/msg-ja";
+
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -49,88 +53,201 @@ function a11yProps(index: number) {
 }
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
-  const [loading, setLoading] = useState(true);
-  const [alreadySubmit, setAlreadySubmit] = useState(true);
   const { user, isSignedIn } = useUser();
   const testId = use(params).id;
-  let session = {
-    user: {
-      name: user?.firstName + " " + user?.lastName || "",
-      id: user?.id || ""
-    },
-    satus: isSignedIn
-  }
+
+  const [loading, setLoading] = useState(true);
+  const [alreadySubmit, setAlreadySubmit] = useState(true);
 
   useEffect(() => {
-    const a = async () => {
-      if (session.satus && session.user.id) {
-        setAlreadySubmit(await isAlreadySubmit({ userId: session.user.id, testId: Number(testId) }))
+    const fetchSubmitStatus = async () => {
+      if (isSignedIn === true && user?.id) {
+        try {
+          const result = await isAlreadySubmit({ userId: user.id, testId: Number(testId) });
+          setAlreadySubmit(result);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      } else if (isSignedIn === false) {
         setLoading(false);
       }
-    }
-    a()
-  }, [session])
+    };
+    fetchSubmitStatus();
+  }, [isSignedIn, user?.id, testId]);
 
-  if (!loading && session && session.user.name && alreadySubmit) {
-    return <>
-      <Result params={{ id: testId, userid: session.user.id }} />
-    </>
+  if (loading || isSignedIn === undefined) {
+    return <>{msg.LOADING || "Loading..."}</>;
   }
-  else {
-    return <>Cant open page</>
+
+  if (isSignedIn === true && user?.id) {
+    if (alreadySubmit) {
+      return <Completed id={testId} />;
+    } else {
+      const userName = user.firstName || user.lastName
+        ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
+        : "ユーザー";
+
+      return (
+        <Solve
+          id={testId}
+          username={userName}
+          setAlreadySubmit={() => setAlreadySubmit(true)}
+        />
+      );
+    }
   }
+
+  return <>{msg.CANT_OPEN_PAGE}</>;
 }
 
-function Result({ params }: { params: { id: string, userid: string } }) {
-  // undefined before init , null when unable to access form TODO
-  const [data, setData] = useState<any | null | undefined>(undefined);
+function Completed({ id }: { id: string }) {
+  let url = "/result/" + id
+  return (
+    <Stack sx={{ margin: 2 }} textAlign={"center"} >
+      <Typography variant="h4" marginY={5}>{msg.SUBMISSION_COMPLETED}</Typography>
+      <Link href={url} fontSize={20} marginY={5}>{msg.CHECK_RESULTS}</Link>
+    </Stack >
+  )
+}
+
+function Solve(
+  { id,
+    username,
+    setAlreadySubmit
+  }: {
+    id: string,
+    username: string,
+    setAlreadySubmit: () => void
+  }) {
+  const { user, isSignedIn } = useUser();
+  const [testData, setTestData] = useState<TestFrame | null | undefined>(undefined);
+
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
-  const [point, setPoint] = useState(0);
+
+  const [sendingStatus, setSendingStatus] = useState(false);
+
+  useEffect(() => {
+    const fetchForm = async () => {
+      const res = await getTestById(Number(id), (user != null && user != undefined) ? user.id : "");
+      if (res) {
+        const test: TestFrame = {
+          test: {
+            id: res.id,
+            title: res.title,
+            summary: res.summary,
+            startDate: res.startDate,
+            endDate: res.endDate,
+            isPublished: res.isPublished
+          },
+          sections: res.sections.map(
+            (s) => {
+              return {
+                section: { id: s.id, testId: s.testId, number: s.number, summary: s.summary },
+                questions: s.questions.map((q) => {
+                  return {
+                    id: q.id,
+                    sectionId: q.sectionId,
+                    number: q.number,
+                    question: q.question,
+                    insertType: q.insertType,
+                    insertContent: q.insertContent,
+                    answer: q.answer,
+                  }
+                })
+              }
+            }
+          ),
+          classes: res.classes,
+        }
+        setTestData(test)
+      } else {
+        setTestData(null)
+      }
+    };
+
+    fetchForm();
+  }, []);
+
+  const changeAnswer = (questionId: number, answer: string) => {
+    setAnswers((prevAnswers) => ({
+      ...prevAnswers,
+      [questionId]: answer,
+    }));
+  };
+
+  const handleSubmit = async () => {
+    setSendingStatus(true);
+
+    if (!testData) {
+      alert(msg.ERROR)
+      setSendingStatus(false);
+      return
+    }
+
+    const ans = { ...answers };
+    const answerList = testData.sections.map((section: SectionFrame) => {
+      return section.questions.map((question: any) => {
+        if (ans[question.id.toString()]) {
+          return { id: Number(question.id), text: ans[question.id.toString()] }
+        } else {
+          return { id: Number(question.id), text: "" }
+        }
+      })
+    }).flat()
+
+    let submitdata: submitProps = {
+      userId: user?.id || "",
+      testId: Number(id),
+      answerList: answerList as Answer[],
+    };
+
+    console.log(answerList)
+
+    const res = await submitTest(submitdata)
+      .then((res) => {
+        alert(msg.SENT);
+        setAlreadySubmit();
+      })
+      .catch((err) => {
+        alert(msg.SEND_FAILED + "\n");
+        alert(err)
+      });
+
+    setSendingStatus(false);
+  };
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setPartIndex(newValue);
   };
 
   useEffect(() => {
-    const fetch = async () => {
-      const data = await getSubmission({ testId: Number(params.id), userid: params.userid })
-      if (data) {
-        setData(data)
-        let i = 0;
-        let p = 0;
-        let misaiten = false;
-        data.test.sections.forEach((sec) => {
-          sec.questions.forEach((q) => {
-            //@ts-ignore
-            q["ans"] = data.answers[i];
-            if (data.answers[i].point >= 0) {
-              p += data.answers[i].point;
-            } else {
-              misaiten = true;
-            }
-            i += 1;
-          })
-        })
-        if (misaiten) {
-          setPoint(-1)
-        } else {
-          setPoint(p)
-        }
-        console.log(data)
-      } else {
-        setData(null)
-      }
-    };
-    fetch();
-  }, []);
+    if (testData) {
+      const initialAnswers: { [key: string]: string } = {};
+      testData.sections.forEach((section) => {
+        section.questions.forEach((question) => {
+          initialAnswers[question.id] = "";
+        });
+      });
+      setAnswers(initialAnswers);
+    }
+  }, [testData]);
 
-  if (!data) {
-    return <>loading</>
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [partIndex]);
+
+  if (testData === null) {
+    return <div>{msg.NO_TEST_FOUND}</div>
+  }
+  if (testData === undefined) {
+    return <div>{msg.LOADING}</div>;
   }
 
   return (
     <main>
-      {/* ヘッダー部分 */}
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
         <Box
           paddingTop={1}
@@ -140,71 +257,86 @@ function Result({ params }: { params: { id: string, userid: string } }) {
           alignItems="center"
           justifyContent="flex-end"
         >
+          <Link
+            href="https://katex.org/docs/supported.html"
+            target="_blank"
+            rel="noopener"
+            marginX={1}
+          >
+            KaTeXヘルプ
+          </Link>
           <Typography fontFamily="monospace" marginX={1}>
-            FormID:{params.id}
+            {msg.FORM_ID}{id}
           </Typography>
         </Box>
-        <Box maxWidth={640} margin="auto">
+        <Box maxWidth={800} margin="auto">
           <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
             <Typography variant="h1" fontSize={30}>
-              {data.test.title}
+              {testData.test.title}
             </Typography>
-            <Typography>{data.test.summary}</Typography>
+            <Typography>{testData.test.summary}</Typography>
             <Typography>
-              Start:{data.test.startDate.toString()} → Deadline:
-              {data.test.endDate.toString()}
+              {msg.START_DATE + ": " + testData.test.startDate.getFullYear() + "/" + (testData.test.startDate.getMonth() + 1) + "/" + testData.test.startDate.getDate() + " " +
+                testData.test.startDate.getHours() + ":" + testData.test.startDate.getMinutes() +
+                " (UTC+" + testData.test.startDate.getTimezoneOffset() / -60 + "h)"
+              }
+            </Typography>
+            <Typography>
+              {msg.END_DATE + ": " + testData.test.endDate.getFullYear() + "/" + (testData.test.endDate.getMonth() + 1) + "/" + testData.test.endDate.getDate() + " " +
+                testData.test.endDate.getHours() + ":" + testData.test.endDate.getMinutes() +
+                " (UTC+" + testData.test.endDate.getTimezoneOffset() / -60 + "h)"
+              }
             </Typography>
           </Stack>
         </Box>
       </Paper>
 
-      {/* 問題部分 */}
-      <Box maxWidth={640} margin="auto">
-        <Box alignContent="center" padding={2}>
-          {
-            point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + " points"}</div>
-          }
-        </Box>
+      <Box maxWidth={800} margin="auto">
         <Tabs
           value={partIndex}
           onChange={handleChange}
           aria-label="Tabs of each PART"
         >
-          {data.test.sections.map((section: any, index: number) => (
+          {testData.sections.map((s, index) => (
             <Tab
-              key={section.number}
-              label={`Part ${section.number}`}
+              key={s.section.number}
+              label={`${msg.SECTION_NUMBER} ${s.section.number}`}
               {...a11yProps(index)}
             />
           ))}
         </Tabs>
-        {data.test.sections.map((section: any, i1: number) => (
+
+        {testData.sections.map((s, index) => (
           <CustomTabPanel
-            key={section.number}
+            key={s.section.number}
             value={partIndex}
-            index={i1}
+            index={index}
           >
-            <Box margin={2}>
+            <Paper
+              key={s.section.number}
+              sx={{ marginTop: 2, padding: 2 }}
+            >
               <Typography variant="h6">
-                PART {section.number}
+                {msg.SECTION_NUMBER} {s.section.number}
               </Typography>
-              <Latex>{section.summary}</Latex>
-            </Box>
-            {section.questions.map((question: any) => {
-              return <Paper key={question.id} sx={{ marginTop: 2, padding: 2 }}><React.Fragment key={question.id}>
-                <Question
-                  id={question.id.toString()}
-                  number={question.number.toString()}
-                  question={question.question}
-                  myAns={question.ans.text}
-                  insertType={question.insertType}
-                  insertContent={question.insertContent}
-                  trueAns={question.answer}
-                  point={question.ans.point}
-                />
-              </React.Fragment>
-              </Paper>
-            })}
+              <Latex>{s.section.summary}</Latex>
+              {s.questions.map((question) => (
+                <React.Fragment key={question.id}>
+                  <Divider sx={{ my: 1 }} />
+                  <Question
+                    id={question.id.toString()}
+                    number={question.number.toString()}
+                    question={question.question}
+                    insertType={question.insertType}
+                    insertContent={question.insertContent}
+                    answer={answers[question.id]}
+                    changeAnswer={(answer) =>
+                      changeAnswer(question.id, answer)
+                    }
+                  />
+                </React.Fragment>
+              ))}
+            </Paper>
           </CustomTabPanel>
         ))}
 
@@ -218,11 +350,13 @@ function Result({ params }: { params: { id: string, userid: string } }) {
           <Next
             index={partIndex}
             setIndex={setPartIndex}
-            maxIndex={data.test.sections.length}
+            maxIndex={testData.sections.length}
+            handleSubmit={handleSubmit}
+            sendingStatus={sendingStatus}
           />
         </Box>
       </Box>
-    </main>
+    </main >
   );
 }
 
@@ -236,22 +370,34 @@ function Previous({
   if (index === 0) {
     return <div></div>;
   }
-  return <Button onClick={() => setIndex(index - 1)}>Previous Part</Button>;
+  return <Button onClick={() => setIndex(index - 1)}>{msg.PREV_PART}</Button>;
 }
 
 function Next({
   index,
   setIndex,
   maxIndex,
+  handleSubmit,
+  sendingStatus
 }: {
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
   maxIndex: number;
+  handleSubmit: () => void;
+  sendingStatus: boolean;
 }) {
-  if (index === maxIndex - 1) {
+  if (index === maxIndex - 1 && !sendingStatus) {
     return (
-      <></>
+      <Button variant="contained" endIcon={<SendIcon />} onClick={handleSubmit}>
+        {msg.SEND}
+      </Button>
     );
+  } else if (sendingStatus) {
+    return (
+      <Button disabled>
+        {msg.SENDING}
+      </Button>
+    )
   }
 
   return (
@@ -260,51 +406,7 @@ function Next({
         setIndex(index + 1);
       }}
     >
-      Next Part
+      {msg.NEXT_PART}
     </Button>
   );
-}
-
-function Question({ id, number, question, insertType, insertContent, myAns, trueAns, point }: any) {
-  return (
-    <Stack spacing={2}>
-      {/* 横に並べる */}
-      <Box display="flex" alignItems="center">
-        <Typography variant="h2" fontSize={17}>({number})</Typography>
-        <Box width="10px"></Box>
-        <Latex>{question}</Latex>
-      </Box>
-      {insertType != "None" ?
-        <><Divider />
-          <InsertFrame insertType={insertType} insertContent={insertContent} />
-        </>
-        : <></>
-      }
-
-      <Divider />
-      <Box
-        display="flex"
-        minHeight={40}
-        alignItems="center"
-        paddingX={2}
-      >
-        <Latex>{myAns}</Latex>
-      </Box>
-      <Divider />
-      <Box
-        display="flex"
-        minHeight={40}
-        alignItems="center"
-        paddingX={2}
-      >
-        <Typography>正答</Typography>
-        <Box minWidth={20} />
-        <Latex>{trueAns}</Latex>
-      </Box>
-      {
-        point == -1 ? <div>{"未採点"}</div> : <div>{"点数: " + point + " points"}</div>
-      }
-    </Stack>
-
-  )
 }

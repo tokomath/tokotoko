@@ -21,6 +21,7 @@ import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit"
 import { Answer } from "@prisma/client";
 import { useUser } from '@clerk/nextjs'
 
+import { msg } from "@/msg-ja";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -93,7 +94,7 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
       )
     }
   } else {
-    return <>Cant open page</>
+    return <>{msg.CANT_OPEN_PAGE}</>
   }
 }
 
@@ -101,8 +102,8 @@ function Completed({ id }: { id: string }) {
   let url = "/result/" + id
   return (
     <Stack sx={{ margin: 2 }} textAlign={"center"} >
-      <Typography variant="h4" marginY={5}>Submission Completed</Typography>
-      <Link href={url} fontSize={20} marginY={5}>Check Your Results ＞</Link>
+      <Typography variant="h4" marginY={5}>{msg.SUBMISSION_COMPLETED}</Typography>
+      <Link href={url} fontSize={20} marginY={5}>{msg.CHECK_RESULTS}</Link>
     </Stack >
   )
 }
@@ -178,7 +179,7 @@ function Solve(
     setSendingStatus(true);
 
     if (!testData) {
-      alert("Error")
+      alert(msg.ERROR)
       setSendingStatus(false);
       return
     }
@@ -204,11 +205,11 @@ function Solve(
 
     const res = await submitTest(submitdata)
       .then((res) => {
-        alert("Sent!");
+        alert(msg.SENT);
         setAlreadySubmit();
       })
       .catch((err) => {
-        alert("Failed to send!\n");
+        alert(msg.SEND_FAILED + "\n");
         alert(err)
       });
 
@@ -236,10 +237,10 @@ function Solve(
   }, [partIndex]);
 
   if (testData === null) {
-    return <div>No Test </div>
+    return <div>{msg.NO_TEST_FOUND}</div>
   }
   if (testData === undefined) {
-    return <div>Loading...</div>;
+    return <div>{msg.LOADING}</div>;
   }
 
   return (
@@ -263,7 +264,7 @@ function Solve(
             KaTeXヘルプ
           </Link>
           <Typography fontFamily="monospace" marginX={1}>
-            FormID:{id}
+            {msg.FORM_ID}{id}
           </Typography>
         </Box>
         <Box maxWidth={800} margin="auto">
@@ -273,13 +274,13 @@ function Solve(
             </Typography>
             <Typography>{testData.test.summary}</Typography>
             <Typography>
-              {"Start: " + testData.test.startDate.getFullYear() + "/" + (testData.test.startDate.getMonth() + 1) + "/" + testData.test.startDate.getDate() + " " +
+              {msg.START_DATE + ": " + testData.test.startDate.getFullYear() + "/" + (testData.test.startDate.getMonth() + 1) + "/" + testData.test.startDate.getDate() + " " +
                 testData.test.startDate.getHours() + ":" + testData.test.startDate.getMinutes() +
                 " (UTC+" + testData.test.startDate.getTimezoneOffset() / -60 + "h)"
               }
             </Typography>
             <Typography>
-              {"End : " + testData.test.endDate.getFullYear() + "/" + (testData.test.endDate.getMonth() + 1) + "/" + testData.test.endDate.getDate() + " " +
+              {msg.END_DATE + ": " + testData.test.endDate.getFullYear() + "/" + (testData.test.endDate.getMonth() + 1) + "/" + testData.test.endDate.getDate() + " " +
                 testData.test.endDate.getHours() + ":" + testData.test.endDate.getMinutes() +
                 " (UTC+" + testData.test.endDate.getTimezoneOffset() / -60 + "h)"
               }
@@ -300,7 +301,7 @@ function Solve(
           {testData.sections.map((s, index) => (
             <Tab
               key={s.section.number}
-              label={`Part ${s.section.number}`}
+              label={`${msg.SECTION_NUMBER} ${s.section.number}`}
               {...a11yProps(index)}
             />
           ))}
@@ -318,7 +319,7 @@ function Solve(
               sx={{ marginTop: 2, padding: 2 }}
             >
               <Typography variant="h6">
-                PART {s.section.number}
+                {msg.SECTION_NUMBER} {s.section.number}
               </Typography>
               <Latex>{s.section.summary}</Latex>
               {s.questions.map((question) => (
@@ -371,7 +372,7 @@ function Previous({
   if (index === 0) {
     return <div></div>;
   }
-  return <Button onClick={() => setIndex(index - 1)}>Previous Part</Button>;
+  return <Button onClick={() => setIndex(index - 1)}>{msg.PREV_PART}</Button>;
 }
 
 function Next({
@@ -390,13 +391,13 @@ function Next({
   if (index === maxIndex - 1 && !sendingStatus) {
     return (
       <Button variant="contained" endIcon={<SendIcon />} onClick={handleSubmit}>
-        Send
+        {msg.SEND}
       </Button>
     );
   } else if (sendingStatus) {
     return (
       <Button disabled>
-        Sending...
+        {msg.SENDING}
       </Button>
     )
   }
@@ -407,7 +408,7 @@ function Next({
         setIndex(index + 1);
       }}
     >
-      Next Part
+      {msg.NEXT_PART}
     </Button>
   );
 }
