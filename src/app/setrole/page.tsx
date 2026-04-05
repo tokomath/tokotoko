@@ -12,20 +12,22 @@ export default function Page() {
     const { user } = useUser();
     const router = useRouter();
     const setRoleTeacher = () => {
-        if (user)
-            changeRole(user?.id, 0).then((ok) => {
+        const userId = user?.id;
+        if (userId)
+            changeRole(userId, 0).then((ok) => {
                 if(ok == 0)
                     router.push("mypage");
             });
-        
+
     }
     const setRoleStudent = () => {
-        if (user)
-            changeRole(user?.id, 1).then((ok) => {
+        const userId = user?.id;
+        if (userId)
+            changeRole(userId, 1).then((ok) => {
                 if(ok == 0)
                     router.push("mypage");
             });
-        
+
     }
 
     return (
