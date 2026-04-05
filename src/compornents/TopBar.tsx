@@ -26,34 +26,47 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
 
   return (
     <>
-      <Toolbar style={{ display: "flex", flexDirection: "row", flexWrap: "wrap" }}>
-        <Typography variant="h6" component="div" width="calc(100%/3)" textAlign="left">
-          <Button variant="text" onClick={titleEvent} sx={{ color: "white", fontSize: "22px" }}>
+      <Toolbar sx={{ display: "flex", flexDirection: "row", flexWrap: "nowrap", alignItems: "center", justifyContent: "space-between" }}>
+        <Box width="calc(100%/3)" sx={{ display: "flex", justifyContent: "flex-start" }}>
+          <Button
+            variant="text"
+            onClick={titleEvent}
+            sx={{
+              color: "white",
+              fontSize: "22px",
+              whiteSpace: "nowrap",
+              textTransform: "none",
+              padding: 0,
+              minWidth: "auto",
+              lineHeight: 1.2
+            }}
+          >
             Formula Form
           </Button>
-        </Typography>
-        <Box width="calc(100%/3)" textAlign="center">
-          <Typography variant="h4">{page_name}</Typography>
         </Box>
-        <Box width="calc(100%/3)" textAlign="right" >
-          <Box display="flex" justifyContent="flex-end" alignItems="center">
-            <Typography marginRight="5px" sx={{ display: "flex", alignItems: "center" }}>
-              {name}
-            </Typography>
-            
-            {isLoaded && !isSignedIn && (
-              <div className="h-fit ml-4 bg-blue-500 w-fit rounded-md text-white text-sm font-semibold">
-                <SignInButton />
-              </div>
-            )}
 
-            {isLoaded && isSignedIn && (
-              <div className="h-fit ml-4 w-fit">
-                <UserButton />
-              </div>
-            )}
-            
-          </Box>
+        <Box width="calc(100%/3)" sx={{ textAlign: "center" }}>
+          <Typography variant="h4" sx={{ fontSize: { xs: "1.5rem", sm: "2.125rem" } }}>
+            {page_name}
+          </Typography>
+        </Box>
+
+        <Box width="calc(100%/3)" sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+          <Typography sx={{ display: "flex", alignItems: "center", marginRight: "5px" }}>
+            {name}
+          </Typography>
+
+          {isLoaded && !isSignedIn && (
+            <Box sx={{ height: "fit-content", ml: 2, bgcolor: "primary.main", borderRadius: 1, color: "white", fontSize: "0.875 margin-toprem", fontWeight: "bold" }}>
+              <SignInButton />
+            </Box>
+          )}
+
+          {isLoaded && isSignedIn && (
+            <Box sx={{ height: "fit-content", ml: 2 }}>
+              <UserButton />
+            </Box>
+          )}
         </Box>
       </Toolbar>
     </>

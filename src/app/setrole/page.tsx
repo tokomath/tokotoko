@@ -1,27 +1,33 @@
 "use client"
 import React, { useEffect, useState } from "react";
+import { notFound } from 'next/navigation';
 import { Button, Box, Typography } from "@mui/material";
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { changeRole } from "@/app/api/User/updateUser"
 export default function Page() {
+    //ロール選択ページは一旦無効化
+    notFound();
+    
     const { user } = useUser();
     const router = useRouter();
     const setRoleTeacher = () => {
-        if (user)
-            changeRole(user?.id, 0).then((ok) => {
+        const userId = user?.id;
+        if (userId)
+            changeRole(userId, 0).then((ok) => {
                 if(ok == 0)
-                    alert("OK");
+                    router.push("mypage");
             });
-        router.push("mypage");
+
     }
     const setRoleStudent = () => {
-        if (user)
-            changeRole(user?.id, 1).then((ok) => {
+        const userId = user?.id;
+        if (userId)
+            changeRole(userId, 1).then((ok) => {
                 if(ok == 0)
-                    alert("OK");
+                    router.push("mypage");
             });
-        router.push("mypage");
+
     }
 
     return (
