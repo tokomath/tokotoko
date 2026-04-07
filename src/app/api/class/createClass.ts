@@ -32,6 +32,7 @@ export const createClass = async (classFrame: ClassFrame) => {
     data: {
       id:id,
       name: classData.name,
+      icon: classData.icon,
       users: {
         connect: user.map((t) => ({ id: t.id })),
       },
