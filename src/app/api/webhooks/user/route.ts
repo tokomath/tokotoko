@@ -57,7 +57,7 @@ export async function POST(req: Request) {
             {
                 const { id, username, first_name, last_name, email_addresses} = evt.data;
 
-                await createUser(id, username || `${first_name} ${last_name}`,email_addresses[0].email_address);
+                await createUser(id, username || `${last_name} ${first_name}`,email_addresses[0].email_address);
 
                 console.log(`User ${id} added to database.`);
                 return NextResponse.json({ message: 'User saved to DB' }, { status: 200 });
