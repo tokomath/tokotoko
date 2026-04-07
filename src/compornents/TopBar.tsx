@@ -6,6 +6,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 
 import { useUser, SignInButton, UserButton } from '@clerk/nextjs';
+import CustomUserButton from "./CustomUserButton";
 
 interface QuestionProps {
   page_name?: string;
@@ -64,7 +65,7 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
 
           {isLoaded && isSignedIn && (
             <Box sx={{ height: "fit-content", ml: 2 }}>
-              <UserButton />
+              <CustomUserButton />
             </Box>
           )}
         </Box>
