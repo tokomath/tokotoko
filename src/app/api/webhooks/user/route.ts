@@ -74,9 +74,8 @@ export async function POST(req: Request) {
             }
             case "user.updated":
             {
-                //ユーザー名変更をDBに反映
                 const { id, first_name, last_name, email_addresses } = evt.data;
-                const name:string = first_name+" "+last_name;
+                const name:string = last_name + " "+ first_name
                 if(id && name)
                 {
                     await updateUser(id,name,email_addresses[0].email_address);
