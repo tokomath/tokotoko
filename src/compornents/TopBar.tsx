@@ -58,7 +58,7 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
 
           {isLoaded && !isSignedIn && (
             <Box sx={{ height: "fit-content", ml: 2, bgcolor: "primary.main", borderRadius: 1, color: "white", fontSize: "0.875 margin-toprem", fontWeight: "bold" }}>
-              <SignInButton />
+              {/*<SignInButton />*/}
             </Box>
           )}
 

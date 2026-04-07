@@ -18,6 +18,42 @@ export const msg = {
     "MANAGE": "管理",
     "LOADING": "読み込み中...",
 
+    // サインイン・サインアップ
+    "SIGN_IN_TITLE": "ログイン",
+    "EMAIL_LABEL": "メールアドレス",
+    "PASSWORD_LABEL": "パスワード",
+    "SIGN_IN_BUTTON": "ログインする",
+    "NO_ACCOUNT_TEXT": "アカウントをお持ちでないですか？",
+    "GO_TO_SIGN_UP": "新規登録はこちら",
+    "ERROR_SIGN_IN": "ログイン処理に失敗しました",
+
+    "SIGN_UP_TITLE": "アカウント登録",
+    "LAST_NAME_LABEL": "姓",
+    "FIRST_NAME_LABEL": "名",
+    "SIGN_UP_BUTTON": "登録する",
+    "ALREADY_HAVE_ACCOUNT": "すでにアカウントをお持ちですか？",
+    "GO_TO_SIGN_IN": "ログインはこちら",
+    "ERROR_SIGN_UP": "アカウント登録に失敗しました",
+
+    "VERIFICATION_TITLE": "メール認証",
+    "VERIFICATION_CODE_LABEL": "認証コード",
+    "VERIFY_BUTTON": "認証する",
+    "ERROR_VERIFICATION": "認証に失敗しました",
+    "ERROR_PASSWORD_INCORRECT": "パスワードが間違っています。もう一度お試しください。",
+    "ERROR_USER_NOT_FOUND": "アカウントが見つかりません。メールアドレスをご確認ください。",
+    "ERROR_TOO_MANY_REQUESTS": "リクエストが多すぎます。しばらく時間をおいてから再度お試しください。",
+    "ERROR_EMAIL_EXISTS": "このメールアドレスは既に登録されています。",
+    "ERROR_PASSWORD_TOO_SHORT": "パスワードの文字数が不足しています。",
+    "ERROR_PASSWORD_PWNED": "このパスワードは過去に漏洩した記録があるため、安全のため使用できません。",
+    "ERROR_INVALID_EMAIL": "無効なメールアドレスの形式です。",
+    "ERROR_SIGN_IN_DEFAULT": "ログインに失敗しました。",
+    "ERROR_SIGN_UP_DEFAULT": "アカウント登録に失敗しました。",
+    "ERROR_DETAIL_PREFIX": "詳細エラー: ",
+    "ERROR_INVALID_CODE": "認証コードが間違っているか、有効期限が切れています。",
+    "ERROR_BOT_PROTECTION": "セキュリティ機能によりブロックされました。ブラウザのキャッシュをクリアするか、画面を更新してください。",
+    "ERROR_INTERNAL": "システム内部でエラーが発生しました。開発者にお問い合わせください。",
+    "ERROR_ENTER_PASSWORD": "パスワードを入力してください。", 
+
     // クラス参加ページ
     // /join/JoinClient.tsx
     "JOINED": "に参加しました。",
