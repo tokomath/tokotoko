@@ -21,7 +21,7 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
 
   let name: string = "";
   if (isSignedIn && user) {
-    name = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    name = `${user.lastName || ""} ${user.firstName || ""}`.trim();
   }
 
   return (
