@@ -16,7 +16,7 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import { User } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { TeacherGuard } from "@/lib/guard"
+import { TeacherGuard } from "@/lib/guard";
 import { msg } from "@/msg-ja";
 
 const stringToBrightColor = (str: string) => {
@@ -54,7 +54,7 @@ export function TeacherClassCards({ classes }: Props) {
         }
 
         return (
-            <Card sx={{ height: "auto", textAlign: "left", }}>
+            <Card sx={{ height: "auto", textAlign: "left" }}>
                 <CardActionArea onClick={detailButtonFunction}>
                     <CardContent>
                         <Box display="flex" alignItems="center" gap={2} mb={2}>
@@ -80,24 +80,27 @@ export function TeacherClassCards({ classes }: Props) {
                                     let comp: JSX.Element[] = [];
                                     for (let i = 0; i < 5; i++) {
                                         const u = classData.users[i];
-                                        if (u && classData.users.length > 6 && i == 4) {
+                                        if (u && classData.users.length > 6 && i === 4) {
                                             comp.push(
-                                                <ListItem key={i} sx={{ py: 0, px: 0 }}>
+                                                <ListItem key={`more-${i}`} sx={{ py: 0, px: 0 }}>
                                                     <ListItemText primary={"︙"} />
-                                                </ListItem>);
+                                                </ListItem>
+                                            );
                                             break;
                                         }
                                         if (!u) {
                                             comp.push(
-                                                <ListItem key={i} sx={{ py: 0, px: 0 }}>
+                                                <ListItem key={`empty-${i}`} sx={{ py: 0, px: 0 }}>
                                                     <ListItemText primary={"　"} />
-                                                </ListItem>);
+                                                </ListItem>
+                                            );
                                             continue;
                                         }
                                         comp.push(
-                                            <ListItem key={u.id + i} sx={{ py: 0, px: 0 }}>
+                                            <ListItem key={u.id} sx={{ py: 0, px: 0 }}>
                                                 <ListItemText primary={u.name} />
-                                            </ListItem>);
+                                            </ListItem>
+                                        );
                                     }
                                     return comp;
                                 })()}
@@ -120,7 +123,7 @@ export function TeacherClassCards({ classes }: Props) {
                 <Grid container spacing={2}>
                     {classes.map((c) => (
                         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={c.id}>
-                            <ClassCards key={c.id} classData={c} />
+                            <ClassCards classData={c} />
                         </Grid>
                     ))}
                 </Grid>
