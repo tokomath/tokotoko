@@ -6,6 +6,7 @@ import { ClassFrame, createClass } from "@/app/api/class/createClass";
 import { UserSelector } from "@/compornents/userSelector";
 import { getClassByClassId } from "@/app/api/class/getClass";
 import { addUserToClass } from "@/app/api/class/addUserToClass";
+import { updateClass } from "@/app/api/class/updateClass";
 import { getUsersFromQuery } from "@/app/api/User/getUsersFromQuery";
 import { useUser } from "@clerk/nextjs";
 import { QRCodeCanvas } from "qrcode.react";
@@ -140,6 +141,7 @@ function ClassEditForm() {
     };
 
     if (isEditMode) {
+      await updateClass(data);
       await addUserToClass(data);
     } else {
       await createClass(data);

@@ -88,7 +88,7 @@ export default function MyPage() {
 
         const fetchClass = async () => {
             const tmpClassList = await getClassByUserId(userId);
-            setClasses(tmpClassList.map((classData) => ({ ...classData, icon: null })));
+            setClasses(tmpClassList);
         };
 
         fetchTest();

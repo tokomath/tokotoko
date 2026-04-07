@@ -8,6 +8,7 @@ import {
   isAlreadySubmit, 
   getSubmissionsByTestId 
 } from "@/app/api/test/submit";
+import { getClerkUsersImages } from "@/app/api/User/getIcon";
 import { useUser } from "@clerk/nextjs";
 import { QRCodeCanvas } from "qrcode.react";
 import {
@@ -30,11 +31,15 @@ import {
   Button,
   Dialog,
   DialogTitle,
-  DialogContent
+  DialogContent,
+  ListItemAvatar
 } from "@mui/material";
 import { ContentCopy, Assignment, People, PlayArrow, Assessment } from "@mui/icons-material";
 import { useSearchParams, useRouter } from "next/navigation";
 import { msg } from "@/msg-ja";
+
+type UserWithImage = User & { image?: string };
+type ClassWithUsers = Class & { users: UserWithImage[] };
 
 const stringToBrightColor = (str: string) => {
   let hash = 0;
@@ -45,9 +50,14 @@ const stringToBrightColor = (str: string) => {
   return `hsl(${h}, 80%, 65%)`;
 };
 
-function MemberItem({ user }: { user: User }) {
+function MemberItem({ user }: { user: UserWithImage }) {
   return (
     <ListItem>
+      <ListItemAvatar>
+        <Avatar src={user.image} alt={user.name || ""}>
+          {user.name?.charAt(0).toUpperCase()}
+        </Avatar>
+      </ListItemAvatar>
       <ListItemText
         primary={
           <Box
@@ -75,7 +85,7 @@ function MemberItem({ user }: { user: User }) {
   );
 }
 
-function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTeacher: boolean; classStudents: User[]; userId: string }) {
+function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTeacher: boolean; classStudents: UserWithImage[]; userId: string }) {
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -106,6 +116,9 @@ function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTe
     left: '8px'
   };
 
+  const searchParams = useSearchParams();
+  const classId = searchParams.get("classId");
+
   return (
     <React.Fragment>
       <ListItem
@@ -115,7 +128,7 @@ function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTe
               <Button variant="outlined" size="small" onClick={() => setDialogOpen(true)}>
                 {msg.SUBMISSION_STATUS} ({submittedStudents.length}/{classStudents.length})
               </Button>
-              <Button variant="contained" size="small" color="primary" onClick={() => router.push(`/teacher/grade?testId=${test.id}`)}>
+              <Button variant="contained" size="small" color="primary" onClick={() => router.push(`/teacher/grading/${test.id}?classId=${classId}`)}>
                 {msg.GRADE}
               </Button>
             </Stack>
@@ -200,7 +213,7 @@ function ClassDetailContent() {
   const { user: clerkUser, isLoaded: isUserLoaded } = useUser();
   const router = useRouter();
 
-  const [classData, setClassData] = useState<(Class & { users: User[] }) | null>(null);
+  const [classData, setClassData] = useState<ClassWithUsers | null>(null);
   const [tests, setTests] = useState<Test[]>([]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -212,8 +225,15 @@ function ClassDetailContent() {
       if (!classId) return;
       const fetchedClass = await getClassByClassId(classId);
       if (fetchedClass) {
-        setClassData(fetchedClass as any);
-        // API側で role 判定が行われ、安全にフィルタリングされた結果が返ってくる
+        const castedClass = fetchedClass as unknown as { id: string; name: string; icon: string | null; users: User[] };
+        const clerkImages = await getClerkUsersImages(castedClass.users.map(u => u.id));
+        
+        const usersWithImages = castedClass.users.map(u => ({
+          ...u,
+          image: clerkImages.find(img => img.id === u.id)?.imageUrl
+        }));
+
+        setClassData({ ...castedClass, users: usersWithImages });
         const fetchedTests = await getTestByClass(classId);
         setTests(fetchedTests);
       }
@@ -252,6 +272,7 @@ function ClassDetailContent() {
               <Stack direction="row" spacing={3} alignItems="flex-start">
                 <Avatar
                   variant="rounded"
+                  src={classData.icon || undefined}
                   sx={{ width: 128, height: 128, bgcolor: stringToBrightColor(classData.name), fontSize: "3rem" }}
                 >
                   {classData.name.charAt(0).toUpperCase()}
