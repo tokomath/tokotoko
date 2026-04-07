@@ -6,6 +6,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 
 import { useUser, SignInButton, UserButton } from '@clerk/nextjs';
+import CustomUserButton from "./CustomUserButton";
 
 interface QuestionProps {
   page_name?: string;
@@ -21,7 +22,7 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
 
   let name: string = "";
   if (isSignedIn && user) {
-    name = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    name = `${user.lastName || ""} ${user.firstName || ""}`.trim();
   }
 
   return (
@@ -58,13 +59,13 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
 
           {isLoaded && !isSignedIn && (
             <Box sx={{ height: "fit-content", ml: 2, bgcolor: "primary.main", borderRadius: 1, color: "white", fontSize: "0.875 margin-toprem", fontWeight: "bold" }}>
-              <SignInButton />
+              {/*<SignInButton />*/}
             </Box>
           )}
 
           {isLoaded && isSignedIn && (
             <Box sx={{ height: "fit-content", ml: 2 }}>
-              <UserButton />
+              <CustomUserButton />
             </Box>
           )}
         </Box>
