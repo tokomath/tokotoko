@@ -18,8 +18,10 @@ import Latex from "react-latex-next";
 import { SectionFrame, TestFrame } from "@/app/api/test/testFrames";
 import { getTestById } from "@/app/api/test/getTestById";
 import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
+import { getSubmission } from "@/app/api/test/result"; 
 import { Answer } from "@prisma/client";
 import { useUser } from '@clerk/nextjs'
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { msg } from "@/msg-ja";
 
@@ -54,6 +56,9 @@ function a11yProps(index: number) {
 }
 
 export default function Page({ params }: { params: Promise<{ id: number }> }) {
+  const searchParams = useSearchParams();
+  const isResubmitMode = searchParams.get("resubmit") === "true";
+  
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
   const [submitDate, setSubmitDate] = useState<Date | null>(null);
@@ -76,7 +81,23 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
           const subResult: any = await isAlreadySubmit({ userId: user.id || "", testId: Number(testId) });
           const testRes: any = await getTestById(Number(testId), user.id || "");
           
-          const isSub = !!subResult;
+          let isSub = !!subResult;
+          
+          if (isSub && isResubmitMode) {
+             const subData = await getSubmission({ testId: Number(testId), userid: user.id || "" });
+             
+             if (subData) {
+                 const maxResubmissions = subData.test?.maxResubmissions || 0;
+                 const submissionCount = subData.submissionCount || 1;
+                 const remaining = maxResubmissions - (submissionCount - 1);
+                 const deadlinePassed = subData.test?.endDate ? new Date() > new Date(subData.test.endDate) : false;
+                
+                 if (remaining > 0) {
+                     isSub = false; 
+                 }
+             }
+          }
+
           setAlreadySubmit(isSub);
 
           if (testRes) {
@@ -108,7 +129,7 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
       }
     }
     a()
-  }, [isSignedIn, user?.id, user?.firstName, user?.lastName, testId])
+  }, [isSignedIn, user?.id, user?.firstName, user?.lastName, testId, isResubmitMode])
 
   if (!loading && session.status && session.user.name) {
     if (alreadySubmit) {
@@ -123,6 +144,7 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
           <Solve
             id={testId.toString()}
             username={session.user.name}
+            isResubmitMode={isResubmitMode}
             setAlreadySubmit={() => setAlreadySubmit(true)}
             setCompletedInfo={(subDate: Date, endD: Date) => {
               setSubmitDate(subDate);
@@ -183,11 +205,13 @@ function Completed({ id, submitDate, endDate }: { id: string, submitDate: Date |
 function Solve(
   { id,
     username,
+    isResubmitMode,
     setAlreadySubmit,
     setCompletedInfo
   }: {
     id: string,
     username: string,
+    isResubmitMode: boolean,
     setAlreadySubmit: () => void,
     setCompletedInfo: (submitDate: Date, endDate: Date) => void
   }) {
@@ -197,6 +221,7 @@ function Solve(
   const [partIndex, setPartIndex] = useState(0);
   const [sendingStatus, setSendingStatus] = useState(false);
   const [isBeforeStart, setIsBeforeStart] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchForm = async () => {
@@ -300,6 +325,10 @@ function Solve(
         }));
         setCompletedInfo(submitTime, new Date(testData.test.endDate));
         setAlreadySubmit();
+        
+        if (isResubmitMode) {
+          router.replace(`/result/${id}`);
+        }
       })
       .catch((err) => {
         alert(msg.SEND_FAILED + "\n");
@@ -366,46 +395,41 @@ function Solve(
 
   return (
     <main>
-      <Paper sx={{ borderRadius: 0, width: "100%" }}>
-        <Box
-          paddingTop={1}
-          paddingRight={1}
-          display="flex"
-          flexWrap="wrap"
-          alignItems="center"
-          justifyContent="flex-end"
-        >
-          <Link
-            href="https://katex.org/docs/supported.html"
-            target="_blank"
-            rel="noopener"
-            marginX={1}
+      <Paper sx={{ borderRadius: 0, width: "100%", borderBottom: 1, borderColor: "divider" }} elevation={0}>
+        <Box maxWidth={800} margin="auto" padding={3}>
+           <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems="flex-start"
+            gap={3}
           >
-            KaTeXヘルプ
-          </Link>
-          <Typography fontFamily="monospace" marginX={1}>
-            {msg.FORM_ID}{id}
-          </Typography>
-        </Box>
-        <Box maxWidth={800} margin="auto">
-          <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
-            <Typography variant="h1" fontSize={30}>
-              {testData.test.title}
-            </Typography>
-            <Typography>{testData.test.summary}</Typography>
-            <Typography>
-              {msg.START_DATE + ": " + testData.test.startDate.getFullYear() + "/" + (testData.test.startDate.getMonth() + 1) + "/" + testData.test.startDate.getDate() + " " +
-                testData.test.startDate.getHours() + ":" + testData.test.startDate.getMinutes() +
-                " (UTC+" + testData.test.startDate.getTimezoneOffset() / -60 + "h)"
-              }
-            </Typography>
-            <Typography>
-              {msg.END_DATE + ": " + testData.test.endDate.getFullYear() + "/" + (testData.test.endDate.getMonth() + 1) + "/" + testData.test.endDate.getDate() + " " +
-                testData.test.endDate.getHours() + ":" + testData.test.endDate.getMinutes() +
-                " (UTC+" + testData.test.endDate.getTimezoneOffset() / -60 + "h)"
-              }
-            </Typography>
-          </Stack>
+            <Stack spacing={1.5} sx={{ width: "100%", flex: 1 }}>
+              <Typography variant="h1" fontSize={30} fontWeight="bold">
+                {testData.test.title} {isResubmitMode && <Typography component="span" color="error" fontWeight="bold">({msg.RESUBMIT})</Typography>}
+              </Typography>
+              <Typography sx={{ whiteSpace: "pre-wrap" }}>
+                {testData.test.summary}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+              {msg.START_DATE} : {testData.test.startDate.getFullYear()}/{testData.test.startDate.getMonth() + 1}/{testData.test.startDate.getDate()} {testData.test.startDate.getHours()}:{testData.test.startDate.getMinutes()} → {msg.END_DATE} : {testData.test.endDate.getFullYear()}/{testData.test.endDate.getMonth() + 1}/{testData.test.endDate.getDate()} {testData.test.endDate.getHours()}:{testData.test.endDate.getMinutes()}
+              </Typography>
+            </Stack>
+
+            <Stack
+              spacing={2}
+              sx={{
+                alignItems: { xs: "flex-start", sm: "flex-end" },
+                textAlign: { xs: "left", sm: "right" },
+                minWidth: { sm: "280px" },
+                width: { xs: "100%", sm: "auto" }
+              }}
+            >
+               <Typography fontFamily="monospace" variant="body2" color="text.secondary">
+                  {msg.FORM_ID}{id}
+                </Typography>
+            </Stack>
+          </Box>
         </Box>
       </Paper>
 
