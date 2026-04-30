@@ -262,4 +262,5 @@ export const msg = {
     "MAX_RESUBMISSIONS": "再提出回数の上限",
     "REMAINING_RESUBMISSIONS": "残り再提出回数",
     "RESUBMIT": "再度提出する",
+    "RESUBMIT_W": "再提出",
 }

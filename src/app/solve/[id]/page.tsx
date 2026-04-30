@@ -18,7 +18,7 @@ import Latex from "react-latex-next";
 import { SectionFrame, TestFrame } from "@/app/api/test/testFrames";
 import { getTestById } from "@/app/api/test/getTestById";
 import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
-import { getSubmission } from "@/app/api/test/result"; 
+import { getSubmission } from "@/app/api/test/result";
 import { Answer } from "@prisma/client";
 import { useUser } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from "next/navigation";
@@ -58,7 +58,7 @@ function a11yProps(index: number) {
 export default function Page({ params }: { params: Promise<{ id: number }> }) {
   const searchParams = useSearchParams();
   const isResubmitMode = searchParams.get("resubmit") === "true";
-  
+
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
   const [submitDate, setSubmitDate] = useState<Date | null>(null);
@@ -80,22 +80,22 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
         try {
           const subResult: any = await isAlreadySubmit({ userId: user.id || "", testId: Number(testId) });
           const testRes: any = await getTestById(Number(testId), user.id || "");
-          
+
           let isSub = !!subResult;
-          
+
           if (isSub && isResubmitMode) {
-             const subData = await getSubmission({ testId: Number(testId), userid: user.id || "" });
-             
-             if (subData) {
-                 const maxResubmissions = subData.test?.maxResubmissions || 0;
-                 const submissionCount = subData.submissionCount || 1;
-                 const remaining = maxResubmissions - (submissionCount - 1);
-                 const deadlinePassed = subData.test?.endDate ? new Date() > new Date(subData.test.endDate) : false;
-                
-                 if (remaining > 0) {
-                     isSub = false; 
-                 }
-             }
+            const subData = await getSubmission({ testId: Number(testId), userid: user.id || "" });
+
+            if (subData) {
+              const maxResubmissions = subData.test?.maxResubmissions || 0;
+              const submissionCount = subData.submissionCount || 1;
+              const remaining = maxResubmissions - (submissionCount - 1);
+              const deadlinePassed = subData.test?.endDate ? new Date() > new Date(subData.test.endDate) : false;
+
+              if (remaining > 0) {
+                isSub = false;
+              }
+            }
           }
 
           setAlreadySubmit(isSub);
@@ -241,7 +241,8 @@ function Solve(
             summary: res.summary,
             startDate: res.startDate,
             endDate: res.endDate,
-            isPublished: res.isPublished
+            isPublished: res.isPublished,
+            maxResubmissions: 0
           },
           sections: res.sections.map(
             (s) => {
@@ -264,13 +265,27 @@ function Solve(
           classes: res.classes,
         }
         setTestData(test)
+
+        if (isResubmitMode) {
+          const subData = await getSubmission({ testId: Number(id), userid: user?.id || "" });
+          if (subData && subData.answers) {
+            const previousAnswers: { [key: string]: string } = {};
+
+            subData.answers.forEach((ans: any) => {
+              previousAnswers[ans.questionId] = ans.text || "";
+            });
+            setAnswers(previousAnswers);
+            return;
+          }
+        }
+
       } else {
         setTestData(null)
       }
     };
 
     fetchForm();
-  }, []);
+  }, [id, isResubmitMode, user?.id]);
 
   const changeAnswer = (questionId: number, answer: string) => {
     setAnswers((prevAnswers) => {
@@ -325,7 +340,7 @@ function Solve(
         }));
         setCompletedInfo(submitTime, new Date(testData.test.endDate));
         setAlreadySubmit();
-        
+
         if (isResubmitMode) {
           router.replace(`/result/${id}`);
         }
@@ -343,7 +358,7 @@ function Solve(
   };
 
   useEffect(() => {
-    if (testData) {
+    if (testData && !isResubmitMode) {
       const storageKey = `test_answers_${id}`;
       const savedDataStr = localStorage.getItem(storageKey);
       let loadedAnswers: { [key: string]: string } | null = null;
@@ -371,8 +386,16 @@ function Solve(
         });
       });
       setAnswers(initialAnswers);
+    } else if (testData && isResubmitMode && Object.keys(answers).length === 0) {
+      const initialAnswers: { [key: string]: string } = {};
+      testData.sections.forEach((section) => {
+        section.questions.forEach((question) => {
+          initialAnswers[question.id] = "";
+        });
+      });
+      setAnswers(initialAnswers);
     }
-  }, [testData, id]);
+  }, [testData, id, isResubmitMode]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -397,7 +420,7 @@ function Solve(
     <main>
       <Paper sx={{ borderRadius: 0, width: "100%", borderBottom: 1, borderColor: "divider" }} elevation={0}>
         <Box maxWidth={800} margin="auto" padding={3}>
-           <Box
+          <Box
             display="flex"
             flexDirection={{ xs: "column", sm: "row" }}
             justifyContent="space-between"
@@ -406,14 +429,13 @@ function Solve(
           >
             <Stack spacing={1.5} sx={{ width: "100%", flex: 1 }}>
               <Typography variant="h1" fontSize={30} fontWeight="bold">
-                {testData.test.title} {isResubmitMode && <Typography component="span" color="error" fontWeight="bold">({msg.RESUBMIT})</Typography>}
+                {testData.test.title} {isResubmitMode && <Typography component="span" color="error" fontWeight="bold">({msg.RESUBMIT_W})</Typography>}
               </Typography>
               <Typography sx={{ whiteSpace: "pre-wrap" }}>
                 {testData.test.summary}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-              {msg.START_DATE} : {testData.test.startDate.getFullYear()}/{testData.test.startDate.getMonth() + 1}/{testData.test.startDate.getDate()} {testData.test.startDate.getHours()}:{testData.test.startDate.getMinutes()} → {msg.END_DATE} : {testData.test.endDate.getFullYear()}/{testData.test.endDate.getMonth() + 1}/{testData.test.endDate.getDate()} {testData.test.endDate.getHours()}:{testData.test.endDate.getMinutes()}
-              </Typography>
+                {msg.START_DATE} : {testData.test.startDate.getFullYear()}/{String(testData.test.startDate.getMonth() + 1).padStart(2, '0')}/{String(testData.test.startDate.getDate()).padStart(2, '0')} {String(testData.test.startDate.getHours()).padStart(2, '0')}:{String(testData.test.startDate.getMinutes()).padStart(2, '0')} → {msg.END_DATE} : {testData.test.endDate.getFullYear()}/{String(testData.test.endDate.getMonth() + 1).padStart(2, '0')}/{String(testData.test.endDate.getDate()).padStart(2, '0')} {String(testData.test.endDate.getHours()).padStart(2, '0')}:{String(testData.test.endDate.getMinutes()).padStart(2, '0')}              </Typography>
             </Stack>
 
             <Stack
@@ -425,15 +447,15 @@ function Solve(
                 width: { xs: "100%", sm: "auto" }
               }}
             >
-               <Typography fontFamily="monospace" variant="body2" color="text.secondary">
-                  {msg.FORM_ID}{id}
-                </Typography>
+              <Typography fontFamily="monospace" variant="body2" color="text.secondary">
+                {msg.FORM_ID}{id}
+              </Typography>
             </Stack>
           </Box>
         </Box>
       </Paper>
 
-      <Box maxWidth={800} margin="auto">
+      <Box maxWidth={800} margin="auto" padding={2}>
         <Tabs
           value={partIndex}
           onChange={handleChange}
