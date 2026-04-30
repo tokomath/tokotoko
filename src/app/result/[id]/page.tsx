@@ -151,67 +151,74 @@ function Result({ id, userid }: { id: string, userid: string }) {
 
   return (
     <main>
-      <Paper sx={{ borderRadius: 0, width: "100%" }}>
-        <Box
-          paddingTop={1}
-          paddingRight={1}
-          display="flex"
-          flexWrap="wrap"
-          alignItems="center"
-          justifyContent="flex-end"
-          gap={2}
-        >
-          {maxResubmissions > 0 && (
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Typography variant="body2" color="text.secondary" fontWeight="bold">
-                {msg.REMAINING_RESUBMISSIONS}: {remainingResubmissions}
-              </Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                disabled={remainingResubmissions <= 0 || isDeadlinePassed}
-                onClick={() => router.push(`/test/${id}`)}
-              >
-                {msg.RESUBMIT}
-              </Button>
-            </Stack>
-          )}
-          <Typography fontFamily="monospace" marginX={1}>
-            {msg.FORM_ID}{id}
-          </Typography>
-        </Box>
-        <Box maxWidth={800} margin="auto">
+      <Paper sx={{ borderRadius: 0, width: "100%", borderBottom: 1, borderColor: "divider" }} elevation={0}>
+        <Box maxWidth={800} margin="auto" padding={3}>
           <Box
             display="flex"
             flexDirection={{ xs: "column", sm: "row" }}
             justifyContent="space-between"
-            paddingX={2}
-            paddingBottom={2}
-            paddingTop={1}
-            gap={2}
+            alignItems="flex-start"
+            gap={3}
           >
-            <Stack spacing={1} sx={{ width: "100%", flex: 1 }}>
-              <Typography variant="h1" fontSize={30}>
+            {/* 左側: テスト情報 */}
+            <Stack spacing={1.5} sx={{ width: "100%", flex: 1 }}>
+              <Typography variant="h1" fontSize={30} fontWeight="bold">
                 {data.test.title}
               </Typography>
-              <Typography>{data.test.summary}</Typography>
+              <Typography sx={{ whiteSpace: "pre-wrap" }}>
+                {data.test.summary}
+              </Typography>
               <Typography variant="body2" color="text.secondary">
-                {msg.START_DATE}:{new Date(data.test.startDate).toLocaleString()} → {msg.END_DATE}:{new Date(data.test.endDate).toLocaleString()}
+                {msg.START_DATE}: {new Date(data.test.startDate).toLocaleString()} → {msg.END_DATE}: {new Date(data.test.endDate).toLocaleString()}
               </Typography>
             </Stack>
 
-            <Box sx={{ alignSelf: { xs: "flex-end", sm: "flex-start" }, textAlign: "right" }}>
-              {point === -1 ? (
-                <Typography variant="h5" color="text.secondary" fontWeight="bold">
-                  {msg.NOT_GRADED}
+            {/* 右側 (モバイル時は下側): メタデータ・アクション・スコア */}
+            <Stack
+              spacing={2}
+              sx={{
+                alignItems: { xs: "flex-start", sm: "flex-end" },
+                textAlign: { xs: "left", sm: "right" },
+                minWidth: { sm: "280px" },
+                width: { xs: "100%", sm: "auto" }
+              }}
+            >
+              {/* フォームID & 再提出コントロール */}
+              <Stack spacing={1} sx={{ alignItems: { xs: "flex-start", sm: "flex-end" } }}>
+                <Typography fontFamily="monospace" variant="body2" color="text.secondary">
+                  {msg.FORM_ID}{id}
                 </Typography>
-              ) : (
-                <Typography variant="h6" color="primary.main" fontWeight="bold">
-                  {msg.SCORE}: {point} {msg.POINTS}
-                </Typography>
-              )}
-              {statusDisplay}
-            </Box>
+                {maxResubmissions > 0 && (
+                  <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                      {msg.REMAINING_RESUBMISSIONS}: {remainingResubmissions}
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      disabled={remainingResubmissions <= 0}
+                      onClick={() => router.push(`/solve/${id}?resubmit=true`)}
+                    >
+                      {msg.RESUBMIT}
+                    </Button>
+                  </Stack>
+                )}
+              </Stack>
+
+              {/* 点数 & 提出時間 */}
+              <Box>
+                {point === -1 ? (
+                  <Typography variant="h5" color="text.secondary" fontWeight="bold">
+                    {msg.NOT_GRADED}
+                  </Typography>
+                ) : (
+                  <Typography variant="h6" color="primary.main" fontWeight="bold">
+                    {msg.SCORE}: {point} {msg.POINTS}
+                  </Typography>
+                )}
+                {statusDisplay}
+              </Box>
+            </Stack>
           </Box>
         </Box>
       </Paper>

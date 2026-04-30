@@ -19,6 +19,7 @@ export const updateTest = async (props: TestFrame) => {
       startDate: props.test.startDate,
       endDate: props.test.endDate,
       isPublished: props.test.isPublished,
+      maxResubmissions: props.test.maxResubmissions,
       classes: {
         set: [],
         connect: props.classes.map((i) => ({ id: i.id })),
@@ -67,6 +68,7 @@ export const updateTestMetadata = async (props: TestFrame) => {
       startDate: props.test.startDate,
       endDate: props.test.endDate,
       isPublished: props.test.isPublished,
+      maxResubmissions: props.test.maxResubmissions,
       classes: {
         set: [],
         connect: props.classes.map((i) => ({ id: i.id })),
