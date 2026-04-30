@@ -13,10 +13,30 @@ export interface submitProps {
 
 
 export const submitTest = async (props: submitProps) => {
+  const existingSubmission = await prisma.submission.findFirst({
+    where: {
+      studentId: props.userId,
+      testId: props.testId
+    },
+    orderBy: {
+      submissionDate: 'desc'
+    }
+  });
+
+  const nextCount = existingSubmission ? existingSubmission.submissionCount + 1 : 1;
+
+
+  if (existingSubmission) {
+      await prisma.submission.delete({
+          where: { id: existingSubmission.id }
+      })
+  }
+
   const sub = await prisma.submission.create({
     data: {
       testId: props.testId,
       studentId: props.userId,
+      submissionCount: nextCount,
       answers: {},
     },
   });
@@ -44,6 +64,17 @@ export const isAlreadySubmit = async (props: { testId: number, userId: string })
   });
   return !!a;
 }
+
+export const getSubmissionCount = async (props: { testId: number, userId: string }) => {
+    const a = await prisma.submission.findFirst({
+        where: {
+            studentId: props.userId,
+            testId: props.testId
+        }
+    });
+    return a ? a.submissionCount : 0;
+}
+
 
 export const grading = async (id: number, your_answer: string): Promise<number> => {
   if (your_answer === "") return 0;
