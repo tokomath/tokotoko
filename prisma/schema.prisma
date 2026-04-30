@@ -32,6 +32,7 @@ model Test {
   startDate   DateTime     @default(now())
   endDate     DateTime     @default(now())
   isPublished Boolean      @default(false)
+  maxResubmissions Int @default(0)
   sections    Section[]
   submissions Submission[]
   classes     Class[]      @relation("ClassToTest")
@@ -63,6 +64,7 @@ model Submission {
   testId         Int
   studentId      String
   submissionDate DateTime @default(now())
+  submissionCount  Int      @default(1)
   answers        Answer[]
   user           User     @relation(fields: [studentId], references: [id])
   test           Test     @relation(fields: [testId], references: [id])

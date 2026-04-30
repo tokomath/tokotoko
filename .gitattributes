@@ -1,1 +1,2 @@
-# src/proxy.ts merge=ours
+.gitattributes merge=ours
+src/proxy.ts merge=ours

@@ -259,4 +259,8 @@ export const msg = {
     "DEADLINE": "期限より",
     "LATE_SUBMISSION": "遅れて提出しました",
     "EARLY_SUBMISSION": "早く提出しました",
+    "MAX_RESUBMISSIONS": "再提出回数の上限",
+    "REMAINING_RESUBMISSIONS": "残り再提出回数",
+    "RESUBMIT": "再度提出する",
+    "RESUBMIT_W": "再提出",
 }
