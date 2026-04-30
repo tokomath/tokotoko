@@ -56,6 +56,8 @@ function a11yProps(index: number) {
 export default function Page({ params }: { params: Promise<{ id: number }> }) {
   const [loading, setLoading] = useState(true);
   const [alreadySubmit, setAlreadySubmit] = useState(true);
+  const [submitDate, setSubmitDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const testId = use(params).id;
   const { user, isSignedIn } = useUser();
 
@@ -69,19 +71,50 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
 
   useEffect(() => {
     const a = async () => {
-      if (session.status && session.user.name) {
-        setAlreadySubmit(await isAlreadySubmit({ userId: session.user.id || "", testId: Number(testId) }))
-        setLoading(false);
+      if (isSignedIn && user?.firstName) {
+        try {
+          const subResult: any = await isAlreadySubmit({ userId: user.id || "", testId: Number(testId) });
+          const testRes: any = await getTestById(Number(testId), user.id || "");
+          
+          const isSub = !!subResult;
+          setAlreadySubmit(isSub);
+
+          if (testRes) {
+            setEndDate(new Date(testRes.endDate));
+          }
+
+          if (isSub) {
+            let subDate: Date | null = null;
+            if (subResult && subResult.submissionDate) {
+              subDate = new Date(subResult.submissionDate);
+            } else if (testRes && testRes.submissions && testRes.submissions.length > 0) {
+              subDate = new Date(testRes.submissions[0].submissionDate);
+            } else {
+              const saved = localStorage.getItem(`submit_info_${testId}`);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                subDate = new Date(parsed.submitDate);
+                if (!testRes && parsed.endDate) {
+                  setEndDate(new Date(parsed.endDate));
+                }
+              }
+            }
+            setSubmitDate(subDate);
+          }
+        } catch (e) {
+        } finally {
+          setLoading(false);
+        }
       }
     }
     a()
-  }, [session])
+  }, [isSignedIn, user?.id, user?.firstName, user?.lastName, testId])
 
   if (!loading && session.status && session.user.name) {
     if (alreadySubmit) {
       return (
         <>
-          <Completed id={testId.toString()} />
+          <Completed id={testId.toString()} submitDate={submitDate} endDate={endDate} />
         </>
       )
     } else {
@@ -91,6 +124,10 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
             id={testId.toString()}
             username={session.user.name}
             setAlreadySubmit={() => setAlreadySubmit(true)}
+            setCompletedInfo={(subDate: Date, endD: Date) => {
+              setSubmitDate(subDate);
+              setEndDate(endD);
+            }}
           />
         </>
       )
@@ -100,11 +137,44 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
   }
 }
 
-function Completed({ id }: { id: string }) {
-  let url = "/result/" + id
+function Completed({ id, submitDate, endDate }: { id: string, submitDate: Date | null, endDate: Date | null }) {
+  let url = "/result/" + id;
+  let statusDisplay = null;
+
+  if (submitDate && endDate) {
+    const diffMs = submitDate.getTime() - endDate.getTime();
+    const isLate = diffMs > 0;
+    const absDiff = Math.abs(diffMs);
+
+    const d = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((absDiff / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((absDiff / 1000 / 60) % 60);
+
+    let timeText = "";
+    if (d > 0) timeText += `${d}${msg.DAY}`;
+    if (h > 0) timeText += `${h}${msg.HOUR}`;
+    if (m > 0) timeText += `${m}${msg.MINUTE}`;
+    if (timeText === "") timeText = `1${msg.MINUTE}`;
+
+    const color = isLate ? "error.main" : "success.main";
+    const textPrefix = isLate ? msg.LATE_SUBMISSION : msg.EARLY_SUBMISSION;
+
+    statusDisplay = (
+      <Box mt={2}>
+        <Typography variant="h6">
+          {msg.SUBMISSION_TIME}: {submitDate.toLocaleString()}
+        </Typography>
+        <Typography variant="h6" color={color} fontWeight="bold">
+          {msg.DEADLINE} {timeText} {textPrefix}
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Stack sx={{ margin: 2 }} textAlign={"center"} >
       <Typography variant="h4" marginY={5}>{msg.SUBMISSION_COMPLETED}</Typography>
+      {statusDisplay}
       <Link href={url} fontSize={20} marginY={5}>{msg.CHECK_RESULTS}</Link>
     </Stack >
   )
@@ -113,22 +183,32 @@ function Completed({ id }: { id: string }) {
 function Solve(
   { id,
     username,
-    setAlreadySubmit
+    setAlreadySubmit,
+    setCompletedInfo
   }: {
     id: string,
     username: string,
-    setAlreadySubmit: () => void
+    setAlreadySubmit: () => void,
+    setCompletedInfo: (submitDate: Date, endDate: Date) => void
   }) {
   const { user, isSignedIn } = useUser();
   const [testData, setTestData] = useState<TestFrame | null | undefined>(undefined);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
   const [sendingStatus, setSendingStatus] = useState(false);
+  const [isBeforeStart, setIsBeforeStart] = useState(false);
 
   useEffect(() => {
     const fetchForm = async () => {
       const res = await getTestById(Number(id), (user != null && user != undefined) ? user.id : "");
       if (res) {
+        const now = new Date();
+        if (now < new Date(res.startDate)) {
+          setIsBeforeStart(true);
+          setTestData(null);
+          return;
+        }
+
         const test: TestFrame = {
           test: {
             id: res.id,
@@ -208,10 +288,17 @@ function Solve(
       answerList: answerList as Answer[],
     };
 
+    const submitTime = new Date();
+
     await submitTest(submitdata)
       .then((res) => {
         alert(msg.SENT);
         localStorage.removeItem(`test_answers_${id}`);
+        localStorage.setItem(`submit_info_${id}`, JSON.stringify({
+          submitDate: submitTime.getTime(),
+          endDate: new Date(testData.test.endDate).getTime()
+        }));
+        setCompletedInfo(submitTime, new Date(testData.test.endDate));
         setAlreadySubmit();
       })
       .catch((err) => {
@@ -261,6 +348,14 @@ function Solve(
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [partIndex]);
+
+  if (isBeforeStart) {
+    return (
+      <Stack sx={{ margin: 2 }} textAlign={"center"} >
+        <Typography variant="h4" marginY={5}>{msg.BEFORE_SUBMISSION_PERIOD}</Typography>
+      </Stack >
+    )
+  }
 
   if (testData === null) {
     return <div>{msg.NO_TEST_FOUND}</div>

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useMemo, useCallback, use } from "react";
-import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip } from "@mui/material";
+import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip } from "@mui/material";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
 
@@ -272,8 +272,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     router.push(`/teacher/grading/${testid}?classid=${selectedClassID}`);
   }, [router, testid]);
 
-
-
   const sectionHandleChange = useCallback((event: React.SyntheticEvent, newValue: number) => {
     setSectionValue(newValue);
   }, []);
@@ -424,6 +422,44 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     return Test_?.classes.at(classIndex)?.users || [];
   }, [Test_, classIndex]);
 
+  const renderSubmissionStatus = useCallback((user_index: number) => {
+    const data_index = submission_index[user_index];
+    const submission = data_index !== undefined && submissionData ? submissionData[data_index] : null;
+
+    if (!submission || !Test_?.endDate) {
+      return (
+        <Tooltip title="未提出" arrow>
+          <Box width={12} height={12} borderRadius="50%" bgcolor="grey.400" flexShrink={0} />
+        </Tooltip>
+      );
+    }
+
+    const subDate = new Date(submission.submissionDate);
+    const endDate = new Date(Test_.endDate);
+    const isLate = subDate > endDate;
+
+    let tooltipText = `提出: ${subDate.toLocaleString()}`;
+    if (isLate) {
+      const diffMs = subDate.getTime() - endDate.getTime();
+      const d = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diffMs / 1000 / 60) % 60);
+      let lateText = "";
+      if (d > 0) lateText += `${d}日`;
+      if (h > 0) lateText += `${h}時間`;
+      if (m > 0) lateText += `${m}分`;
+      if (lateText === "") lateText = "1分未満";
+      tooltipText += `\n(期限から ${lateText}遅れ)`;
+    } else {
+      tooltipText += `\n(期限内)`;
+    }
+
+    return (
+      <Tooltip title={<span style={{ whiteSpace: 'pre-line' }}>{tooltipText}</span>} arrow>
+        <Box width={12} height={12} borderRadius="50%" bgcolor={isLate ? "error.main" : "success.main"} flexShrink={0} />
+      </Tooltip>
+    );
+  }, [submission_index, submissionData, Test_]);
 
   return (
     <TeacherGuard>
@@ -509,7 +545,12 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                       const metrics = userMetrics[user_index] || { totalPoints: 0, ungradedCount: 0 };
                       return (
                         <TableRow key={"ROW-" + user.id}>
-                          <TableCell key={"username-" + user.id} className={styles.name_cell}>{user.name}</TableCell>
+                          <TableCell key={"username-" + user.id} className={styles.name_cell}>
+                            <Box display="flex" alignItems="center" gap={1}>
+                              {renderSubmissionStatus(user_index)}
+                              {user.name}
+                            </Box>
+                          </TableCell>
                           <TableCell key={"totalPoints-" + user.id} sx={{ textAlign: "center" }} className={styles.point_cell}>
                             {metrics.totalPoints}
                           </TableCell>

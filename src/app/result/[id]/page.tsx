@@ -108,6 +108,40 @@ function Result({ id, userid }: { id: string, userid: string }) {
     return <>{msg.NO_TEST_FOUND}</>;
   }
 
+  const submitDate = data.submissionDate ? new Date(data.submissionDate) : null;
+  const endDate = data.test ? new Date(data.test.endDate) : null;
+
+  let statusDisplay = null;
+  if (submitDate && endDate) {
+    const diffMs = submitDate.getTime() - endDate.getTime();
+    const isLate = diffMs > 0;
+    const absDiff = Math.abs(diffMs);
+
+    const d = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((absDiff / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((absDiff / 1000 / 60) % 60);
+
+    let timeText = "";
+    if (d > 0) timeText += `${d}${msg.DAY}`;
+    if (h > 0) timeText += `${h}${msg.HOUR}`;
+    if (m > 0) timeText += `${m}${msg.MINUTE}`;
+    if (timeText === "") timeText = `1${msg.MINUTE}`;
+
+    const color = isLate ? "error.main" : "success.main";
+    const textPrefix = isLate ? msg.LATE_SUBMISSION : msg.EARLY_SUBMISSION;
+
+    statusDisplay = (
+      <Box mt={1}>
+        <Typography variant="body2" color="text.secondary">
+          {msg.SUBMISSION_TIME}: {submitDate.toLocaleString()}
+        </Typography>
+        <Typography variant="body2" color={color} fontWeight="bold">
+          {msg.DEADLINE} {timeText} {textPrefix}
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <main>
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
@@ -123,27 +157,43 @@ function Result({ id, userid }: { id: string, userid: string }) {
             {msg.FORM_ID}{id}
           </Typography>
         </Box>
-        <Box maxWidth={640} margin="auto">
-          <Stack spacing={1} paddingX={2} paddingBottom={2} paddingTop={1}>
-            <Typography variant="h1" fontSize={30}>
-              {data.test.title}
-            </Typography>
-            <Typography>{data.test.summary}</Typography>
-            <Typography>
-              {msg.START_DATE}:{new Date(data.test.startDate).toLocaleString()} → {msg.END_DATE}:{new Date(data.test.endDate).toLocaleString()}
-            </Typography>
-          </Stack>
+        <Box maxWidth={800} margin="auto">
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            paddingX={2}
+            paddingBottom={2}
+            paddingTop={1}
+            gap={2}
+          >
+            <Stack spacing={1} sx={{ width: "100%", flex: 1 }}>
+              <Typography variant="h1" fontSize={30}>
+                {data.test.title}
+              </Typography>
+              <Typography>{data.test.summary}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {msg.START_DATE}:{new Date(data.test.startDate).toLocaleString()} → {msg.END_DATE}:{new Date(data.test.endDate).toLocaleString()}
+              </Typography>
+            </Stack>
+
+            <Box sx={{ alignSelf: { xs: "flex-end", sm: "flex-start" }, textAlign: "right" }}>
+              {point === -1 ? (
+                <Typography variant="h5" color="text.secondary" fontWeight="bold">
+                  {msg.NOT_GRADED}
+                </Typography>
+              ) : (
+                <Typography variant="h6" color="primary.main" fontWeight="bold">
+                  {msg.SCORE}: {point} {msg.POINTS}
+                </Typography>
+              )}
+              {statusDisplay}
+            </Box>
+          </Box>
         </Box>
       </Paper>
 
-      <Box maxWidth={640} margin="auto">
-        <Box alignContent="center" padding={2}>
-          {point === -1 ? (
-            <div>{msg.NOT_GRADED}</div>
-          ) : (
-            <div>{msg.SCORE}: {point} {msg.POINTS}</div>
-          )}
-        </Box>
+      <Box maxWidth={800} margin="auto">
         <Tabs
           value={partIndex}
           onChange={handleChange}
