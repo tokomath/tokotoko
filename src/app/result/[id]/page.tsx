@@ -350,6 +350,7 @@ function Question({ id, number, question, insertType, insertContent, myAns, true
         <Latex>{myAns}</Latex>
       </Box>
       <Divider />
+      {/*
       <Box
         display="flex"
         minHeight={40}
@@ -359,7 +360,7 @@ function Question({ id, number, question, insertType, insertContent, myAns, true
         <Typography>{msg.TRUE_ANS}</Typography>
         <Box minWidth={20} />
         <Latex>{trueAns}</Latex>
-      </Box>
+      </Box>*/}
       {point === -1 ? (
         <div>{msg.NOT_GRADED}</div>
       ) : (
