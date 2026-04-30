@@ -253,5 +253,10 @@ export const msg = {
     "ERROR_INVALID_URL": "無効なURLです",
     "GRADE": "採点",
     "TAKE_TEST": "解答する",
-    "VIEW_RESULT": "結果を見る"
+    "VIEW_RESULT": "結果を見る",
+    "BEFORE_SUBMISSION_PERIOD": "提出期間前です",
+    "SUBMISSION_TIME": "提出時間",
+    "DEADLINE": "期限より",
+    "LATE_SUBMISSION": "遅れて提出しました",
+    "EARLY_SUBMISSION": "早く提出しました",
 }
