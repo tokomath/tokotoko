@@ -23,6 +23,8 @@ import { useUser } from '@clerk/nextjs'
 
 import { msg } from "@/msg-ja";
 
+const EXPIRATION_TIME = 30 * 24 * 60 * 60 * 1000;
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -118,12 +120,9 @@ function Solve(
     setAlreadySubmit: () => void
   }) {
   const { user, isSignedIn } = useUser();
-  // undefined before init , null when unable to access form TODO
   const [testData, setTestData] = useState<TestFrame | null | undefined>(undefined);
-
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [partIndex, setPartIndex] = useState(0);
-
   const [sendingStatus, setSendingStatus] = useState(false);
 
   useEffect(() => {
@@ -169,10 +168,18 @@ function Solve(
   }, []);
 
   const changeAnswer = (questionId: number, answer: string) => {
-    setAnswers((prevAnswers) => ({
-      ...prevAnswers,
-      [questionId]: answer,
-    }));
+    setAnswers((prevAnswers) => {
+      const newAnswers = {
+        ...prevAnswers,
+        [questionId]: answer,
+      };
+      const storageKey = `test_answers_${id}`;
+      localStorage.setItem(storageKey, JSON.stringify({
+        answers: newAnswers,
+        timestamp: new Date().getTime()
+      }));
+      return newAnswers;
+    });
   };
 
   const handleSubmit = async () => {
@@ -201,11 +208,10 @@ function Solve(
       answerList: answerList as Answer[],
     };
 
-    console.log(answerList)
-
-    const res = await submitTest(submitdata)
+    await submitTest(submitdata)
       .then((res) => {
         alert(msg.SENT);
+        localStorage.removeItem(`test_answers_${id}`);
         setAlreadySubmit();
       })
       .catch((err) => {
@@ -222,15 +228,35 @@ function Solve(
 
   useEffect(() => {
     if (testData) {
+      const storageKey = `test_answers_${id}`;
+      const savedDataStr = localStorage.getItem(storageKey);
+      let loadedAnswers: { [key: string]: string } | null = null;
+
+      if (savedDataStr) {
+        try {
+          const savedData = JSON.parse(savedDataStr);
+          const now = new Date().getTime();
+          if (now - savedData.timestamp < EXPIRATION_TIME) {
+            loadedAnswers = savedData.answers;
+          } else {
+            localStorage.removeItem(storageKey);
+          }
+        } catch (e) {
+          localStorage.removeItem(storageKey);
+        }
+      }
+
       const initialAnswers: { [key: string]: string } = {};
       testData.sections.forEach((section) => {
         section.questions.forEach((question) => {
-          initialAnswers[question.id] = "";
+          initialAnswers[question.id] = loadedAnswers && loadedAnswers[question.id] !== undefined
+            ? loadedAnswers[question.id]
+            : "";
         });
       });
       setAnswers(initialAnswers);
     }
-  }, [testData]);
+  }, [testData, id]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -245,7 +271,6 @@ function Solve(
 
   return (
     <main>
-      {/* ヘッダー部分 */}
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
         <Box
           paddingTop={1}
@@ -289,10 +314,7 @@ function Solve(
         </Box>
       </Paper>
 
-      {/* 問題部分 */}
       <Box maxWidth={800} margin="auto">
-
-        {/* タブ部分 Part */}
         <Tabs
           value={partIndex}
           onChange={handleChange}
@@ -307,7 +329,6 @@ function Solve(
           ))}
         </Tabs>
 
-        {/* Question部分 */}
         {testData.sections.map((s, index) => (
           <CustomTabPanel
             key={s.section.number}
