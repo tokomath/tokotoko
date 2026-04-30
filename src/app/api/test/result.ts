@@ -46,6 +46,7 @@ export const getSubmissionsByTestAndClass = async (props: { testId: number, clas
             summary: true,
             startDate: true,
             endDate: true,
+            maxResubmissions: true,
             sections: {
               include: { 
                 questions: true

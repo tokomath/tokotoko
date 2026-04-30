@@ -16,6 +16,7 @@ import { useUser } from '@clerk/nextjs';
 import { getSubmission } from "@/app/api/test/result";
 import InsertFrame from "@/compornents/InsertFrame";
 import { msg } from "@/msg-ja";
+import { useRouter } from "next/navigation";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -64,6 +65,7 @@ function Result({ id, userid }: { id: string, userid: string }) {
   const [data, setData] = useState<any | null | undefined>(undefined);
   const [partIndex, setPartIndex] = useState(0);
   const [point, setPoint] = useState(0);
+  const router = useRouter();
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setPartIndex(newValue);
@@ -142,6 +144,11 @@ function Result({ id, userid }: { id: string, userid: string }) {
     );
   }
 
+  const maxResubmissions = data.test?.maxResubmissions || 0;
+  const currentSubmissionCount = data.submissionCount || 1;
+  const remainingResubmissions = maxResubmissions - (currentSubmissionCount - 1);
+  const isDeadlinePassed = endDate ? new Date() > endDate : false;
+
   return (
     <main>
       <Paper sx={{ borderRadius: 0, width: "100%" }}>
@@ -152,7 +159,23 @@ function Result({ id, userid }: { id: string, userid: string }) {
           flexWrap="wrap"
           alignItems="center"
           justifyContent="flex-end"
+          gap={2}
         >
+          {maxResubmissions > 0 && (
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                {msg.REMAINING_RESUBMISSIONS}: {remainingResubmissions}
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                disabled={remainingResubmissions <= 0 || isDeadlinePassed}
+                onClick={() => router.push(`/test/${id}`)}
+              >
+                {msg.RESUBMIT}
+              </Button>
+            </Stack>
+          )}
           <Typography fontFamily="monospace" marginX={1}>
             {msg.FORM_ID}{id}
           </Typography>

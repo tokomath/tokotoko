@@ -79,6 +79,7 @@ function ClientSearchParamWrapper() {
   const [sections, setSections] = useState<SectionFrame[]>([]);
   const [testTitle, setTestTitle] = useState("");
   const [testSummary, setTestSummary] = useState("");
+  const [maxResubmissions, setMaxResubmissions] = useState<number>(0);
   const [value, setValue] = React.useState(0);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -116,6 +117,7 @@ function ClientSearchParamWrapper() {
           if (existingTest) {
             setTestTitle(existingTest.title);
             setTestSummary(existingTest.summary || "");
+            setMaxResubmissions(existingTest.maxResubmissions ?? 0);
             setStartDate(dayjs(existingTest.startDate));
             setEndDate(dayjs(existingTest.endDate));
             setIsCurrentPublished(existingTest.isPublished);
@@ -157,6 +159,7 @@ function ClientSearchParamWrapper() {
       startDate: startDate.toDate(),
       endDate: endDate.toDate(),
       isPublished: publishStateToSave,
+      maxResubmissions: maxResubmissions,
     };
 
     const testFrame: TestFrame = {
@@ -225,6 +228,7 @@ function ClientSearchParamWrapper() {
   const checkDataError = () => {
     if (startDate.isAfter(endDate)) return true;
     if (assignedClass.length === 0) return true;
+    if (maxResubmissions < 0) return true;
     return sections.some(section =>
       section.questions.some(q => q.insertType !== "None" && q.insertContent === "")
     );
@@ -301,6 +305,7 @@ function ClientSearchParamWrapper() {
                 <MetaDataPage
                   testTitle={testTitle} setTestTitle={setTestTitle}
                   testSummary={testSummary} setTestSummary={setTestSummary}
+                  maxResubmissions={maxResubmissions} setMaxResubmissions={setMaxResubmissions}
                   startDate={startDate} setStartDate={setStartDate}
                   endDate={endDate} setEndDate={setEndDate}
                   asignedClass={assignedClass}
@@ -348,6 +353,8 @@ const MetaDataPage = ({
   setTestTitle,
   testSummary,
   setTestSummary,
+  maxResubmissions,
+  setMaxResubmissions,
   startDate,
   setStartDate,
   endDate,
@@ -416,6 +423,15 @@ const MetaDataPage = ({
                 rows={3}
                 value={testSummary}
                 onChange={(e) => setTestSummary(e.target.value)}
+              />
+              <TextField
+                label={msg.MAX_RESUBMISSIONS || "再提出回数の上限"}
+                variant="outlined"
+                type="number"
+                fullWidth
+                value={maxResubmissions}
+                onChange={(e) => setMaxResubmissions(parseInt(e.target.value, 10) || 0)}
+                inputProps={{ min: 0 }}
               />
             </Stack>
           </CardContent>

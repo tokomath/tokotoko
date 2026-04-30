@@ -23,6 +23,7 @@ export const createTest = async (props: TestFrame) => {
     startDate: props.test.startDate,
     endDate: props.test.endDate,
     isPublished: props.test.isPublished,
+    maxResubmissions: props.test.maxResubmissions,
     sections: {
       create: props.sections.map((section) => {
         return {
