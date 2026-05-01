@@ -90,9 +90,9 @@ const TestCardItem = ({ testData, onDeleted }: { testData: Test, onDeleted: (id:
     const editTestButtonFunction = () => router.push("/teacher/createTest?testId=" + testData.id);
 
     return (
-        <Card sx={{ height: "100%", display: 'flex', flexDirection: 'column', textAlign: "left" }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', flexGrow: 1 }}>
             <CardContent sx={{ flexGrow: 1 }}>
-                <Grid container alignItems="center" spacing={1} mb={1} ml={3}>
+                <Grid container alignItems="center" spacing={1} mb={1}>
                     <Grid size="grow">
                         <Typography variant="h6" component="div" sx={{ wordBreak: 'break-word', lineHeight: 1.2 }}>
                             {testData.title}
@@ -117,7 +117,7 @@ const TestCardItem = ({ testData, onDeleted }: { testData: Test, onDeleted: (id:
                 <Button size="small" onClick={editTestButtonFunction}>{msg.EDIT}</Button>
                 <DeleteTestButton testId={testData.id} testTitle={testData.title} onSuccess={() => onDeleted(testData.id)} />
             </CardActions>
-        </Card>
+        </Box>
     );
 }
 
@@ -137,7 +137,6 @@ export function TestCards({ testData }: props) {
     const [layout, setLayout] = useState<LayoutNode[]>([]);
     const [isClient, setIsClient] = useState(false);
 
-    // 複数選択用ステート
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionBox, setSelectionBox] = useState({ startX: 0, startY: 0, endX: 0, endY: 0 });
@@ -184,9 +183,8 @@ export function TestCards({ testData }: props) {
         setTests(testData);
     }, [testData]);
 
-    // 範囲選択イベント処理
     const handleMouseDown = (e: React.MouseEvent) => {
-        if (e.button !== 0) return; // 左クリックのみ
+        if (e.button !== 0) return; 
         setIsSelecting(true);
         setSelectionBox({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
         setSelectedIds([]);
@@ -322,14 +320,12 @@ export function TestCards({ testData }: props) {
         });
     };
 
-    // --- Drag & Drop (Multi-select supported) ---
     const handleDragStart = (e: DragEvent, id: string) => {
         e.stopPropagation();
         setDraggedId(id);
         e.dataTransfer.setData('text/plain', id);
         e.dataTransfer.effectAllowed = "move";
         
-        // 掴んだものが選択されていない場合、それのみを選択状態にする
         if (!selectedIds.includes(id)) {
             setSelectedIds([id]);
         }
@@ -349,11 +345,10 @@ export function TestCards({ testData }: props) {
         const movingIds = getMovingIds(draggedId);
         if (movingIds.length === 0) return;
         
-        // フォルダをフォルダの中に入れようとしている場合はブロック
         if (targetParentId !== null) {
             const hasFolder = layout.some(n => movingIds.includes(n.id) && n.type === 'folder');
             if (hasFolder) return;
-            if (movingIds.includes(targetParentId)) return; // 自身へのドロップ防止
+            if (movingIds.includes(targetParentId)) return; 
         }
 
         setLayout(prev => {
@@ -384,7 +379,6 @@ export function TestCards({ testData }: props) {
     const handleDropOnFolder = (e: DragEvent, targetFolderId: string) => {
         e.preventDefault();
         e.stopPropagation();
-        // フォルダに重なった場合は中へ
         executeDrop(targetFolderId, null);
     };
 
@@ -393,9 +387,8 @@ export function TestCards({ testData }: props) {
         executeDrop(null, null);
     };
 
-    // Ctrl + クリックでの複数選択ハンドラー
     const handleItemClickCapture = (e: React.MouseEvent, id: string) => {
-        if (e.button !== 0) return; // 左クリックのみ
+        if (e.button !== 0) return; 
         if (e.ctrlKey || e.metaKey) {
             e.stopPropagation();
             e.preventDefault();
@@ -417,7 +410,6 @@ export function TestCards({ testData }: props) {
             onContextMenu={handleBgContextMenu} 
             sx={{ minHeight: '60vh', pb: 10, userSelect: isSelecting ? 'none' : 'auto', position: 'relative' }}
         >
-            {/* 範囲選択エフェクトボックス */}
             {isSelecting && (
                 <Box sx={{
                     position: 'fixed',
@@ -449,19 +441,21 @@ export function TestCards({ testData }: props) {
                         const children = layout.filter(n => n.parentId === node.id).sort((a, b) => a.order - b.order);
                         return (
                             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={node.id}>
-                                <Box 
+                                <Card 
                                     className="draggable-item" data-id={node.id}
                                     draggable onDragStart={(e) => handleDragStart(e, node.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnFolder(e, node.id)} onContextMenu={(e) => handleFolderContextMenu(e, node.id)} onMouseDown={(e) => e.stopPropagation()} 
                                     onClickCapture={(e) => handleItemClickCapture(e, node.id)}
-                                    sx={{ height: '100%', cursor: 'grab', position: 'relative', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px', borderRadius: 1 }) }}
+                                    sx={{ display: 'flex', height: '100%', cursor: 'grab', bgcolor: 'grey.50', '&:hover': { bgcolor: 'grey.100' }, '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px' }) }}
                                 >
-                                    <Checkbox
-                                        className="select-checkbox"
-                                        checked={isSelected}
-                                        onChange={(e) => setSelectedIds(prev => e.target.checked ? [...prev, node.id] : prev.filter(id => id !== node.id))}
-                                        sx={{ position: 'absolute', top: 4, left: 4, zIndex: 10, opacity: isSelected ? 1 : 0, bgcolor: 'rgba(255,255,255,0.8)', padding: '2px', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,1)' } }}
-                                    />
-                                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50', '&:hover': { bgcolor: 'grey.100' } }}>
+                                    <Box sx={{ width: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Checkbox
+                                            className="select-checkbox"
+                                            checked={isSelected}
+                                            onChange={(e) => setSelectedIds(prev => e.target.checked ? [...prev, node.id] : prev.filter(id => id !== node.id))}
+                                            sx={{ opacity: isSelected ? 1 : 0, transition: 'opacity 0.2s' }}
+                                        />
+                                    </Box>
+                                    <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minWidth: 0, borderLeft: '1px solid', borderColor: 'divider' }}>
                                         <CardActionArea onClick={() => setOpenFolderId(node.id)} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 2 }}>
                                             <FolderIcon sx={{ fontSize: 40, color: node.color || 'primary.main', mb: 1 }} />
                                             <Typography variant="subtitle1" fontWeight="bold" textAlign="center" sx={{ wordBreak: 'break-word' }}>
@@ -471,8 +465,8 @@ export function TestCards({ testData }: props) {
                                                 {children.length}  {msg.TEST}
                                             </Typography>
                                         </CardActionArea>
-                                    </Card>
-                                </Box>
+                                    </Box>
+                                </Card>
                             </Grid>
                         );
                     } else {
@@ -480,20 +474,24 @@ export function TestCards({ testData }: props) {
                         if (!t) return null;
                         return (
                             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={node.id}>
-                                <Box 
+                                <Card 
                                     className="draggable-item" data-id={node.id}
                                     draggable onDragStart={(e) => handleDragStart(e, node.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnItem(e, node.id)} onMouseDown={(e) => e.stopPropagation()} 
                                     onClickCapture={(e) => handleItemClickCapture(e, node.id)}
-                                    sx={{ cursor: 'grab', height: '100%', position: 'relative', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px', borderRadius: 1 }) }}
+                                    sx={{ display: 'flex', height: '100%', cursor: 'grab', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px' }) }}
                                 >
-                                    <Checkbox
-                                        className="select-checkbox"
-                                        checked={isSelected}
-                                        onChange={(e) => setSelectedIds(prev => e.target.checked ? [...prev, node.id] : prev.filter(id => id !== node.id))}
-                                        sx={{ position: 'absolute', top: 4, left: 4, zIndex: 10, opacity: isSelected ? 1 : 0, bgcolor: 'rgba(255,255,255,0.8)', padding: '2px', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,1)' } }}
-                                    />
-                                    <TestCardItem testData={t} onDeleted={handleRemoveFromState} />
-                                </Box>
+                                    <Box sx={{ width: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, bgcolor: 'grey.50' }}>
+                                        <Checkbox
+                                            className="select-checkbox"
+                                            checked={isSelected}
+                                            onChange={(e) => setSelectedIds(prev => e.target.checked ? [...prev, node.id] : prev.filter(id => id !== node.id))}
+                                            sx={{ opacity: isSelected ? 1 : 0, transition: 'opacity 0.2s' }}
+                                        />
+                                    </Box>
+                                    <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minWidth: 0, borderLeft: '1px solid', borderColor: 'divider' }}>
+                                        <TestCardItem testData={t} onDeleted={handleRemoveFromState} />
+                                    </Box>
+                                </Card>
                             </Grid>
                         );
                     }
@@ -504,8 +502,8 @@ export function TestCards({ testData }: props) {
             <Dialog 
                 open={openFolderId !== null} 
                 onClose={() => setOpenFolderId(null)} 
-                maxWidth="md" 
-                fullWidth
+                maxWidth={false}
+                PaperProps={{ sx: { width: '80%', maxWidth: 'none' } }}
                 onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
             >
                 {openFolderId && (
@@ -524,20 +522,24 @@ export function TestCards({ testData }: props) {
                                     const isSelected = selectedIds.includes(child.id);
                                     return (
                                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={child.id}>
-                                            <Box 
+                                            <Card 
                                                 className="draggable-item" data-id={child.id}
                                                 draggable onDragStart={(e) => handleDragStart(e, child.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnItem(e, child.id)} onMouseDown={(e) => e.stopPropagation()} 
                                                 onClickCapture={(e) => handleItemClickCapture(e, child.id)}
-                                                sx={{ cursor: 'grab', height: '100%', position: 'relative', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px', borderRadius: 1 }) }}
+                                                sx={{ display: 'flex', height: '100%', cursor: 'grab', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px' }) }}
                                             >
-                                                <Checkbox
-                                                    className="select-checkbox"
-                                                    checked={isSelected}
-                                                    onChange={(e) => setSelectedIds(prev => e.target.checked ? [...prev, child.id] : prev.filter(id => id !== child.id))}
-                                                    sx={{ position: 'absolute', top: 4, left: 4, zIndex: 10, opacity: isSelected ? 1 : 0, bgcolor: 'rgba(255,255,255,0.8)', padding: '2px', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,1)' } }}
-                                                />
-                                                <TestCardItem testData={t} onDeleted={handleRemoveFromState} />
-                                            </Box>
+                                                <Box sx={{ width: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, bgcolor: 'grey.50' }}>
+                                                    <Checkbox
+                                                        className="select-checkbox"
+                                                        checked={isSelected}
+                                                        onChange={(e) => setSelectedIds(prev => e.target.checked ? [...prev, child.id] : prev.filter(id => id !== child.id))}
+                                                        sx={{ opacity: isSelected ? 1 : 0, transition: 'opacity 0.2s' }}
+                                                    />
+                                                </Box>
+                                                <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minWidth: 0, borderLeft: '1px solid', borderColor: 'divider' }}>
+                                                    <TestCardItem testData={t} onDeleted={handleRemoveFromState} />
+                                                </Box>
+                                            </Card>
                                         </Grid>
                                     );
                                 })}
