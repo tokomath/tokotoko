@@ -155,12 +155,12 @@ export const msg = {
     "ASSIGNMENT": "割り当て",
     "TARGET_CLASS": "対象クラス",
 
-    // セクションタブ
+    // 大問タブ
     "SECTION_NUMBER": "大問",
-    "ADD_SECTION": "セクション追加",
+    "ADD_SECTION": "大問追加",
     "SECTION_SETTINGS": "設定",
-    "DELETE_SECTION": "セクションを削除",
-    "SECTION_SUMMARY_LABEL": "セクション概要",
+    "DELETE_SECTION": "大問を削除",
+    "SECTION_SUMMARY_LABEL": "大問概要",
     "PREVIEW": "プレビュー",
     "QUESTIONS_LIST": "問題一覧",
     "ADD_QUESTION": "問題を追加",
@@ -284,4 +284,7 @@ export const msg = {
     "CLOSE": "閉じる",
     "ANSWER_LABEL": "解答",
     "SCORE_LABEL": "得点",
+    "MOVE_UP": "上へ",
+    "MOVE_DOWN": "下へ",
+    "DUPLICATE": "コピーを作成",
 }

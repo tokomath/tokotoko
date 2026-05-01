@@ -18,6 +18,7 @@ import {
   Typography,
   FormControl,
   OutlinedInput,
+  Menu,
   MenuItem,
   Chip,
   Container,
@@ -97,6 +98,60 @@ function ClientSearchParamWrapper() {
   const [assignedClass, setAssignedClass] = useState<Class[]>([]);
   const [classList, setClassList] = useState<Class[]>([]);
   const teacherId = useUser().user?.id || "";
+
+  const [sectionContextMenu, setSectionContextMenu] = useState<{ mouseX: number; mouseY: number; index: number } | null>(null);
+  const [draggedSectionIndex, setDraggedSectionIndex] = useState<number | null>(null);
+
+  const handleSectionContextMenu = (event: React.MouseEvent, index: number) => {
+    event.preventDefault();
+    setSectionContextMenu({ mouseX: event.clientX, mouseY: event.clientY, index });
+  };
+  const handleSectionContextMenuClose = () => setSectionContextMenu(null);
+
+  const moveSection = (dragIndex: number, hoverIndex: number) => {
+    if (dragIndex < 0 || hoverIndex < 0 || dragIndex >= sections.length || hoverIndex >= sections.length) return;
+    const newSections = [...sections];
+    const [draggedItem] = newSections.splice(dragIndex, 1);
+    newSections.splice(hoverIndex, 0, draggedItem);
+
+    const updatedSections = newSections.map((sec, i) => ({ ...sec, section: { ...sec.section, number: i + 1 } }));
+    setSections(updatedSections);
+
+    if (value === dragIndex + 1) {
+      setValue(hoverIndex + 1);
+    } else if (dragIndex < value - 1 && hoverIndex >= value - 1) {
+      setValue(value - 1);
+    } else if (dragIndex > value - 1 && hoverIndex <= value - 1) {
+      setValue(value + 1);
+    }
+  };
+
+  const duplicateSection = (index: number) => {
+    const target = sections[index];
+    const dummySectionId = -Math.floor(Math.random() * 1000000);
+
+    const newSection: SectionFrame = JSON.parse(JSON.stringify(target));
+
+    newSection.section.id = dummySectionId;
+
+    newSection.questions = newSection.questions.map((q: Question) => ({
+      ...q,
+      id: -Math.floor(Math.random() * 1000000),
+      sectionId: dummySectionId
+    }));
+
+    const newSections = [...sections];
+    newSections.splice(index + 1, 0, newSection);
+
+    const updatedSections = newSections.map((sec, i) => ({
+      ...sec,
+      section: { ...sec.section, number: i + 1 }
+    }));
+
+    setSections(updatedSections);
+
+    setValue(index + 2);
+  };
 
   useEffect(() => {
     const fetchClassesAndTest = async () => {
@@ -276,7 +331,22 @@ function ClientSearchParamWrapper() {
             >
               <Tab label={msg.METADATA} />
               {sections.map((_, index) => (
-                <Tab label={`${msg.SECTION_NUMBER} ${index + 1}`} key={index} />
+                <Tab
+                  label={`${msg.SECTION_NUMBER} ${index + 1}`}
+                  key={index}
+                  draggable
+                  onDragStart={() => setDraggedSectionIndex(index)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggedSectionIndex !== null && draggedSectionIndex !== index) {
+                      moveSection(draggedSectionIndex, index);
+                    }
+                    setDraggedSectionIndex(null);
+                  }}
+                  onContextMenu={(e) => handleSectionContextMenu(e, index)}
+                  sx={{ cursor: 'grab' }}
+                />
               ))}
               <Tab icon={<AddIcon />} iconPosition="start" label={msg.ADD_SECTION} onClick={handleAdd} sx={{ color: 'primary.main', fontWeight: 'bold' }} />
             </Tabs>
@@ -314,6 +384,30 @@ function ClientSearchParamWrapper() {
           </Box>
         </Paper>
       </Box>
+      <Menu
+        open={sectionContextMenu !== null}
+        onClose={handleSectionContextMenuClose}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          sectionContextMenu !== null
+            ? { top: sectionContextMenu.mouseY, left: sectionContextMenu.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem onClick={() => {
+          if (sectionContextMenu) moveSection(sectionContextMenu.index, sectionContextMenu.index - 1);
+          handleSectionContextMenuClose();
+        }} disabled={sectionContextMenu?.index === 0}>{msg.MOVE_UP}</MenuItem>
+        <MenuItem onClick={() => {
+          if (sectionContextMenu) moveSection(sectionContextMenu.index, sectionContextMenu.index + 1);
+          handleSectionContextMenuClose();
+        }} disabled={sectionContextMenu?.index === sections.length - 1}>{msg.MOVE_DOWN}</MenuItem>
+        <Divider />
+        <MenuItem onClick={() => {
+          if (sectionContextMenu) duplicateSection(sectionContextMenu.index);
+          handleSectionContextMenuClose();
+        }}>{msg.DUPLICATE}</MenuItem>
+      </Menu>
     </Container>
   );
 }
@@ -506,6 +600,37 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
     setSection({ section: newS, questions: section.questions });
   }
 
+  // =========================================================================
+  // ★ エラーの原因：この部分が handleSectionSummaryChange の中に入っていました
+  // =========================================================================
+  const [questionContextMenu, setQuestionContextMenu] = useState<{ mouseX: number; mouseY: number; index: number } | null>(null);
+  const [draggedQuestionIndex, setDraggedQuestionIndex] = useState<number | null>(null);
+
+  const handleQuestionContextMenu = (event: React.MouseEvent, index: number) => {
+    event.preventDefault();
+    setQuestionContextMenu({ mouseX: event.clientX, mouseY: event.clientY, index });
+  };
+  const handleQuestionContextMenuClose = () => setQuestionContextMenu(null);
+
+  const moveQuestion = (dragIndex: number, hoverIndex: number) => {
+    if (dragIndex < 0 || hoverIndex < 0 || dragIndex >= section.questions.length || hoverIndex >= section.questions.length) return;
+    const newQuestions = [...section.questions];
+    const [draggedItem] = newQuestions.splice(dragIndex, 1);
+    newQuestions.splice(hoverIndex, 0, draggedItem);
+    const updatedQuestions = newQuestions.map((q, i) => ({ ...q, number: i + 1 }));
+    setSection({ ...section, questions: updatedQuestions });
+  };
+
+  const duplicateQuestion = (index: number) => {
+    const target = section.questions[index];
+    const dummyId = -Math.floor(Math.random() * 1000000);
+    const newQuestion = JSON.parse(JSON.stringify({ ...target, id: dummyId }));
+    const newQuestions = [...section.questions];
+    newQuestions.splice(index + 1, 0, newQuestion);
+    const updatedQuestions = newQuestions.map((q, i) => ({ ...q, number: i + 1 }));
+    setSection({ ...section, questions: updatedQuestions });
+  };
+
   return (
     <Box sx={{ p: 4, pb: 15 }}>
       <Card variant="outlined" sx={{ bgcolor: 'grey.50', mb: 4 }}>
@@ -572,13 +697,28 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
 
         <Stack spacing={3}>
           {section.questions.map((q: Question, index: number) => (
-            <QuestionPage
-              key={index}
-              index={index}
-              question={q}
-              setQuestion={(q: Question) => handleQuestionChange(q, index)}
-              deleteQuestion={() => handleRemove(index)}
-            />
+            <Box
+              key={q.id}
+              draggable
+              onDragStart={() => setDraggedQuestionIndex(index)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedQuestionIndex !== null && draggedQuestionIndex !== index) {
+                  moveQuestion(draggedQuestionIndex, index);
+                }
+                setDraggedQuestionIndex(null);
+              }}
+              onContextMenu={(e) => handleQuestionContextMenu(e, index)}
+              sx={{ cursor: 'grab' }}
+            >
+              <QuestionPage
+                index={index}
+                question={q}
+                setQuestion={(q: Question) => handleQuestionChange(q, index)}
+                deleteQuestion={() => handleRemove(index)}
+              />
+            </Box>
           ))}
           {section.questions.length === 0 && (
             <Alert severity="info">{msg.NO_QUESTIONS_ALERT}</Alert>
@@ -597,6 +737,32 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           {msg.ADD_ANOTHER_QUESTION}
         </Button>
       )}
+      <Menu
+        open={questionContextMenu !== null}
+        onClose={handleQuestionContextMenuClose}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          questionContextMenu !== null
+            ? { top: questionContextMenu.mouseY, left: questionContextMenu.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem onClick={() => {
+          if (questionContextMenu) moveQuestion(questionContextMenu.index, questionContextMenu.index - 1);
+          handleQuestionContextMenuClose();
+        }} disabled={questionContextMenu?.index === 0}>上へ</MenuItem>
+        <MenuItem onClick={() => {
+          if (questionContextMenu) moveQuestion(questionContextMenu.index, questionContextMenu.index + 1);
+          handleQuestionContextMenuClose();
+        }} disabled={questionContextMenu?.index === section.questions.length - 1}>下へ</MenuItem>
+        <Divider />
+        <MenuItem onClick={() => {
+          if (questionContextMenu) duplicateQuestion(questionContextMenu.index);
+          handleQuestionContextMenuClose();
+        }}>
+          {msg.DUPLICATE}
+        </MenuItem>
+      </Menu>
     </Box>
   );
 };
@@ -634,7 +800,7 @@ const QuestionPage = ({
       <CardHeader
         title={<Typography variant="subtitle1" fontWeight="bold">{msg.QUESTION_NUMBER_PREFIX || "Question"} {question.number}</Typography>}
         action={
-          <Stack direction="row" spacing={2} alignItems="center" sx={{p:1}}>
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ p: 1 }}>
             <TextField
               label={msg.ALLOCATION_POINT}
               type="number"
@@ -642,7 +808,7 @@ const QuestionPage = ({
               value={question.allocationPoint ?? 1}
               onChange={(e) => setAllocationPoint(parseInt(e.target.value, 10) || 0)}
               inputProps={{ min: 0 }}
-              sx={{ width: '80px'}}
+              sx={{ width: '80px' }}
             />
             <IconButton aria-label="delete" onClick={deleteQuestion} color="error" size="small">
               <CloseIcon />
