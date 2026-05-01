@@ -12,7 +12,9 @@ import { setAnswerPoints } from "@/app/api/test/setAnswerPoints";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from '@clerk/nextjs';
 import { TeacherGuard } from "@/lib/guard";
+import judge from "@/lib/judge";
 import { msg } from "@/msg-ja";
+
 
 import styles from "./styles.module.css";
 
@@ -170,6 +172,40 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
   const [texDialogOpen, setTexDialogOpen] = useState(false);
   const [currentTexContent, setCurrentTexContent] = useState("");
+  const [autoGradingDialogOpen, setAutoGradingDialogOpen] = useState(false);
+
+  const autoGradingHandle = useCallback(() => {
+    if (!Test_ || !submissionData) return;
+
+    setPoints(prevPoints => {
+      const newPoints = { ...prevPoints };
+      const allQuestions = Test_.sections.flatMap((s: any) => s.questions);
+
+      submissionData.forEach((submission, dataIndex) => {
+        const studentPoints = { ...newPoints[dataIndex] };
+
+        submission.answers.forEach((answer: Answer, qIndex: number) => {
+          const question = allQuestions[qIndex];
+          if (!question) return;
+
+          if (answer.text.trim() === "") {
+            studentPoints[qIndex] = 0;
+          } else {
+            const result = judge(question.answer, answer.text);
+            if (result === 1 || result === 2) {
+              studentPoints[qIndex] = question.allocationPoint ?? 1;
+            } else {
+              studentPoints[qIndex] = -1;
+            }
+          }
+        });
+        newPoints[dataIndex] = studentPoints;
+      });
+      return newPoints;
+    });
+
+    setAutoGradingDialogOpen(false);
+  }, [Test_, submissionData]);
 
   const handleOpenTexDialog = useCallback((tex: string, event: React.MouseEvent) => {
     event.preventDefault();
@@ -410,19 +446,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
     const currentClass = Test_.classes.at(classIndex);
 
-if (currentClassUsers.length > 0) {
+    if (currentClassUsers.length > 0) {
       currentClassUsers.forEach(({ user, originalIndex }: { user: User; originalIndex: number }) => {
         let rn: string = "";
         const data_index = submission_index[originalIndex];
         const submission = data_index !== undefined ? submissionData[data_index] : null;
 
-        let statusText = msg.NOT_SUBMITTED; 
+        let statusText = msg.NOT_SUBMITTED;
         if (submission && Test_.endDate) {
           const subDate = new Date(submission.submissionDate);
           const endDate = new Date(Test_.endDate);
           statusText = subDate > endDate ? msg.OVERDUE : msg.ON_TIME;
         } else if (submission) {
-          statusText = msg.SUBMITTED; 
+          statusText = msg.SUBMITTED;
         }
 
         const metrics = userMetrics[originalIndex] || { totalPoints: 0, ungradedCount: 0 };
@@ -475,7 +511,7 @@ if (currentClassUsers.length > 0) {
 
 
 
-const renderSubmissionStatus = useCallback((user_index: number) => {
+  const renderSubmissionStatus = useCallback((user_index: number) => {
     const data_index = submission_index[user_index];
     const submission = data_index !== undefined && submissionData ? submissionData[data_index] : null;
 
@@ -536,26 +572,38 @@ const renderSubmissionStatus = useCallback((user_index: number) => {
               </Typography>
             </Box>
 
-            <Box width="10em">
-              <Box display="flex" justifyContent="right">
-                {Test_?.classes?.length > 0 &&
-                  <TextField select id="select_class" value={classId || ''} onChange={selectClassHandle} fullWidth>
-                    {
-                      Test_?.classes.map((a_class: Class) =>
-                        <MenuItem key={"select_class_" + a_class.id} value={a_class.id}>
-                          {a_class.name}
-                        </MenuItem>
-                      )
-                    }
-                  </TextField>
-                }
+            <Box display="flex" alignItems="flex-start" gap={1}>
+              {/* 自動採点ボタン */}
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => setAutoGradingDialogOpen(true)}
+                sx={{ height: '56px', whiteSpace: 'nowrap' }} // TextField(select)の高さに合わせる
+              >
+                {msg.AUTO_GRADING}
+              </Button>
+
+              <Box width="10em">
+                <Box display="flex" justifyContent="right">
+                  {Test_?.classes?.length > 0 &&
+                    <TextField select id="select_class" value={classId || ''} onChange={selectClassHandle} fullWidth>
+                      {
+                        Test_?.classes.map((a_class: Class) =>
+                          <MenuItem key={"select_class_" + a_class.id} value={a_class.id}>
+                            {a_class.name}
+                          </MenuItem>
+                        )
+                      }
+                    </TextField>
+                  }
+                </Box>
+                <Typography textAlign="right">
+                  {msg.CLASS_ID}: {classId ?? '...'}
+                </Typography>
+                <Typography textAlign="right">
+                  {msg.TEST_ID}: {testid}
+                </Typography>
               </Box>
-              <Typography textAlign="right">
-                {msg.CLASS_ID}: {classId ?? '...'}
-              </Typography>
-              <Typography textAlign="right">
-                {msg.TEST_ID}: {testid}
-              </Typography>
             </Box>
           </Box>
         </Box>
@@ -677,6 +725,19 @@ const renderSubmissionStatus = useCallback((user_index: number) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseTexDialog}>{msg.CLOSE}</Button>
+        </DialogActions>
+      </Dialog>
+      {/* 自動採点確認ダイアログ */}
+      <Dialog open={autoGradingDialogOpen} onClose={() => setAutoGradingDialogOpen(false)}>
+        <DialogTitle>{msg.AUTO_GRADING_CONFIRM_TITLE}</DialogTitle>
+        <DialogContent>
+          <Typography>{msg.AUTO_GRADING_CONFIRM_MESSAGE}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAutoGradingDialogOpen(false)}>{msg.CANCEL}</Button>
+          <Button onClick={autoGradingHandle} color="primary" variant="contained">
+            {msg.EXECUTE}
+          </Button>
         </DialogActions>
       </Dialog>
     </TeacherGuard>

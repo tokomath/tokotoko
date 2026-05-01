@@ -287,4 +287,8 @@ export const msg = {
     "MOVE_UP": "上へ",
     "MOVE_DOWN": "下へ",
     "DUPLICATE": "コピーを作成",
+    "AUTO_GRADING": "自動採点",
+    "AUTO_GRADING_CONFIRM_TITLE": "自動採点の実行",
+    "AUTO_GRADING_CONFIRM_MESSAGE": "自動採点を実行すると、現在入力されている点数が上書きされます。よろしいですか？",
+    "EXECUTE": "実行",
 }
