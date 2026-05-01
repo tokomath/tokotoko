@@ -65,6 +65,7 @@ function Result({ id, userid }: { id: string, userid: string }) {
   const [data, setData] = useState<any | null | undefined>(undefined);
   const [partIndex, setPartIndex] = useState(0);
   const [point, setPoint] = useState(0);
+  const [totalMaxPoint, setTotalMaxPoint] = useState(0);
   const router = useRouter();
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -78,10 +79,12 @@ function Result({ id, userid }: { id: string, userid: string }) {
         setData(res);
         let i = 0;
         let p = 0;
+        let mp = 0;
         let misaiten = false;
         res.test.sections.forEach((sec: any) => {
           sec.questions.forEach((q: any) => {
             q["ans"] = res.answers[i];
+            mp += q.allocationPoint ?? 1;
             if (res.answers[i].point >= 0) {
               p += res.answers[i].point;
             } else {
@@ -90,6 +93,9 @@ function Result({ id, userid }: { id: string, userid: string }) {
             i += 1;
           });
         });
+
+        setTotalMaxPoint(mp);
+
         if (misaiten) {
           setPoint(-1);
         } else {
@@ -213,7 +219,7 @@ function Result({ id, userid }: { id: string, userid: string }) {
                   </Typography>
                 ) : (
                   <Typography variant="h6" color="primary.main" fontWeight="bold">
-                    {msg.SCORE}: {point} {msg.POINTS}
+                    {msg.SCORE}: {point} / {totalMaxPoint} {msg.POINTS}
                   </Typography>
                 )}
                 {statusDisplay}
@@ -262,6 +268,7 @@ function Result({ id, userid }: { id: string, userid: string }) {
                       insertContent={question.insertContent}
                       trueAns={question.answer}
                       point={question.ans.point}
+                      allocationPoint={question.allocationPoint}
                     />
                   </React.Fragment>
                 </Paper>
@@ -325,13 +332,14 @@ function Next({
   );
 }
 
-function Question({ id, number, question, insertType, insertContent, myAns, trueAns, point }: any) {
+function Question({ id, number, question, insertType, insertContent, myAns, trueAns, point,allocationPoint }: any) {
   return (
     <Stack spacing={2}>
       <Box display="flex" alignItems="center">
         <Typography variant="h2" fontSize={17}>({number})</Typography>
         <Box width="10px"></Box>
         <Latex>{question}</Latex>
+        <Box sx={{ml:3}}>[ {allocationPoint} {msg.POINTS} ]</Box>
       </Box>
       {insertType !== "None" ? (
         <>
