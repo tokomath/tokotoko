@@ -353,6 +353,17 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     });
   }, [Test_, classIndex, submission_index, points, submissionData]);
 
+  const currentClassUsers = useMemo(() => {
+    const users = Test_?.classes.at(classIndex)?.users || [];
+    return users
+      .map((user: User, index: number) => ({ user, originalIndex: index }))
+      .sort((a: { user: User, originalIndex: number }, b: { user: User, originalIndex: number }) => {
+        const emailA = String((a.user as any).email || "");
+        const emailB = String((b.user as any).email || "");
+        return emailA.localeCompare(emailB);
+      });
+  }, [Test_, classIndex]);
+
   const exportbutonHandle = useCallback(() => {
     if (!Test_ || !submissionData) return;
 
@@ -382,10 +393,10 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
     const currentClass = Test_.classes.at(classIndex);
 
-    if (currentClass) {
-      currentClass.users.forEach((user: User, user_index: number) => {
+    if (currentClassUsers.length > 0) {
+      currentClassUsers.forEach(({ user, originalIndex }: { user: User; originalIndex: number }) => {
         let rn: string = "";
-        const data_index = submission_index[user_index];
+        const data_index = submission_index[originalIndex];
         const submission = data_index !== undefined ? submissionData[data_index] : null;
 
         let statusText = "未提出";
@@ -397,7 +408,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           statusText = "提出済み";
         }
 
-        const metrics = userMetrics[user_index] || { totalPoints: 0, ungradedCount: 0 };
+        const metrics = userMetrics[originalIndex] || { totalPoints: 0, ungradedCount: 0 };
 
         rn += `${statusText},`;
         rn += `${format_text(user.name || '')},`;
@@ -432,8 +443,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     a_buf.click();
     document.body.removeChild(a_buf);
     URL.revokeObjectURL(url);
-  }, [Test_, classIndex, submissionData, submission_index, points, userMetrics]);
-
+  }, [Test_, classIndex, submissionData, submission_index, points, userMetrics, currentClassUsers]);
 
   const visibleQuestions = useMemo(() => {
     if (!Test_?.sections) return { questions: [], startIndex: 0 };
@@ -446,9 +456,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     return { questions, startIndex };
   }, [Test_, sectionValue]);
 
-  const currentClassUsers = useMemo(() => {
-    return Test_?.classes.at(classIndex)?.users || [];
-  }, [Test_, classIndex]);
+
 
   const renderSubmissionStatus = useCallback((user_index: number) => {
     const data_index = submission_index[user_index];
@@ -572,14 +580,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                 </TableHead>
                 <TableBody>
                   {
-                    currentClassUsers.map((user: User, user_index: number) => {
-                      const metrics = userMetrics[user_index] || { totalPoints: 0, ungradedCount: 0 };
+                    currentClassUsers.map(({ user, originalIndex }: { user: User; originalIndex: number }) => {
+                      const metrics = userMetrics[originalIndex] || { totalPoints: 0, ungradedCount: 0 };
+                      const data_index = submission_index[originalIndex];
+
                       return (
                         <TableRow key={"ROW-" + user.id}>
                           <TableCell key={"username-" + user.id} className={styles.name_cell}>
                             <Box display="flex" alignItems="center" gap={1}>
-                              {renderSubmissionStatus(user_index)}
-                              {user.name}
+                              {renderSubmissionStatus(originalIndex)}
+                              <Box display="flex" flexDirection="column">
+                                <Typography variant="body2">{user.name}</Typography>
+                                <Typography variant="caption" color="text.secondary">{(user as any).email}</Typography>
+                              </Box>
                             </Box>
                           </TableCell>
                           <TableCell key={"totalPoints-" + user.id} sx={{ textAlign: "center" }} className={styles.point_cell}>
@@ -589,7 +602,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                           {
                             visibleQuestions.questions.map((question: Question, index: number) => {
                               const questionGlobalIndex = visibleQuestions.startIndex + index;
-                              const data_index = submission_index[user_index];
 
                               if (data_index !== undefined && submissionData?.[data_index]?.answers?.[questionGlobalIndex]) {
                                 const answer = submissionData[data_index].answers[questionGlobalIndex];
