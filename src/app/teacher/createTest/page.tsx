@@ -276,7 +276,7 @@ function ClientSearchParamWrapper() {
     <Container
       maxWidth="xl"
       sx={{
-        height: "calc(100vh - 64px)",
+        height: "calc(100vh - 80px)",
         display: "flex",
         flexDirection: "column",
         pt: 2,
@@ -354,7 +354,7 @@ function ClientSearchParamWrapper() {
 
           <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
             {value === 0 && (
-              <Box sx={{ p: 4, pb: 10 }}>
+              <Box sx={{ p: 4, pb: 0 }}>
                 <MetaDataPage
                   testTitle={testTitle} setTestTitle={setTestTitle}
                   testSummary={testSummary} setTestSummary={setTestSummary}
