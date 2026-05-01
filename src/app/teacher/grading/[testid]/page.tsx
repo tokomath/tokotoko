@@ -318,73 +318,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     return () => clearTimeout(timer);
   }, [points, submissionData, savebuttonHandle]);
 
-  const exportbutonHandle = useCallback(() => {
-    if (!Test_ || !submissionData) return;
-
-    let exportdata_csv: string = "";
-    let r1: string = `${msg.CSV_PART_QNUMBER},`;
-    let r2: string = `${msg.CSV_QUESTION},`;
-    let r3: string = `${msg.CSV_ANSWER},`;
-
-    const format_text = (str: string): string => {
-      return str.replaceAll("\n", "").replaceAll(",", "，");
-    }
-
-    Test_.sections.forEach((section: any, section_index: number) => {
-      section.questions.forEach((question: Question, question_index: number) => {
-        r1 += `${msg.SECTION_NUMBER}${section_index + 1}-${question_index + 1},,`;
-        r2 += `${format_text(question.question)},,`;
-        r3 += `${format_text(question.answer)},,`;
-      })
-    })
-
-    r1 = r1.slice(0, r1.length - 1) + "\n";
-    r2 = r2.slice(0, r2.length - 1) + "\n";
-    r3 = r3.slice(0, r3.length - 1) + "\n";
-    exportdata_csv = r1 + r2 + r3;
-
-    const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
-    const currentClass = Test_.classes.at(classIndex);
-
-    if (currentClass) {
-      currentClass.users.forEach((user: User, user_index: number) => {
-        let rn: string = "";
-        const data_index = submission_index[user_index];
-        rn += `${format_text(user.name || '')},`;
-
-        if (data_index !== undefined) {
-          const submission = submissionData.at(data_index);
-          if (submission) {
-            for (let i = 0; i < totalQuestionsCount; i++) {
-              const answer = submission.answers[i];
-              if (answer) {
-                rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
-              } else {
-                rn += ",,";
-              }
-            }
-          } else {
-            rn += ",".repeat(totalQuestionsCount * 2);
-          }
-        } else {
-          rn += ",".repeat(totalQuestionsCount * 2);
-        }
-        rn = rn.slice(0, rn.length - 1) + "\n";
-        exportdata_csv += rn;
-      });
-    }
-
-    const blob = new Blob([exportdata_csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a_buf = document.createElement('a');
-    a_buf.href = url;
-    a_buf.download = `${Test_?.title}_${currentClass?.name}.csv`;
-    document.body.appendChild(a_buf);
-    a_buf.click();
-    document.body.removeChild(a_buf);
-    URL.revokeObjectURL(url);
-  }, [Test_, classIndex, submissionData, submission_index, points]);
-
 
   const userMetrics = useMemo(() => {
     if (!Test_ || !submissionData) return [];
@@ -419,6 +352,88 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       return { totalPoints, ungradedCount };
     });
   }, [Test_, classIndex, submission_index, points, submissionData]);
+
+  const exportbutonHandle = useCallback(() => {
+    if (!Test_ || !submissionData) return;
+
+    let exportdata_csv: string = "";
+    let r1: string = `提出状況,名前,メールアドレス,合計点,未採点数,`;
+    let r2: string = `,,,,,`;
+    let r3: string = `,,,,,`;
+
+    const format_text = (str: string): string => {
+      if (!str) return "";
+      return String(str).replaceAll("\n", "").replaceAll(",", "，");
+    }
+
+    Test_.sections.forEach((section: any, section_index: number) => {
+      section.questions.forEach((question: Question, question_index: number) => {
+        r1 += `${msg.SECTION_NUMBER}${section_index + 1}-${question_index + 1}解答,${msg.SECTION_NUMBER}${section_index + 1}-${question_index + 1}得点,`;
+        r2 += `${format_text(question.question)},,`;
+        r3 += `${format_text(question.answer)},,`;
+      })
+    })
+
+    r1 = r1.slice(0, r1.length - 1) + "\n";
+    r2 = r2.slice(0, r2.length - 1) + "\n";
+    r3 = r3.slice(0, r3.length - 1) + "\n";
+    exportdata_csv = r1 + r2 + r3;
+
+    const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
+    const currentClass = Test_.classes.at(classIndex);
+
+    if (currentClass) {
+      currentClass.users.forEach((user: User, user_index: number) => {
+        let rn: string = "";
+        const data_index = submission_index[user_index];
+        const submission = data_index !== undefined ? submissionData[data_index] : null;
+
+        let statusText = "未提出";
+        if (submission && Test_.endDate) {
+          const subDate = new Date(submission.submissionDate);
+          const endDate = new Date(Test_.endDate);
+          statusText = subDate > endDate ? "期限遅れ" : "期限内";
+        } else if (submission) {
+          statusText = "提出済み";
+        }
+
+        const metrics = userMetrics[user_index] || { totalPoints: 0, ungradedCount: 0 };
+
+        rn += `${statusText},`;
+        rn += `${format_text(user.name || '')},`;
+        rn += `${format_text((user as any).email || '')},`;
+        rn += `${metrics.totalPoints},`;
+        rn += `${metrics.ungradedCount},`;
+
+        if (submission) {
+          for (let i = 0; i < totalQuestionsCount; i++) {
+            const answer = submission.answers[i];
+            if (answer) {
+              rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
+            } else {
+              rn += ",,";
+            }
+          }
+        } else {
+          rn += ",".repeat(totalQuestionsCount * 2);
+        }
+        rn = rn.slice(0, rn.length - 1) + "\n";
+        exportdata_csv += rn;
+      });
+    }
+
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, exportdata_csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a_buf = document.createElement('a');
+    a_buf.href = url;
+    a_buf.download = `${Test_?.title}_${currentClass?.name}.csv`;
+    document.body.appendChild(a_buf);
+    a_buf.click();
+    document.body.removeChild(a_buf);
+    URL.revokeObjectURL(url);
+  }, [Test_, classIndex, submissionData, submission_index, points, userMetrics]);
+
 
   const visibleQuestions = useMemo(() => {
     if (!Test_?.sections) return { questions: [], startIndex: 0 };
