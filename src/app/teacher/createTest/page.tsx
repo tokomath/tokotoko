@@ -126,6 +126,33 @@ function ClientSearchParamWrapper() {
     }
   };
 
+  const duplicateSection = (index: number) => {
+    const target = sections[index];
+    const dummySectionId = -Math.floor(Math.random() * 1000000);
+
+    const newSection: SectionFrame = JSON.parse(JSON.stringify(target));
+
+    newSection.section.id = dummySectionId;
+
+    newSection.questions = newSection.questions.map((q: Question) => ({
+      ...q,
+      id: -Math.floor(Math.random() * 1000000),
+      sectionId: dummySectionId
+    }));
+
+    const newSections = [...sections];
+    newSections.splice(index + 1, 0, newSection);
+
+    const updatedSections = newSections.map((sec, i) => ({
+      ...sec,
+      section: { ...sec.section, number: i + 1 }
+    }));
+
+    setSections(updatedSections);
+
+    setValue(index + 2);
+  };
+
   useEffect(() => {
     const fetchClassesAndTest = async () => {
       if (teacherId) {
@@ -375,6 +402,11 @@ function ClientSearchParamWrapper() {
           if (sectionContextMenu) moveSection(sectionContextMenu.index, sectionContextMenu.index + 1);
           handleSectionContextMenuClose();
         }} disabled={sectionContextMenu?.index === sections.length - 1}>{msg.MOVE_DOWN}</MenuItem>
+        <Divider />
+        <MenuItem onClick={() => {
+          if (sectionContextMenu) duplicateSection(sectionContextMenu.index);
+          handleSectionContextMenuClose();
+        }}>{msg.DUPLICATE}</MenuItem>
       </Menu>
     </Container>
   );
