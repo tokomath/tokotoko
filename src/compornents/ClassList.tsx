@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState, DragEvent } from "react";
+import React, { useEffect, useState, DragEvent, useRef } from "react";
 import {
     Box,
     Card,
@@ -74,9 +74,9 @@ export function TeacherClassCards({ classes }: Props) {
     const [renameFolderId, setRenameFolderId] = useState<string | null>(null);
     const [editFolderName, setEditFolderName] = useState('');
 
-    const [colorDialogOpen, setColorDialogOpen] = useState(false);
     const [colorFolderId, setColorFolderId] = useState<string | null>(null);
     const [editFolderColor, setEditFolderColor] = useState('#1976d2');
+    const colorInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setIsClient(true);
@@ -134,15 +134,30 @@ export function TeacherClassCards({ classes }: Props) {
         handleCloseContextMenus();
     };
 
-    const handleOpenColorDialog = () => {
+    const handleTriggerColorPicker = () => {
         if (!folderContextMenu) return;
         const folder = layout.find(n => n.id === folderContextMenu.folderId);
         if (folder) {
             setEditFolderColor(folder.color || '#1976d2');
             setColorFolderId(folder.id);
-            setColorDialogOpen(true);
+            setTimeout(() => {
+                if (colorInputRef.current) {
+                    colorInputRef.current.click();
+                }
+            }, 0);
         }
         handleCloseContextMenus();
+    };
+
+    const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newColor = e.target.value;
+        setEditFolderColor(newColor);
+        if (!colorFolderId) return;
+        setLayout(prev => {
+            const newLayout = prev.map(n => n.id === colorFolderId ? { ...n, color: newColor } : n);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLayout));
+            return newLayout;
+        });
     };
 
     const handleCreateFolder = () => {
@@ -164,17 +179,6 @@ export function TeacherClassCards({ classes }: Props) {
         });
         setRenameDialogOpen(false);
         setRenameFolderId(null);
-    };
-
-    const handleSaveFolderColor = () => {
-        if (!colorFolderId) return;
-        setLayout(prev => {
-            const newLayout = prev.map(n => n.id === colorFolderId ? { ...n, color: editFolderColor } : n);
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLayout));
-            return newLayout;
-        });
-        setColorDialogOpen(false);
-        setColorFolderId(null);
     };
 
     const handleDeleteFolderMenu = () => {
@@ -315,7 +319,7 @@ export function TeacherClassCards({ classes }: Props) {
 
                 <Menu open={folderContextMenu !== null} onClose={handleCloseContextMenus} anchorReference="anchorPosition" anchorPosition={folderContextMenu !== null ? { top: folderContextMenu.mouseY, left: folderContextMenu.mouseX } : undefined}>
                     <MenuItem onClick={handleOpenRenameDialog}>{msg.RENAME_FOLDER || "名前の変更"}</MenuItem>
-                    <MenuItem onClick={handleOpenColorDialog}>{msg.CHANGE_FOLDER_COLOR || "色の変更"}</MenuItem>
+                    <MenuItem onClick={handleTriggerColorPicker}>{msg.CHANGE_FOLDER_COLOR || "色の変更"}</MenuItem>
                     <MenuItem onClick={handleDeleteFolderMenu} sx={{ color: 'error.main' }}>{msg.DELETE_FOLDER || "削除"}</MenuItem>
                 </Menu>
 
@@ -333,7 +337,7 @@ export function TeacherClassCards({ classes }: Props) {
                                                     {node.name}
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    {children.length}  {msg.TEST}
+                                                    {children.length}  {msg.CLASS}
                                                 </Typography>
                                             </CardActionArea>
                                         </Card>
@@ -410,22 +414,14 @@ export function TeacherClassCards({ classes }: Props) {
                     </DialogActions>
                 </Dialog>
 
-                <Dialog open={colorDialogOpen} onClose={() => setColorDialogOpen(false)}>
-                    <DialogTitle>{msg.CHANGE_FOLDER_COLOR || "色の変更"}</DialogTitle>
-                    <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, pt: 3 }}>
-                        <FolderIcon sx={{ fontSize: 80, color: editFolderColor }} />
-                        <input
-                            type="color"
-                            value={editFolderColor}
-                            onChange={(e) => setEditFolderColor(e.target.value)}
-                            style={{ width: '100%', height: '50px', cursor: 'pointer', border: 'none', padding: 0 }}
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setColorDialogOpen(false)}>{msg.CANCEL}</Button>
-                        <Button onClick={handleSaveFolderColor} variant="contained">{msg.SAVE || "保存"}</Button>
-                    </DialogActions>
-                </Dialog>
+                {/* 非表示のカラーピッカー入力 */}
+                <input
+                    type="color"
+                    ref={colorInputRef}
+                    value={editFolderColor}
+                    onChange={handleColorChange}
+                    style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: '0px', height: '0px' }}
+                />
             </Box>
         </TeacherGuard>
     );
