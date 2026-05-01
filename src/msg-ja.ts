@@ -263,4 +263,13 @@ export const msg = {
     "REMAINING_RESUBMISSIONS": "残り再提出回数",
     "RESUBMIT": "再度提出する",
     "RESUBMIT_W": "再提出",
+
+    "CREATE_FOLDER": "フォルダを作成",
+    "NEW_FOLDER_NAME": "フォルダ名",
+    "DELETE_FOLDER_CONFIRM": "フォルダを削除しますか？（中身のアイテムは外に移動されます）",
+    "DROP_HERE": "（ここへドロップして追加）",
+    "RENAME_FOLDER": "名前の変更",
+    "DELETE_FOLDER": "削除",
+    "CHANGE_FOLDER_COLOR": "色の変更",
+    "SELECT_COLOR": "色を選択",
 }
