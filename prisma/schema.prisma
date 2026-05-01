@@ -55,6 +55,7 @@ model Question {
   insertType        String
   insertContent     String
   answer            String
+  allocationPoint   Int      @default(1)
   submissionAnswers Answer[]
   section           Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 }

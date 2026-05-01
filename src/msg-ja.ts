@@ -272,4 +272,5 @@ export const msg = {
     "DELETE_FOLDER": "削除",
     "CHANGE_FOLDER_COLOR": "色の変更",
     "SELECT_COLOR": "色を選択",
+    "ALLOCATION_POINT": "配点",
 }

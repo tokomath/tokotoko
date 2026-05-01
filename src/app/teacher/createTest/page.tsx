@@ -464,6 +464,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
       id: dummyId,
       sectionId: section.section.id,
       question: "",
+      allocationPoint: 1,
       number: section.questions.length + 1,
       insertType: "None",
       insertContent: "",
@@ -618,6 +619,10 @@ const QuestionPage = ({
     setQuestion({ ...question, insertContent: insertContent });
   };
 
+  const setAllocationPoint = (newPoint: number) => {
+    setQuestion({ ...question, allocationPoint: newPoint });
+  };
+
   const contetError = () => {
     if (question.insertType !== "None" && question.insertContent === "") {
       return <Alert severity="error">{msg.ERROR_CONTENT_MISSING}</Alert>;
@@ -629,9 +634,20 @@ const QuestionPage = ({
       <CardHeader
         title={<Typography variant="subtitle1" fontWeight="bold">{msg.QUESTION_NUMBER_PREFIX || "Question"} {question.number}</Typography>}
         action={
-          <IconButton aria-label="delete" onClick={deleteQuestion} color="error" size="small">
-            <CloseIcon />
-          </IconButton>
+          <Stack direction="row" spacing={2} alignItems="center" sx={{p:1}}>
+            <TextField
+              label={msg.ALLOCATION_POINT}
+              type="number"
+              size="small"
+              value={question.allocationPoint ?? 1}
+              onChange={(e) => setAllocationPoint(parseInt(e.target.value, 10) || 0)}
+              inputProps={{ min: 0 }}
+              sx={{ width: '80px'}}
+            />
+            <IconButton aria-label="delete" onClick={deleteQuestion} color="error" size="small">
+              <CloseIcon />
+            </IconButton>
+          </Stack>
         }
         sx={{ bgcolor: 'grey.100', py: 1 }}
       />

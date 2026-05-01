@@ -37,6 +37,7 @@ export const createTest = async (props: TestFrame) => {
                 insertContent: question.insertContent,
                 number: question.number,
                 answer: question.answer,
+                allocationPoint: question.allocationPoint,
               };
             }),
           },
