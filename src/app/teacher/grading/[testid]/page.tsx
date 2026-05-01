@@ -12,7 +12,7 @@ import { setAnswerPoints } from "@/app/api/test/setAnswerPoints";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from '@clerk/nextjs';
 import { TeacherGuard } from "@/lib/guard";
-import judge from "@/lib/judge";
+import judge, { format } from "@/lib/judge";
 import { msg } from "@/msg-ja";
 
 
@@ -720,6 +720,16 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           <Box sx={{ p: 2, bgcolor: 'grey.100', borderRadius: 1, overflowX: 'auto' }}>
             <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
               {currentTexContent}
+            </pre>
+          </Box>
+        </DialogContent>
+        <DialogContent>
+          <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+            {msg.FORMATED_TEX}
+          </Typography>
+          <Box sx={{ p: 2, bgcolor: 'blue.50', borderRadius: 1, overflowX: 'auto', border: '1px solid', borderColor: 'blue.100' }}>
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
+              {format(currentTexContent)}
             </pre>
           </Box>
         </DialogContent>

@@ -280,7 +280,7 @@ export const msg = {
     "LATE_PREFIX": "期限から ",
     "LATE_SUFFIX": "遅れ",
     "LESS_THAN_A_MINUTE": "1分未満",
-    "RAW_TEX": "Raw TeX",
+    "RAW_TEX": "原文TeX",
     "CLOSE": "閉じる",
     "ANSWER_LABEL": "解答",
     "SCORE_LABEL": "得点",
@@ -291,4 +291,5 @@ export const msg = {
     "AUTO_GRADING_CONFIRM_TITLE": "自動採点の実行",
     "AUTO_GRADING_CONFIRM_MESSAGE": "自動採点を実行すると、現在入力されている点数が上書きされます。よろしいですか？",
     "EXECUTE": "実行",
+    "FORMATED_TEX": "フォーマットされたTeX",
 }
