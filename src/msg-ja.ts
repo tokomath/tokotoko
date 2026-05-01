@@ -284,4 +284,7 @@ export const msg = {
     "CLOSE": "閉じる",
     "ANSWER_LABEL": "解答",
     "SCORE_LABEL": "得点",
+    "MOVE_UP": "上へ",
+    "MOVE_DOWN": "下へ",
+    "DUPLICATE": "コピーを作成",
 }
