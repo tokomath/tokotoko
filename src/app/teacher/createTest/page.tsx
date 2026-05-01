@@ -322,7 +322,7 @@ function ClientSearchParamWrapper() {
       </Stack>
       <Box sx={{ flexGrow: 1, minHeight: 0, p: 1.5, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Paper elevation={3} sx={{ flexGrow: 1, minHeight: 0, display: 'flex', overflow: 'hidden', borderRadius: 2 }}>
-          <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", bgcolor: 'grey.50', overflowY: 'auto' }}>
+          <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", bgcolor: 'grey.50', overflowY: 'auto', height: '100%' }}>
             <Tabs
               value={value}
               onChange={(_, v) => setValue(v)}
@@ -352,9 +352,9 @@ function ClientSearchParamWrapper() {
             </Tabs>
           </Box>
 
-          <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+          <Box sx={{ flexGrow: 1, overflowY: 'auto', height: '100%' }}>
             {value === 0 && (
-              <Box sx={{ p: 4}}>
+              <Box sx={{ p: 4 }}>
                 <MetaDataPage
                   testTitle={testTitle} setTestTitle={setTestTitle}
                   testSummary={testSummary} setTestSummary={setTestSummary}
