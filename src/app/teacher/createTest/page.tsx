@@ -354,7 +354,7 @@ function ClientSearchParamWrapper() {
 
           <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
             {value === 0 && (
-              <Box sx={{ p: 4, pb: 0 }}>
+              <Box sx={{ p: 4}}>
                 <MetaDataPage
                   testTitle={testTitle} setTestTitle={setTestTitle}
                   testSummary={testSummary} setTestSummary={setTestSummary}
@@ -632,7 +632,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
   };
 
   return (
-    <Box sx={{ p: 4, pb: 15 }}>
+    <Box sx={{ p: 4 }}>
       <Card variant="outlined" sx={{ bgcolor: 'grey.50', mb: 4 }}>
         <CardHeader
           title={`${msg.SECTION_NUMBER} ${index + 1} ${msg.SECTION_SETTINGS}`}
