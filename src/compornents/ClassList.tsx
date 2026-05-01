@@ -88,23 +88,24 @@ export function TeacherClassCards({ classes }: Props) {
         const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
         let parsed: LayoutNode[] = saved ? JSON.parse(saved) : [];
 
-        const existingItemIds = new Set(parsed.filter(n => n.type === 'item').map(n => n.id));
+        const existingItemIds = new Set(parsed.filter(n => n.type === 'item').map(n => String(n.id)));
         let maxOrder = parsed.length > 0 ? Math.max(...parsed.filter(n => n.parentId === null).map(n => n.order), 0) : 0;
 
+        let hasNew = false;
         const newNodes: LayoutNode[] = [];
         classes.forEach(c => {
-            if (!existingItemIds.has(c.id)) {
+            if (!existingItemIds.has(String(c.id))) {
                 maxOrder++;
-                newNodes.push({ id: c.id, type: 'item', parentId: null, order: maxOrder });
+                newNodes.push({ id: String(c.id), type: 'item', parentId: null, order: maxOrder });
+                hasNew = true;
             }
         });
 
-        const currentClassIds = new Set(classes.map(c => c.id));
-        parsed = parsed.filter(n => n.type === 'folder' || currentClassIds.has(n.id));
-
         const finalLayout = [...parsed, ...newNodes];
         setLayout(finalLayout);
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalLayout));
+        if (hasNew) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalLayout));
+        }
     }, [classes]);
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -267,17 +268,20 @@ export function TeacherClassCards({ classes }: Props) {
         }
 
         setLayout(prev => {
-            const newLayout = [...prev];
+            let newLayout = prev.map(n => movingIds.includes(n.id) ? { ...n, parentId: targetParentId } : n);
             const movingNodes = newLayout.filter(n => movingIds.includes(n.id));
-            
-            movingNodes.forEach(n => n.parentId = targetParentId);
-            
             const siblings = newLayout.filter(n => n.parentId === targetParentId && !movingIds.includes(n.id)).sort((a, b) => a.order - b.order);
+            
             const targetIndex = insertBeforeNodeId ? siblings.findIndex(n => n.id === insertBeforeNodeId) : siblings.length;
             const insertIndex = targetIndex !== -1 ? targetIndex : siblings.length;
 
             siblings.splice(insertIndex, 0, ...movingNodes);
-            siblings.forEach((sib, idx) => sib.order = idx);
+            siblings.forEach((sib, idx) => {
+                const nodeIndex = newLayout.findIndex(n => n.id === sib.id);
+                if (nodeIndex !== -1) {
+                    newLayout[nodeIndex] = { ...newLayout[nodeIndex], order: idx };
+                }
+            });
 
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLayout));
             return newLayout;
