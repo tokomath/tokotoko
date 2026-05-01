@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useMemo, useCallback, use } from "react";
-import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip } from "@mui/material";
+import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
 
@@ -92,7 +92,7 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
   );
 }
 
-const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoint, userIndex, questionIndex, answerCellHandle, cursorImage }: { answer: string; point: number; allocationPoint: number; userIndex: number; questionIndex: number; answerCellHandle: (newPoint: number, userIndex: number, questionIndex: number) => void; cursorImage: string; }) {
+const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoint, userIndex, questionIndex, answerCellHandle, cursorImage, onRightClick }: { answer: string; point: number; allocationPoint: number; userIndex: number; questionIndex: number; answerCellHandle: (newPoint: number, userIndex: number, questionIndex: number) => void; cursorImage: string; onRightClick: (tex: string, event: React.MouseEvent) => void; }) {
   if (!answer) {
     return null
   }
@@ -110,8 +110,12 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
     }
   }
 
+  const contextMenuHandle = (event: React.MouseEvent) => {
+    onRightClick(answer, event);
+  }
+
   return (<>
-    <TableCell onClick={click_handle} onKeyDown={keydown_handle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
+    <TableCell onClick={click_handle} onKeyDown={keydown_handle} onContextMenu={contextMenuHandle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
       <div className={((point === -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
       <div className={styles.matharea}><Latex>{String(answer)}</Latex></div>
     </TableCell>
@@ -163,6 +167,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   const [cursorImage, setCursorImage] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
+
+  const [texDialogOpen, setTexDialogOpen] = useState(false);
+  const [currentTexContent, setCurrentTexContent] = useState("");
+
+  const handleOpenTexDialog = useCallback((tex: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    setCurrentTexContent(tex);
+    setTexDialogOpen(true);
+  }, []);
+
+  const handleCloseTexDialog = useCallback(() => {
+    setTexDialogOpen(false);
+  }, []);
 
   useEffect(() => {
     const paramClassId = searchParams.get("classid");
@@ -368,7 +385,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     if (!Test_ || !submissionData) return;
 
     let exportdata_csv: string = "";
-    let r1: string = `提出状況,名前,メールアドレス,合計点,未採点数,`;
+    let r1: string = `${msg.SUBMISSION_STATUS},${msg.NAME},${msg.EMAIL_LABEL},${msg.TOTAL_POINT},${msg.UNGRADED_COUNT},`;
     let r2: string = `,,,,,`;
     let r3: string = `,,,,,`;
 
@@ -393,19 +410,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
     const currentClass = Test_.classes.at(classIndex);
 
-    if (currentClassUsers.length > 0) {
+if (currentClassUsers.length > 0) {
       currentClassUsers.forEach(({ user, originalIndex }: { user: User; originalIndex: number }) => {
         let rn: string = "";
         const data_index = submission_index[originalIndex];
         const submission = data_index !== undefined ? submissionData[data_index] : null;
 
-        let statusText = "未提出";
+        let statusText = msg.NOT_SUBMITTED; 
         if (submission && Test_.endDate) {
           const subDate = new Date(submission.submissionDate);
           const endDate = new Date(Test_.endDate);
-          statusText = subDate > endDate ? "期限遅れ" : "期限内";
+          statusText = subDate > endDate ? msg.OVERDUE : msg.ON_TIME;
         } else if (submission) {
-          statusText = "提出済み";
+          statusText = msg.SUBMITTED; 
         }
 
         const metrics = userMetrics[originalIndex] || { totalPoints: 0, ungradedCount: 0 };
@@ -458,13 +475,13 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
 
 
-  const renderSubmissionStatus = useCallback((user_index: number) => {
+const renderSubmissionStatus = useCallback((user_index: number) => {
     const data_index = submission_index[user_index];
     const submission = data_index !== undefined && submissionData ? submissionData[data_index] : null;
 
     if (!submission || !Test_?.endDate) {
       return (
-        <Tooltip title="未提出" arrow>
+        <Tooltip title={msg.NOT_SUBMITTED} arrow>
           <Box width={12} height={12} borderRadius="50%" bgcolor="grey.400" flexShrink={0} />
         </Tooltip>
       );
@@ -474,20 +491,20 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     const endDate = new Date(Test_.endDate);
     const isLate = subDate > endDate;
 
-    let tooltipText = `提出: ${subDate.toLocaleString()}`;
+    let tooltipText = `${msg.SUBMIT_PREFIX}${subDate.toLocaleString()}`;
     if (isLate) {
       const diffMs = subDate.getTime() - endDate.getTime();
       const d = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const h = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
       const m = Math.floor((diffMs / 1000 / 60) % 60);
       let lateText = "";
-      if (d > 0) lateText += `${d}日`;
-      if (h > 0) lateText += `${h}時間`;
-      if (m > 0) lateText += `${m}分`;
-      if (lateText === "") lateText = "1分未満";
-      tooltipText += `\n(期限から ${lateText}遅れ)`;
+      if (d > 0) lateText += `${d}${msg.DAY}`;
+      if (h > 0) lateText += `${h}${msg.HOUR}`;
+      if (m > 0) lateText += `${m}${msg.MINUTE}`;
+      if (lateText === "") lateText = msg.LESS_THAN_A_MINUTE;
+      tooltipText += `\n(${msg.LATE_PREFIX}${lateText}${msg.LATE_SUFFIX})`;
     } else {
-      tooltipText += `\n(期限内)`;
+      tooltipText += `\n(${msg.ON_TIME})`;
     }
 
     return (
@@ -572,7 +589,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                           </Typography>
                           <Latex>{question.question}</Latex>
                           <hr />
-                          <Latex>{question.answer}</Latex>
+                          <Box onContextMenu={(e) => handleOpenTexDialog(question.answer, e)} sx={{ cursor: 'context-menu' }}>
+                            <Latex>{question.answer}</Latex>
+                          </Box>
                         </TableCell>
                       )
                     }
@@ -606,6 +625,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                               if (data_index !== undefined && submissionData?.[data_index]?.answers?.[questionGlobalIndex]) {
                                 const answer = submissionData[data_index].answers[questionGlobalIndex];
                                 const currentPoint = points[data_index]?.[questionGlobalIndex] ?? Number(answer.point);
+
                                 return (
                                   <AnswerCell
                                     answer={(answer.text === "" ? " " : answer.text)}
@@ -616,6 +636,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                                     userIndex={data_index}
                                     questionIndex={questionGlobalIndex}
                                     cursorImage={cursorImage}
+                                    onRightClick={handleOpenTexDialog}
                                   />
                                 )
                               } else {
@@ -644,6 +665,20 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           </>
         )}
       </Container>
+
+      <Dialog open={texDialogOpen} onClose={handleCloseTexDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>{msg.RAW_TEX}</DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ p: 2, bgcolor: 'grey.100', borderRadius: 1, overflowX: 'auto' }}>
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
+              {currentTexContent}
+            </pre>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseTexDialog}>{msg.CLOSE}</Button>
+        </DialogActions>
+      </Dialog>
     </TeacherGuard>
   );
 }
