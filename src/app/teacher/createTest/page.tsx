@@ -26,11 +26,6 @@ import {
   Grid,
   Switch,
   FormControlLabel,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
 } from "@mui/material";
 import "katex/dist/katex.min.css";
 
@@ -48,7 +43,6 @@ import {
 } from "@/app/api/test/testFrames";
 import { createTest } from "@/app/api/test/createTest";
 import { getTestById } from "@/app/api/test/getTestById";
-import { getSubmissionsByTestId } from "@/app/api/test/submit";
 import { updateTest, updateTestPublishStatus, updateTestMetadata } from "@/app/api/test/updateTest";
 
 import { Test, Section, Question, Class } from "@prisma/client";
@@ -85,7 +79,6 @@ function ClientSearchParamWrapper() {
   const [isEditing, setIsEditing] = useState(false);
   const [isCurrentPublished, setIsCurrentPublished] = useState(false);
   const [currentTestId, setCurrentTestId] = useState<number | null>(param_testId ? Number(param_testId) : null);
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
   const initialSectionsRef = useRef<string>("");
 
@@ -188,20 +181,9 @@ function ClientSearchParamWrapper() {
       }
       alert(msg.SUCCESS_CREATE_TEST);
     }
-    setIsConfirmDialogOpen(false);
   };
 
   const handleSaveClick = async () => {
-    if (isEditing && currentTestId) {
-      const isStructureChanged = JSON.stringify(sections) !== initialSectionsRef.current;
-      if (isStructureChanged) {
-        const submissions = await getSubmissionsByTestId(currentTestId);
-        if (submissions.length > 0) {
-          setIsConfirmDialogOpen(true);
-          return;
-        }
-      }
-    }
     await performSave();
   };
 
@@ -216,9 +198,10 @@ function ClientSearchParamWrapper() {
   };
 
   const handleAdd = () => {
+    const dummyId = -Math.floor(Math.random() * 1000000);
     const section: Section = {
-      id: 1,
-      testId: 1,
+      id: dummyId,
+      testId: currentTestId || 1,
       summary: "",
       number: sections.length + 1,
     };
@@ -330,19 +313,6 @@ function ClientSearchParamWrapper() {
             ))}
           </Box>
         </Paper>
-
-        <Dialog open={isConfirmDialogOpen} onClose={() => setIsConfirmDialogOpen(false)}>
-          <DialogTitle>{msg.CONFIRM_DELETE_SUBMISSIONS_TITLE}</DialogTitle>
-          <DialogContent>
-            <DialogContentText>{msg.CONFIRM_DELETE_SUBMISSIONS_MESSAGE}</DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setIsConfirmDialogOpen(false)}>{msg.CANCEL}</Button>
-            <Button onClick={() => performSave()} color="error" variant="contained">
-              {msg.PROCEED_SAVE}
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     </Container>
   );
@@ -489,9 +459,10 @@ const MetaDataPage = ({
 
 const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
   const addQuestion = () => {
+    const dummyId = -Math.floor(Math.random() * 1000000);
     const question: Question = {
-      id: 1,
-      sectionId: 1,
+      id: dummyId,
+      sectionId: section.section.id,
       question: "",
       number: section.questions.length + 1,
       insertType: "None",
