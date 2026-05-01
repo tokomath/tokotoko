@@ -305,6 +305,9 @@ export function TestCards({ testData }: props) {
             const draggedNode = newLayout.find(n => n.id === draggedId);
             if (!draggedNode || (draggedNode.type === 'folder' && targetNode.parentId === draggedNode.id)) return prev;
 
+            // フォルダの入れ子を防止
+            if (draggedNode.type === 'folder' && targetNode.parentId !== null) return prev;
+
             draggedNode.parentId = targetNode.parentId;
             draggedNode.order = targetNode.order - 0.5;
             const siblings = newLayout.filter(n => n.parentId === targetNode.parentId).sort((a, b) => a.order - b.order);
@@ -414,7 +417,14 @@ export function TestCards({ testData }: props) {
                 })}
             </Grid>
 
-            <Dialog open={openFolderId !== null} onClose={() => setOpenFolderId(null)} maxWidth="md" fullWidth>
+            {/* フォルダ展開ポップアップ (ポップアップ内の右クリックを無効化) */}
+            <Dialog 
+                open={openFolderId !== null} 
+                onClose={() => setOpenFolderId(null)} 
+                maxWidth="md" 
+                fullWidth
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            >
                 {openFolderId && (
                     <>
                         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
