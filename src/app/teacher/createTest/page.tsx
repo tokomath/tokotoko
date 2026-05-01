@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useState, useRef } from "react";
 import {
+  Autocomplete,
   Alert,
   Box,
   Button,
@@ -37,6 +38,8 @@ import SaveIcon from "@mui/icons-material/Save";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ImageIcon from "@mui/icons-material/Image";
 import CodeIcon from "@mui/icons-material/Code";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 
 import {
   TestFrame,
@@ -50,7 +53,6 @@ import { Test, Section, Question, Class } from "@prisma/client";
 import dayjs, { Dayjs } from "dayjs";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import Autocomplete from '@mui/material/Autocomplete';
 
 import Latex from "react-latex-next";
 import { useRouter, useSearchParams } from "next/navigation"
@@ -82,6 +84,8 @@ function ClientSearchParamWrapper() {
   const [currentTestId, setCurrentTestId] = useState<number | null>(param_testId ? Number(param_testId) : null);
 
   const initialSectionsRef = useRef<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null); 
+  
 
   const getInitialStartDate = () => {
     const now = dayjs();
@@ -101,6 +105,47 @@ function ClientSearchParamWrapper() {
 
   const [sectionContextMenu, setSectionContextMenu] = useState<{ mouseX: number; mouseY: number; index: number } | null>(null);
   const [draggedSectionIndex, setDraggedSectionIndex] = useState<number | null>(null);
+
+  const exportToJson = () => {
+    const exportData = {
+      title: testTitle,
+      summary: testSummary,
+      maxResubmissions: maxResubmissions,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      sections: sections,
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${testTitle || "test_data"}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importFromJson = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        setTestTitle(data.title || "");
+        setTestSummary(data.summary || "");
+        setMaxResubmissions(data.maxResubmissions || 0);
+        if (data.startDate) setStartDate(dayjs(data.startDate));
+        if (data.endDate) setEndDate(dayjs(data.endDate));
+        if (data.sections) setSections(data.sections);
+      } catch (err) {
+        alert(msg.ERROR_FILE_LOAD);
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+  };
 
   const handleSectionContextMenu = (event: React.MouseEvent, index: number) => {
     event.preventDefault();
@@ -297,6 +342,29 @@ function ClientSearchParamWrapper() {
         </Stack>
 
         <Stack direction="row" spacing={2} alignItems="center">
+          {/* JSON読み込み用隠しインプット */}
+          <input
+            type="file"
+            accept="application/json"
+            style={{ display: "none" }}
+            ref={fileInputRef}
+            onChange={importFromJson}
+          />
+          <Button
+            variant="outlined"
+            startIcon={<FolderOpenIcon />}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {msg.OPEN_JSON}
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<FileDownloadIcon />}
+            onClick={exportToJson}
+          >
+            {msg.SAVE_JSON}
+          </Button>
+          
           <Button
             variant="contained"
             size="large"
@@ -320,6 +388,8 @@ function ClientSearchParamWrapper() {
           />
         </Stack>
       </Stack>
+      
+      {/* 以下のコンテンツ部分は変更なし */}
       <Box sx={{ flexGrow: 1, minHeight: 0, p: 1.5, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Paper elevation={3} sx={{ flexGrow: 1, minHeight: 0, display: 'flex', overflow: 'hidden', borderRadius: 2 }}>
           <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", bgcolor: 'grey.50', overflowY: 'auto', height: '100%' }}>
@@ -600,9 +670,6 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
     setSection({ section: newS, questions: section.questions });
   }
 
-  // =========================================================================
-  // ★ エラーの原因：この部分が handleSectionSummaryChange の中に入っていました
-  // =========================================================================
   const [questionContextMenu, setQuestionContextMenu] = useState<{ mouseX: number; mouseY: number; index: number } | null>(null);
   const [draggedQuestionIndex, setDraggedQuestionIndex] = useState<number | null>(null);
 
