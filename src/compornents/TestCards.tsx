@@ -163,23 +163,24 @@ export function TestCards({ testData }: props) {
         const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
         let parsed: LayoutNode[] = saved ? JSON.parse(saved) : [];
 
-        const existingItemIds = new Set(parsed.filter(n => n.type === 'item').map(n => Number(n.id)));
+        const existingItemIds = new Set(parsed.filter(n => n.type === 'item').map(n => String(n.id)));
         let maxOrder = parsed.length > 0 ? Math.max(...parsed.filter(n => n.parentId === null).map(n => n.order), 0) : 0;
 
+        let hasNew = false;
         const newNodes: LayoutNode[] = [];
         testData.forEach(t => {
-            if (!existingItemIds.has(t.id)) {
+            if (!existingItemIds.has(String(t.id))) {
                 maxOrder++;
-                newNodes.push({ id: t.id.toString(), type: 'item', parentId: null, order: maxOrder });
+                newNodes.push({ id: String(t.id), type: 'item', parentId: null, order: maxOrder });
+                hasNew = true;
             }
         });
 
-        const currentTestIds = new Set(testData.map(t => t.id.toString()));
-        parsed = parsed.filter(n => n.type === 'folder' || currentTestIds.has(n.id));
-
         const finalLayout = [...parsed, ...newNodes];
         setLayout(finalLayout);
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalLayout));
+        if (hasNew) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalLayout));
+        }
         setTests(testData);
     }, [testData]);
 
@@ -352,17 +353,20 @@ export function TestCards({ testData }: props) {
         }
 
         setLayout(prev => {
-            const newLayout = [...prev];
+            let newLayout = prev.map(n => movingIds.includes(n.id) ? { ...n, parentId: targetParentId } : n);
             const movingNodes = newLayout.filter(n => movingIds.includes(n.id));
-            
-            movingNodes.forEach(n => n.parentId = targetParentId);
-            
             const siblings = newLayout.filter(n => n.parentId === targetParentId && !movingIds.includes(n.id)).sort((a, b) => a.order - b.order);
+            
             const targetIndex = insertBeforeNodeId ? siblings.findIndex(n => n.id === insertBeforeNodeId) : siblings.length;
             const insertIndex = targetIndex !== -1 ? targetIndex : siblings.length;
 
             siblings.splice(insertIndex, 0, ...movingNodes);
-            siblings.forEach((sib, idx) => sib.order = idx);
+            siblings.forEach((sib, idx) => {
+                const nodeIndex = newLayout.findIndex(n => n.id === sib.id);
+                if (nodeIndex !== -1) {
+                    newLayout[nodeIndex] = { ...newLayout[nodeIndex], order: idx };
+                }
+            });
 
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLayout));
             return newLayout;
@@ -498,7 +502,6 @@ export function TestCards({ testData }: props) {
                 })}
             </Grid>
 
-            {/* フォルダ展開ポップアップ */}
             <Dialog 
                 open={openFolderId !== null} 
                 onClose={() => setOpenFolderId(null)} 
