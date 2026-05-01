@@ -1,42 +1,33 @@
 import nerdamer from 'nerdamer';
 
-// 判定結果の定義[cite: 3]
 enum JudgeResult {
-  Unknown,      // 0: 不一致
-  MabyCorrect,  // 1: 数学的に等価
-  Correct,      // 2: 文字列レベルで一致
+  Unknown,
+  MabyCorrect,
+  Correct,
 }
 
-/**
- * メイン判定関数[cite: 3, 8]
- */
 export default function judge(correct_answer_tex: string, your_answer_tex: string) {
   correct_answer_tex = trimSpace(correct_answer_tex);
   your_answer_tex = trimSpace(your_answer_tex);
 
-  // フォーマット処理（表記揺れの吸収）を適用
   let c_f = format(correct_answer_tex);
   let y_f = format(your_answer_tex);
 
-  // 1. 文字列レベルでの一致判定
   if (correct_answer_tex === your_answer_tex) {
     return JudgeResult.Correct;
   } else if (c_f === y_f) {
     return JudgeResult.Correct;
   }
 
-  // 2. 空白除去後の一致判定
   const c_f_no_space = c_f.replace(/\s/g, '');
   const y_f_no_space = y_f.replace(/\s/g, '');
   if (c_f_no_space !== "" && c_f_no_space === y_f_no_space) {
     return JudgeResult.Correct;
   }
 
-  // 3. 構造比較（向きを正規化して比較）
   const c_struct = getNormalizedStructure(c_f);
   const y_struct = getNormalizedStructure(y_f);
 
-  // 不等号の種類（< か \le か）が一致しているか確認
   if (JSON.stringify(c_struct.operators) === JSON.stringify(y_struct.operators)) {
     let allPartsMatch = true;
     for (let i = 0; i < c_struct.parts.length; i++) {
@@ -54,9 +45,6 @@ export default function judge(correct_answer_tex: string, your_answer_tex: strin
   return JudgeResult.Unknown;
 }
 
-/**
- * 式をパーツと演算子に分解し、向きを「<, \le」側に統一する[cite: 8]
- */
 function getNormalizedStructure(tex: string) {
   const clean = tex.replace(/\$/g, '').trim();
   const tokens = clean.split(/(=|<|>|\\le|\\ge|,)/);
@@ -72,9 +60,7 @@ function getNormalizedStructure(tex: string) {
     }
   });
 
-  // 不等号の向きを「<」や「\le」の方向に統一する（例: 0 >= y >= -5 -> -5 <= y <= 0）[cite: 8]
   if (operators.some(op => op === '>' || op === '\\ge')) {
-    // すべての演算子が「>」系、または「=」や「,」であれば反転可能と判断
     const canFlip = operators.every(op => op === '>' || op === '\\ge' || op === '=' || op === ',');
     
     if (canFlip) {
@@ -90,9 +76,6 @@ function getNormalizedStructure(tex: string) {
   return { parts, operators };
 }
 
-/**
- * 数学的等価判定（Nerdamer）[cite: 3, 8]
- */
 function isMathematicallyEqual(a: string, b: string): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
@@ -129,9 +112,10 @@ function normalizeTeXCommand(input: string): string {
     .replace(/\\tfrac/g, '\\frac')
     .replace(/\\left/g, '')
     .replace(/\\right/g, '')
-    .replace(/\\(geqq|leq|leq)/g, '\\le')
-    .replace(/\\(≧|geqq|geq|geq)/g, '\\ge')
-    .replace(/\\(le|ge|pm|mp|times|div|sqrt|sin|cos|tan|log|ln|pi)([a-zA-Z0-9])/g, '\\$1 $2')
+    .replace(/\\(leqslant|leqq|leq)/g, '\\le')
+    .replace(/\\(geqslant|geqq|geq)/g, '\\ge')
+    .replace(/\\neq/g, '\\ne')
+    .replace(/\\(le|ge|ne|pm|mp|times|div|sqrt|sin|cos|tan|log|ln|pi)([a-zA-Z0-9])/g, '\\$1 $2')
     .replace(/[＝=]/g, '=')
     .replace(/[≠]/g, '\\ne')
     .replace(/[＞>]/g, '>')
@@ -141,7 +125,7 @@ function normalizeTeXCommand(input: string): string {
     .replace(/[±]/g, '\\pm')
     .replace(/[×]/g, '\\times')
     .replace(/[÷／]/g, '\\div')
-    .replace(/[－—–ー一⁻−]/g, '-') 
+    .replace(/[－—–ー⁻−]/g, '-') 
     .replace(/[√]/g, '\\sqrt')
     .replace(/[π]/g, '\\pi')
     .replace(/[＋+]/g, '+')
