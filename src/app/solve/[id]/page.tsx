@@ -257,6 +257,7 @@ function Solve(
                     insertType: q.insertType,
                     insertContent: q.insertContent,
                     answer: q.answer,
+                    allocationPoint: q.allocationPoint
                   }
                 })
               }

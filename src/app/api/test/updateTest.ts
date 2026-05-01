@@ -82,6 +82,7 @@ export const updateTest = async (props: TestFrame) => {
               insertContent: question.insertContent,
               number: question.number,
               answer: question.answer,
+              allocationPoint: question.allocationPoint,
             },
           });
         } else {
@@ -93,6 +94,7 @@ export const updateTest = async (props: TestFrame) => {
               insertContent: question.insertContent,
               number: question.number,
               answer: question.answer,
+              allocationPoint: question.allocationPoint,
             },
           });
 
@@ -126,6 +128,7 @@ export const updateTest = async (props: TestFrame) => {
             insertContent: question.insertContent,
             number: question.number,
             answer: question.answer,
+            allocationPoint: question.allocationPoint,
           },
         });
 

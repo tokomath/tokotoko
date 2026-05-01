@@ -92,13 +92,13 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
   );
 }
 
-const AnswerCell = React.memo(function AnswerCell({ answer, point, userIndex, questionIndex, answerCellHandle, cursorImage }: { answer: string; point: number; userIndex: number; questionIndex: number; answerCellHandle: (newPoint: number, userIndex: number, questionIndex: number) => void; cursorImage: string; }) {
+const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoint, userIndex, questionIndex, answerCellHandle, cursorImage }: { answer: string; point: number; allocationPoint: number; userIndex: number; questionIndex: number; answerCellHandle: (newPoint: number, userIndex: number, questionIndex: number) => void; cursorImage: string; }) {
   if (!answer) {
     return null
   }
 
   const click_handle = () => {
-    const new_point = (point === 0 ? 1 : 0);
+    const new_point = (point <= 0 ? allocationPoint : 0);
     answerCellHandle(new_point, userIndex, questionIndex);
   }
 
@@ -161,6 +161,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   const [points, setPoints] = useState<Record<number, Record<number, number>>>({});
   const [submission_index, setSubmissionIndex] = useState<Record<number, number>>({});
   const [cursorImage, setCursorImage] = useState("");
+
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const paramClassId = searchParams.get("classid");
@@ -298,12 +300,23 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     });
 
     const send_res = await setAnswerPoints(send_data);
+    setIsSaving(false);
     if (send_res === 0) {
-      alert(msg.SUCCESS_SAVE_GRADING);
+      //alert(msg.SUCCESS_SAVE_GRADING);
     } else {
-      alert(msg.ERROR_OCCURRED);
+      //alert(msg.ERROR_OCCURRED);
     }
   }, [submissionData, points]);
+
+  useEffect(() => {
+    if (!submissionData || Object.keys(points).length === 0) return;
+
+    const timer = setTimeout(() => {
+      savebuttonHandle();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [points, submissionData, savebuttonHandle]);
 
   const exportbutonHandle = useCallback(() => {
     if (!Test_ || !submissionData) return;
@@ -531,6 +544,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                     {
                       visibleQuestions.questions.map((question: Question, index: number) =>
                         <TableCell key={"question" + question.id} sx={{ textAlign: "center" }}>
+                          <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+                            [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
+                          </Typography>
                           <Latex>{question.question}</Latex>
                           <hr />
                           <Latex>{question.answer}</Latex>
@@ -568,6 +584,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                                     answer={(answer.text === "" ? " " : answer.text)}
                                     point={currentPoint}
                                     answerCellHandle={answerCellClickHandle}
+                                    allocationPoint={question.allocationPoint ?? 1}
                                     key={`answer-${user.id}-${question.id}`}
                                     userIndex={data_index}
                                     questionIndex={questionGlobalIndex}
