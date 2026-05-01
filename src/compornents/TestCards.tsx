@@ -7,7 +7,6 @@ import {
     CardActionArea,
     Button,
     Grid,
-    IconButton,
     Typography,
     Dialog,
     DialogTitle,
@@ -19,6 +18,7 @@ import {
     TextField,
     Menu,
     MenuItem,
+    Checkbox,
 } from "@mui/material";
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
@@ -92,7 +92,7 @@ const TestCardItem = ({ testData, onDeleted }: { testData: Test, onDeleted: (id:
     return (
         <Card sx={{ height: "100%", display: 'flex', flexDirection: 'column', textAlign: "left" }}>
             <CardContent sx={{ flexGrow: 1 }}>
-                <Grid container alignItems="center" spacing={1} mb={1}>
+                <Grid container alignItems="center" spacing={1} mb={1} ml={3}>
                     <Grid size="grow">
                         <Typography variant="h6" component="div" sx={{ wordBreak: 'break-word', lineHeight: 1.2 }}>
                             {testData.title}
@@ -137,6 +137,11 @@ export function TestCards({ testData }: props) {
     const [layout, setLayout] = useState<LayoutNode[]>([]);
     const [isClient, setIsClient] = useState(false);
 
+    // 複数選択用ステート
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isSelecting, setIsSelecting] = useState(false);
+    const [selectionBox, setSelectionBox] = useState({ startX: 0, startY: 0, endX: 0, endY: 0 });
+
     const [folderDialogOpen, setFolderDialogOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
     const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -179,6 +184,47 @@ export function TestCards({ testData }: props) {
         setTests(testData);
     }, [testData]);
 
+    // 範囲選択イベント処理
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (e.button !== 0) return; // 左クリックのみ
+        setIsSelecting(true);
+        setSelectionBox({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
+        setSelectedIds([]);
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!isSelecting) return;
+            setSelectionBox(prev => ({ ...prev, endX: e.clientX, endY: e.clientY }));
+
+            const left = Math.min(selectionBox.startX, e.clientX);
+            const right = Math.max(selectionBox.startX, e.clientX);
+            const top = Math.min(selectionBox.startY, e.clientY);
+            const bottom = Math.max(selectionBox.startY, e.clientY);
+
+            const newSelected: string[] = [];
+            document.querySelectorAll('.draggable-item').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (!(rect.right < left || rect.left > right || rect.bottom < top || rect.top > bottom)) {
+                    const id = el.getAttribute('data-id');
+                    if (id) newSelected.push(id);
+                }
+            });
+            setSelectedIds(newSelected);
+        };
+
+        const handleMouseUp = () => setIsSelecting(false);
+
+        if (isSelecting) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        }
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isSelecting, selectionBox.startX, selectionBox.startY]);
+
     const handleBgContextMenu = (event: React.MouseEvent) => {
         event.preventDefault();
         setBgContextMenu(bgContextMenu === null ? { mouseX: event.clientX + 2, mouseY: event.clientY - 6 } : null);
@@ -217,11 +263,7 @@ export function TestCards({ testData }: props) {
         if (folder) {
             setEditFolderColor(folder.color || '#1976d2');
             setColorFolderId(folder.id);
-            setTimeout(() => {
-                if (colorInputRef.current) {
-                    colorInputRef.current.click();
-                }
-            }, 0);
+            setTimeout(() => { if (colorInputRef.current) colorInputRef.current.click(); }, 0);
         }
         handleCloseContextMenus();
     };
@@ -280,11 +322,17 @@ export function TestCards({ testData }: props) {
         });
     };
 
+    // --- Drag & Drop (Multi-select supported) ---
     const handleDragStart = (e: DragEvent, id: string) => {
         e.stopPropagation();
         setDraggedId(id);
         e.dataTransfer.setData('text/plain', id);
         e.dataTransfer.effectAllowed = "move";
+        
+        // 掴んだものが選択されていない場合、それのみを選択状態にする
+        if (!selectedIds.includes(id)) {
+            setSelectedIds([id]);
+        }
     };
 
     const handleDragOver = (e: DragEvent) => {
@@ -292,25 +340,33 @@ export function TestCards({ testData }: props) {
         e.dataTransfer.dropEffect = "move";
     };
 
-    const handleDropOnItem = (e: DragEvent, targetId: string) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!draggedId || draggedId === targetId) return;
+    const getMovingIds = (fallbackId: string | null) => {
+        if (!fallbackId) return [];
+        return selectedIds.includes(fallbackId) ? selectedIds : [fallbackId];
+    };
 
-        const targetNode = layout.find(n => n.id === targetId);
-        if (!targetNode) return;
+    const executeDrop = (targetParentId: string | null, insertBeforeNodeId: string | null = null) => {
+        const movingIds = getMovingIds(draggedId);
+        if (movingIds.length === 0) return;
+        
+        // フォルダをフォルダの中に入れようとしている場合はブロック
+        if (targetParentId !== null) {
+            const hasFolder = layout.some(n => movingIds.includes(n.id) && n.type === 'folder');
+            if (hasFolder) return;
+            if (movingIds.includes(targetParentId)) return; // 自身へのドロップ防止
+        }
 
         setLayout(prev => {
             const newLayout = [...prev];
-            const draggedNode = newLayout.find(n => n.id === draggedId);
-            if (!draggedNode || (draggedNode.type === 'folder' && targetNode.parentId === draggedNode.id)) return prev;
+            const movingNodes = newLayout.filter(n => movingIds.includes(n.id));
+            
+            movingNodes.forEach(n => n.parentId = targetParentId);
+            
+            const siblings = newLayout.filter(n => n.parentId === targetParentId && !movingIds.includes(n.id)).sort((a, b) => a.order - b.order);
+            const targetIndex = insertBeforeNodeId ? siblings.findIndex(n => n.id === insertBeforeNodeId) : siblings.length;
+            const insertIndex = targetIndex !== -1 ? targetIndex : siblings.length;
 
-            // フォルダの入れ子を防止
-            if (draggedNode.type === 'folder' && targetNode.parentId !== null) return prev;
-
-            draggedNode.parentId = targetNode.parentId;
-            draggedNode.order = targetNode.order - 0.5;
-            const siblings = newLayout.filter(n => n.parentId === targetNode.parentId).sort((a, b) => a.order - b.order);
+            siblings.splice(insertIndex, 0, ...movingNodes);
             siblings.forEach((sib, idx) => sib.order = idx);
 
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLayout));
@@ -319,51 +375,34 @@ export function TestCards({ testData }: props) {
         setDraggedId(null);
     };
 
+    const handleDropOnItem = (e: DragEvent, targetId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        executeDrop(layout.find(n => n.id === targetId)?.parentId || null, targetId);
+    };
+
     const handleDropOnFolder = (e: DragEvent, targetFolderId: string) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!draggedId || draggedId === targetFolderId) return;
-
-        const draggedNode = layout.find(n => n.id === draggedId);
-        if (!draggedNode) return;
-
-        if (draggedNode.type === 'folder') {
-            handleDropOnItem(e, targetFolderId);
-            return;
-        }
-
-        setLayout(prev => {
-            const newLayout = [...prev];
-            const node = newLayout.find(n => n.id === draggedId);
-            if (!node) return prev;
-
-            node.parentId = targetFolderId;
-            const children = newLayout.filter(n => n.parentId === targetFolderId);
-            node.order = children.length > 0 ? Math.max(...children.map(n => n.order)) + 1 : 0;
-
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLayout));
-            return newLayout;
-        });
-        setDraggedId(null);
+        // フォルダに重なった場合は中へ
+        executeDrop(targetFolderId, null);
     };
 
     const handleDropOnRoot = (e: DragEvent) => {
         e.preventDefault();
-        if (!draggedId) return;
+        executeDrop(null, null);
+    };
 
-        setLayout(prev => {
-            const newLayout = [...prev];
-            const draggedNode = newLayout.find(n => n.id === draggedId);
-            if (!draggedNode || draggedNode.parentId === null) return prev;
-
-            draggedNode.parentId = null;
-            const roots = newLayout.filter(n => n.parentId === null);
-            draggedNode.order = roots.length > 0 ? Math.max(...roots.map(n => n.order)) + 1 : 0;
-
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLayout));
-            return newLayout;
-        });
-        setDraggedId(null);
+    // Ctrl + クリックでの複数選択ハンドラー
+    const handleItemClickCapture = (e: React.MouseEvent, id: string) => {
+        if (e.button !== 0) return; // 左クリックのみ
+        if (e.ctrlKey || e.metaKey) {
+            e.stopPropagation();
+            e.preventDefault();
+            setSelectedIds(prev => 
+                prev.includes(id) ? prev.filter(selectedId => selectedId !== id) : [...prev, id]
+            );
+        }
     };
 
     if (!isClient) return <CircularProgress />;
@@ -371,7 +410,28 @@ export function TestCards({ testData }: props) {
     const rootNodes = layout.filter(n => n.parentId === null).sort((a, b) => a.order - b.order);
 
     return (
-        <Box onDragOver={handleDragOver} onDrop={handleDropOnRoot} onContextMenu={handleBgContextMenu} sx={{ minHeight: '60vh', pb: 10 }}>
+        <Box 
+            onMouseDown={handleMouseDown} 
+            onDragOver={handleDragOver} 
+            onDrop={handleDropOnRoot} 
+            onContextMenu={handleBgContextMenu} 
+            sx={{ minHeight: '60vh', pb: 10, userSelect: isSelecting ? 'none' : 'auto', position: 'relative' }}
+        >
+            {/* 範囲選択エフェクトボックス */}
+            {isSelecting && (
+                <Box sx={{
+                    position: 'fixed',
+                    left: Math.min(selectionBox.startX, selectionBox.endX),
+                    top: Math.min(selectionBox.startY, selectionBox.endY),
+                    width: Math.abs(selectionBox.endX - selectionBox.startX),
+                    height: Math.abs(selectionBox.endY - selectionBox.startY),
+                    bgcolor: 'rgba(25, 118, 210, 0.2)',
+                    border: '1px solid rgba(25, 118, 210, 0.5)',
+                    pointerEvents: 'none',
+                    zIndex: 9999,
+                }} />
+            )}
+
             <Menu open={bgContextMenu !== null} onClose={handleCloseContextMenus} anchorReference="anchorPosition" anchorPosition={bgContextMenu !== null ? { top: bgContextMenu.mouseY, left: bgContextMenu.mouseX } : undefined}>
                 <MenuItem onClick={handleOpenFolderDialogFromMenu}>{msg.CREATE_FOLDER || "フォルダを作成"}</MenuItem>
             </Menu>
@@ -384,11 +444,23 @@ export function TestCards({ testData }: props) {
 
             <Grid container spacing={2}>
                 {rootNodes.map(node => {
+                    const isSelected = selectedIds.includes(node.id);
                     if (node.type === 'folder') {
                         const children = layout.filter(n => n.parentId === node.id).sort((a, b) => a.order - b.order);
                         return (
                             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={node.id}>
-                                <Box draggable onDragStart={(e) => handleDragStart(e, node.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnFolder(e, node.id)} onContextMenu={(e) => handleFolderContextMenu(e, node.id)} sx={{ height: '100%', cursor: 'grab' }}>
+                                <Box 
+                                    className="draggable-item" data-id={node.id}
+                                    draggable onDragStart={(e) => handleDragStart(e, node.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnFolder(e, node.id)} onContextMenu={(e) => handleFolderContextMenu(e, node.id)} onMouseDown={(e) => e.stopPropagation()} 
+                                    onClickCapture={(e) => handleItemClickCapture(e, node.id)}
+                                    sx={{ height: '100%', cursor: 'grab', position: 'relative', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px', borderRadius: 1 }) }}
+                                >
+                                    <Checkbox
+                                        className="select-checkbox"
+                                        checked={isSelected}
+                                        onChange={(e) => setSelectedIds(prev => e.target.checked ? [...prev, node.id] : prev.filter(id => id !== node.id))}
+                                        sx={{ position: 'absolute', top: 4, left: 4, zIndex: 10, opacity: isSelected ? 1 : 0, bgcolor: 'rgba(255,255,255,0.8)', padding: '2px', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,1)' } }}
+                                    />
                                     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50', '&:hover': { bgcolor: 'grey.100' } }}>
                                         <CardActionArea onClick={() => setOpenFolderId(node.id)} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 2 }}>
                                             <FolderIcon sx={{ fontSize: 40, color: node.color || 'primary.main', mb: 1 }} />
@@ -408,7 +480,18 @@ export function TestCards({ testData }: props) {
                         if (!t) return null;
                         return (
                             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={node.id}>
-                                <Box draggable onDragStart={(e) => handleDragStart(e, node.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnItem(e, node.id)} sx={{ cursor: 'grab', height: '100%' }}>
+                                <Box 
+                                    className="draggable-item" data-id={node.id}
+                                    draggable onDragStart={(e) => handleDragStart(e, node.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnItem(e, node.id)} onMouseDown={(e) => e.stopPropagation()} 
+                                    onClickCapture={(e) => handleItemClickCapture(e, node.id)}
+                                    sx={{ cursor: 'grab', height: '100%', position: 'relative', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px', borderRadius: 1 }) }}
+                                >
+                                    <Checkbox
+                                        className="select-checkbox"
+                                        checked={isSelected}
+                                        onChange={(e) => setSelectedIds(prev => e.target.checked ? [...prev, node.id] : prev.filter(id => id !== node.id))}
+                                        sx={{ position: 'absolute', top: 4, left: 4, zIndex: 10, opacity: isSelected ? 1 : 0, bgcolor: 'rgba(255,255,255,0.8)', padding: '2px', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,1)' } }}
+                                    />
                                     <TestCardItem testData={t} onDeleted={handleRemoveFromState} />
                                 </Box>
                             </Grid>
@@ -417,7 +500,7 @@ export function TestCards({ testData }: props) {
                 })}
             </Grid>
 
-            {/* フォルダ展開ポップアップ (ポップアップ内の右クリックを無効化) */}
+            {/* フォルダ展開ポップアップ */}
             <Dialog 
                 open={openFolderId !== null} 
                 onClose={() => setOpenFolderId(null)} 
@@ -426,7 +509,7 @@ export function TestCards({ testData }: props) {
                 onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
             >
                 {openFolderId && (
-                    <>
+                    <Box onMouseDown={handleMouseDown} sx={{ position: 'relative', userSelect: isSelecting ? 'none' : 'auto' }}>
                         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Box display="flex" alignItems="center" gap={1} onDragOver={handleDragOver} onDrop={(e) => handleDropOnFolder(e, openFolderId)}>
                                 <FolderIcon sx={{ color: layout.find(n => n.id === openFolderId)?.color || 'primary.main' }} />
@@ -438,9 +521,21 @@ export function TestCards({ testData }: props) {
                                 {layout.filter(n => n.parentId === openFolderId).sort((a, b) => a.order - b.order).map(child => {
                                     const t = tests.find(test => test.id.toString() === child.id);
                                     if (!t) return null;
+                                    const isSelected = selectedIds.includes(child.id);
                                     return (
                                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={child.id}>
-                                            <Box draggable onDragStart={(e) => handleDragStart(e, child.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnItem(e, child.id)} sx={{ cursor: 'grab', height: '100%' }}>
+                                            <Box 
+                                                className="draggable-item" data-id={child.id}
+                                                draggable onDragStart={(e) => handleDragStart(e, child.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnItem(e, child.id)} onMouseDown={(e) => e.stopPropagation()} 
+                                                onClickCapture={(e) => handleItemClickCapture(e, child.id)}
+                                                sx={{ cursor: 'grab', height: '100%', position: 'relative', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px', borderRadius: 1 }) }}
+                                            >
+                                                <Checkbox
+                                                    className="select-checkbox"
+                                                    checked={isSelected}
+                                                    onChange={(e) => setSelectedIds(prev => e.target.checked ? [...prev, child.id] : prev.filter(id => id !== child.id))}
+                                                    sx={{ position: 'absolute', top: 4, left: 4, zIndex: 10, opacity: isSelected ? 1 : 0, bgcolor: 'rgba(255,255,255,0.8)', padding: '2px', borderRadius: 1, '&:hover': { bgcolor: 'rgba(255,255,255,1)' } }}
+                                                />
                                                 <TestCardItem testData={t} onDeleted={handleRemoveFromState} />
                                             </Box>
                                         </Grid>
@@ -454,7 +549,7 @@ export function TestCards({ testData }: props) {
                         <DialogActions>
                             <Button onClick={() => setOpenFolderId(null)}>{msg.BACK || "閉じる"}</Button>
                         </DialogActions>
-                    </>
+                    </Box>
                 )}
             </Dialog>
 
@@ -480,7 +575,6 @@ export function TestCards({ testData }: props) {
                 </DialogActions>
             </Dialog>
 
-            {/* 非表示のカラーピッカー入力 */}
             <input
                 type="color"
                 ref={colorInputRef}
