@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useMemo, useCallback, use } from "react";
-import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip } from "@mui/material";
+import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import 'katex/dist/katex.min.css';
 import Latex from "react-latex-next";
 
@@ -92,7 +92,7 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
   );
 }
 
-const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoint, userIndex, questionIndex, answerCellHandle, cursorImage }: { answer: string; point: number; allocationPoint: number; userIndex: number; questionIndex: number; answerCellHandle: (newPoint: number, userIndex: number, questionIndex: number) => void; cursorImage: string; }) {
+const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoint, userIndex, questionIndex, answerCellHandle, cursorImage, onRightClick }: { answer: string; point: number; allocationPoint: number; userIndex: number; questionIndex: number; answerCellHandle: (newPoint: number, userIndex: number, questionIndex: number) => void; cursorImage: string; onRightClick: (tex: string, event: React.MouseEvent) => void; }) {
   if (!answer) {
     return null
   }
@@ -110,8 +110,12 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
     }
   }
 
+  const contextMenuHandle = (event: React.MouseEvent) => {
+    onRightClick(answer, event);
+  }
+
   return (<>
-    <TableCell onClick={click_handle} onKeyDown={keydown_handle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
+    <TableCell onClick={click_handle} onKeyDown={keydown_handle} onContextMenu={contextMenuHandle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
       <div className={((point === -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
       <div className={styles.matharea}><Latex>{String(answer)}</Latex></div>
     </TableCell>
@@ -163,6 +167,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   const [cursorImage, setCursorImage] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
+
+  const [texDialogOpen, setTexDialogOpen] = useState(false);
+  const [currentTexContent, setCurrentTexContent] = useState("");
+
+  const handleOpenTexDialog = useCallback((tex: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    setCurrentTexContent(tex);
+    setTexDialogOpen(true);
+  }, []);
+
+  const handleCloseTexDialog = useCallback(() => {
+    setTexDialogOpen(false);
+  }, []);
 
   useEffect(() => {
     const paramClassId = searchParams.get("classid");
@@ -318,73 +335,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     return () => clearTimeout(timer);
   }, [points, submissionData, savebuttonHandle]);
 
-  const exportbutonHandle = useCallback(() => {
-    if (!Test_ || !submissionData) return;
-
-    let exportdata_csv: string = "";
-    let r1: string = `${msg.CSV_PART_QNUMBER},`;
-    let r2: string = `${msg.CSV_QUESTION},`;
-    let r3: string = `${msg.CSV_ANSWER},`;
-
-    const format_text = (str: string): string => {
-      return str.replaceAll("\n", "").replaceAll(",", "，");
-    }
-
-    Test_.sections.forEach((section: any, section_index: number) => {
-      section.questions.forEach((question: Question, question_index: number) => {
-        r1 += `${msg.SECTION_NUMBER}${section_index + 1}-${question_index + 1},,`;
-        r2 += `${format_text(question.question)},,`;
-        r3 += `${format_text(question.answer)},,`;
-      })
-    })
-
-    r1 = r1.slice(0, r1.length - 1) + "\n";
-    r2 = r2.slice(0, r2.length - 1) + "\n";
-    r3 = r3.slice(0, r3.length - 1) + "\n";
-    exportdata_csv = r1 + r2 + r3;
-
-    const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
-    const currentClass = Test_.classes.at(classIndex);
-
-    if (currentClass) {
-      currentClass.users.forEach((user: User, user_index: number) => {
-        let rn: string = "";
-        const data_index = submission_index[user_index];
-        rn += `${format_text(user.name || '')},`;
-
-        if (data_index !== undefined) {
-          const submission = submissionData.at(data_index);
-          if (submission) {
-            for (let i = 0; i < totalQuestionsCount; i++) {
-              const answer = submission.answers[i];
-              if (answer) {
-                rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
-              } else {
-                rn += ",,";
-              }
-            }
-          } else {
-            rn += ",".repeat(totalQuestionsCount * 2);
-          }
-        } else {
-          rn += ",".repeat(totalQuestionsCount * 2);
-        }
-        rn = rn.slice(0, rn.length - 1) + "\n";
-        exportdata_csv += rn;
-      });
-    }
-
-    const blob = new Blob([exportdata_csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a_buf = document.createElement('a');
-    a_buf.href = url;
-    a_buf.download = `${Test_?.title}_${currentClass?.name}.csv`;
-    document.body.appendChild(a_buf);
-    a_buf.click();
-    document.body.removeChild(a_buf);
-    URL.revokeObjectURL(url);
-  }, [Test_, classIndex, submissionData, submission_index, points]);
-
 
   const userMetrics = useMemo(() => {
     if (!Test_ || !submissionData) return [];
@@ -420,6 +370,98 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     });
   }, [Test_, classIndex, submission_index, points, submissionData]);
 
+  const currentClassUsers = useMemo(() => {
+    const users = Test_?.classes.at(classIndex)?.users || [];
+    return users
+      .map((user: User, index: number) => ({ user, originalIndex: index }))
+      .sort((a: { user: User, originalIndex: number }, b: { user: User, originalIndex: number }) => {
+        const emailA = String((a.user as any).email || "");
+        const emailB = String((b.user as any).email || "");
+        return emailA.localeCompare(emailB);
+      });
+  }, [Test_, classIndex]);
+
+  const exportbutonHandle = useCallback(() => {
+    if (!Test_ || !submissionData) return;
+
+    let exportdata_csv: string = "";
+    let r1: string = `${msg.SUBMISSION_STATUS},${msg.NAME},${msg.EMAIL_LABEL},${msg.TOTAL_POINT},${msg.UNGRADED_COUNT},`;
+    let r2: string = `,,,,,`;
+    let r3: string = `,,,,,`;
+
+    const format_text = (str: string): string => {
+      if (!str) return "";
+      return String(str).replaceAll("\n", "").replaceAll(",", "，");
+    }
+
+    Test_.sections.forEach((section: any, section_index: number) => {
+      section.questions.forEach((question: Question, question_index: number) => {
+        r1 += `${msg.SECTION_NUMBER}${section_index + 1}-${question_index + 1}解答,${msg.SECTION_NUMBER}${section_index + 1}-${question_index + 1}得点,`;
+        r2 += `${format_text(question.question)},,`;
+        r3 += `${format_text(question.answer)},,`;
+      })
+    })
+
+    r1 = r1.slice(0, r1.length - 1) + "\n";
+    r2 = r2.slice(0, r2.length - 1) + "\n";
+    r3 = r3.slice(0, r3.length - 1) + "\n";
+    exportdata_csv = r1 + r2 + r3;
+
+    const totalQuestionsCount = Test_.sections.reduce((acc: number, section: any) => acc + section.questions.length, 0);
+    const currentClass = Test_.classes.at(classIndex);
+
+if (currentClassUsers.length > 0) {
+      currentClassUsers.forEach(({ user, originalIndex }: { user: User; originalIndex: number }) => {
+        let rn: string = "";
+        const data_index = submission_index[originalIndex];
+        const submission = data_index !== undefined ? submissionData[data_index] : null;
+
+        let statusText = msg.NOT_SUBMITTED; 
+        if (submission && Test_.endDate) {
+          const subDate = new Date(submission.submissionDate);
+          const endDate = new Date(Test_.endDate);
+          statusText = subDate > endDate ? msg.OVERDUE : msg.ON_TIME;
+        } else if (submission) {
+          statusText = msg.SUBMITTED; 
+        }
+
+        const metrics = userMetrics[originalIndex] || { totalPoints: 0, ungradedCount: 0 };
+
+        rn += `${statusText},`;
+        rn += `${format_text(user.name || '')},`;
+        rn += `${format_text((user as any).email || '')},`;
+        rn += `${metrics.totalPoints},`;
+        rn += `${metrics.ungradedCount},`;
+
+        if (submission) {
+          for (let i = 0; i < totalQuestionsCount; i++) {
+            const answer = submission.answers[i];
+            if (answer) {
+              rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
+            } else {
+              rn += ",,";
+            }
+          }
+        } else {
+          rn += ",".repeat(totalQuestionsCount * 2);
+        }
+        rn = rn.slice(0, rn.length - 1) + "\n";
+        exportdata_csv += rn;
+      });
+    }
+
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, exportdata_csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a_buf = document.createElement('a');
+    a_buf.href = url;
+    a_buf.download = `${Test_?.title}_${currentClass?.name}.csv`;
+    document.body.appendChild(a_buf);
+    a_buf.click();
+    document.body.removeChild(a_buf);
+    URL.revokeObjectURL(url);
+  }, [Test_, classIndex, submissionData, submission_index, points, userMetrics, currentClassUsers]);
+
   const visibleQuestions = useMemo(() => {
     if (!Test_?.sections) return { questions: [], startIndex: 0 };
 
@@ -431,17 +473,15 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     return { questions, startIndex };
   }, [Test_, sectionValue]);
 
-  const currentClassUsers = useMemo(() => {
-    return Test_?.classes.at(classIndex)?.users || [];
-  }, [Test_, classIndex]);
 
-  const renderSubmissionStatus = useCallback((user_index: number) => {
+
+const renderSubmissionStatus = useCallback((user_index: number) => {
     const data_index = submission_index[user_index];
     const submission = data_index !== undefined && submissionData ? submissionData[data_index] : null;
 
     if (!submission || !Test_?.endDate) {
       return (
-        <Tooltip title="未提出" arrow>
+        <Tooltip title={msg.NOT_SUBMITTED} arrow>
           <Box width={12} height={12} borderRadius="50%" bgcolor="grey.400" flexShrink={0} />
         </Tooltip>
       );
@@ -451,20 +491,20 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     const endDate = new Date(Test_.endDate);
     const isLate = subDate > endDate;
 
-    let tooltipText = `提出: ${subDate.toLocaleString()}`;
+    let tooltipText = `${msg.SUBMIT_PREFIX}${subDate.toLocaleString()}`;
     if (isLate) {
       const diffMs = subDate.getTime() - endDate.getTime();
       const d = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const h = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
       const m = Math.floor((diffMs / 1000 / 60) % 60);
       let lateText = "";
-      if (d > 0) lateText += `${d}日`;
-      if (h > 0) lateText += `${h}時間`;
-      if (m > 0) lateText += `${m}分`;
-      if (lateText === "") lateText = "1分未満";
-      tooltipText += `\n(期限から ${lateText}遅れ)`;
+      if (d > 0) lateText += `${d}${msg.DAY}`;
+      if (h > 0) lateText += `${h}${msg.HOUR}`;
+      if (m > 0) lateText += `${m}${msg.MINUTE}`;
+      if (lateText === "") lateText = msg.LESS_THAN_A_MINUTE;
+      tooltipText += `\n(${msg.LATE_PREFIX}${lateText}${msg.LATE_SUFFIX})`;
     } else {
-      tooltipText += `\n(期限内)`;
+      tooltipText += `\n(${msg.ON_TIME})`;
     }
 
     return (
@@ -549,7 +589,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                           </Typography>
                           <Latex>{question.question}</Latex>
                           <hr />
-                          <Latex>{question.answer}</Latex>
+                          <Box onContextMenu={(e) => handleOpenTexDialog(question.answer, e)} sx={{ cursor: 'context-menu' }}>
+                            <Latex>{question.answer}</Latex>
+                          </Box>
                         </TableCell>
                       )
                     }
@@ -557,14 +599,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                 </TableHead>
                 <TableBody>
                   {
-                    currentClassUsers.map((user: User, user_index: number) => {
-                      const metrics = userMetrics[user_index] || { totalPoints: 0, ungradedCount: 0 };
+                    currentClassUsers.map(({ user, originalIndex }: { user: User; originalIndex: number }) => {
+                      const metrics = userMetrics[originalIndex] || { totalPoints: 0, ungradedCount: 0 };
+                      const data_index = submission_index[originalIndex];
+
                       return (
                         <TableRow key={"ROW-" + user.id}>
                           <TableCell key={"username-" + user.id} className={styles.name_cell}>
                             <Box display="flex" alignItems="center" gap={1}>
-                              {renderSubmissionStatus(user_index)}
-                              {user.name}
+                              {renderSubmissionStatus(originalIndex)}
+                              <Box display="flex" flexDirection="column">
+                                <Typography variant="body2">{user.name}</Typography>
+                                <Typography variant="caption" color="text.secondary">{(user as any).email}</Typography>
+                              </Box>
                             </Box>
                           </TableCell>
                           <TableCell key={"totalPoints-" + user.id} sx={{ textAlign: "center" }} className={styles.point_cell}>
@@ -574,11 +621,11 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                           {
                             visibleQuestions.questions.map((question: Question, index: number) => {
                               const questionGlobalIndex = visibleQuestions.startIndex + index;
-                              const data_index = submission_index[user_index];
 
                               if (data_index !== undefined && submissionData?.[data_index]?.answers?.[questionGlobalIndex]) {
                                 const answer = submissionData[data_index].answers[questionGlobalIndex];
                                 const currentPoint = points[data_index]?.[questionGlobalIndex] ?? Number(answer.point);
+
                                 return (
                                   <AnswerCell
                                     answer={(answer.text === "" ? " " : answer.text)}
@@ -589,6 +636,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                                     userIndex={data_index}
                                     questionIndex={questionGlobalIndex}
                                     cursorImage={cursorImage}
+                                    onRightClick={handleOpenTexDialog}
                                   />
                                 )
                               } else {
@@ -617,6 +665,20 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           </>
         )}
       </Container>
+
+      <Dialog open={texDialogOpen} onClose={handleCloseTexDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>{msg.RAW_TEX}</DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ p: 2, bgcolor: 'grey.100', borderRadius: 1, overflowX: 'auto' }}>
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
+              {currentTexContent}
+            </pre>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseTexDialog}>{msg.CLOSE}</Button>
+        </DialogActions>
+      </Dialog>
     </TeacherGuard>
   );
 }
