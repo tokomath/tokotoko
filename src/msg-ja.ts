@@ -292,4 +292,5 @@ export const msg = {
     "AUTO_GRADING_CONFIRM_MESSAGE": "自動採点を実行すると、現在入力されている点数が上書きされます。よろしいですか？",
     "EXECUTE": "実行",
     "FORMATED_TEX": "フォーマットされたTeX",
+    "ITEMS": "アイテム"
 }
