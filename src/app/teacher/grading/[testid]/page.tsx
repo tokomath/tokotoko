@@ -218,7 +218,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   }, []);
 
   useEffect(() => {
-    const paramClassId = searchParams.get("classid");
+    const paramClassId = searchParams.get("classId");
     if (paramClassId) {
       setClassId(paramClassId);
     } else {
