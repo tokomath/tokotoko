@@ -26,15 +26,25 @@ import {
   Chip,
   IconButton,
   Snackbar,
-  Tooltip,
   Paper,
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
-  ListItemAvatar
+  ListItemAvatar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from "@mui/material";
-import { ContentCopy, Assignment, People, PlayArrow, Assessment } from "@mui/icons-material";
+import { 
+  ContentCopy, 
+  Assignment, 
+  People, 
+  PlayArrow, 
+  Assessment,
+  Folder as FolderIcon,
+  ExpandMore as ExpandMoreIcon
+} from "@mui/icons-material";
 import { useSearchParams, useRouter } from "next/navigation";
 import { msg } from "@/msg-ja";
 
@@ -48,6 +58,15 @@ const stringToBrightColor = (str: string) => {
   }
   const h = Math.abs(hash) % 360;
   return `hsl(${h}, 80%, 65%)`;
+};
+
+type LayoutNode = {
+  id: string;
+  type: 'item' | 'folder';
+  parentId: string | null;
+  order: number;
+  name?: string;
+  color?: string;
 };
 
 function MemberItem({ user }: { user: UserWithImage }) {
@@ -219,6 +238,7 @@ function ClassDetailContent() {
 
   const [classData, setClassData] = useState<ClassWithUsers | null>(null);
   const [tests, setTests] = useState<Test[]>([]);
+  const [layout, setLayout] = useState<LayoutNode[]>([]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
@@ -245,6 +265,13 @@ function ClassDetailContent() {
     if (isUserLoaded && classId) fetchData();
   }, [classId, isUserLoaded]);
 
+  useEffect(() => {
+    const saved = localStorage.getItem('test_layout_prefs');
+    if (saved) {
+      setLayout(JSON.parse(saved));
+    }
+  }, []);
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setSnackbarOpen(true);
@@ -253,6 +280,69 @@ function ClassDetailContent() {
   const teachers = useMemo(() => classData?.users.filter(u => u.role === 0) || [], [classData]);
   const students = useMemo(() => classData?.users.filter(u => u.role === 1) || [], [classData]);
   const isTeacher = useMemo(() => teachers.some(u => u.id === clerkUser?.id), [teachers, clerkUser]);
+
+  const renderTreeTests = () => {
+    if (tests.length === 0) {
+      return <Typography variant="body2" color="textSecondary" py={2}>{msg.NO_TESTS_IN_CLASS}</Typography>;
+    }
+
+    const testIdsInClass = new Set(tests.map(t => String(t.id)));
+    const existingInLayout = new Set(layout.filter(n => n.type === 'item').map(n => String(n.id)));
+    
+    let maxOrder = layout.length > 0 ? Math.max(...layout.filter(n => n.parentId === null).map(n => n.order), 0) : 0;
+    const missingNodes: LayoutNode[] = tests
+      .filter(t => !existingInLayout.has(String(t.id)))
+      .map(t => {
+        maxOrder++;
+        return { id: String(t.id), type: 'item', parentId: null, order: maxOrder };
+      });
+
+    const combinedLayout = [...layout, ...missingNodes];
+    const rootNodes = combinedLayout.filter(n => n.parentId === null).sort((a, b) => a.order - b.order);
+
+    return (
+      <Box>
+        {rootNodes.map(node => {
+          if (node.type === 'folder') {
+            const allChildren = combinedLayout.filter(n => n.parentId === node.id).sort((a, b) => a.order - b.order);
+            const visibleChildren = allChildren.filter(c => testIdsInClass.has(c.id));
+
+            if (visibleChildren.length === 0) return null;
+
+            return (
+              <Accordion key={node.id} disableGutters elevation={0} sx={{ border: '1px solid', borderColor: 'divider', mb: 1, '&:before': { display: 'none' } }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: 'grey.50', minHeight: 48, '& .MuiAccordionSummary-content': { my: 1 } }}>
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <FolderIcon sx={{ color: node.color || 'primary.main' }} />
+                    <Typography fontWeight="bold">{node.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">({visibleChildren.length} {msg.ITEMS})</Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ p: 0 }}>
+                  <List disablePadding>
+                    {visibleChildren.map(child => {
+                      const test = tests.find(t => String(t.id) === child.id);
+                      if (!test) return null;
+                      return <TestItem key={test.id} test={test} isTeacher={isTeacher} classStudents={students} userId={clerkUser?.id || ""} />;
+                    })}
+                  </List>
+                </AccordionDetails>
+              </Accordion>
+            );
+          } else {
+            if (!testIdsInClass.has(node.id)) return null;
+            const test = tests.find(t => String(t.id) === node.id);
+            if (!test) return null;
+            return (
+              <List disablePadding key={node.id}>
+                <TestItem test={test} isTeacher={isTeacher} classStudents={students} userId={clerkUser?.id || ""} />
+              </List>
+            );
+          }
+        })}
+      </Box>
+    );
+  };
 
   if (!classId) return <Typography p={3}>{msg.ERROR_INVALID_URL}</Typography>;
   if (!classData) return <Typography p={3}>{msg.LOADING}</Typography>;
@@ -327,13 +417,11 @@ function ClassDetailContent() {
                   </Button>
                 )}
               </Stack>
-              <Divider />
-              <List>
-                {tests.length === 0 && <Typography variant="body2" color="textSecondary" py={2}>{msg.NO_TESTS_IN_CLASS}</Typography>}
-                {tests.map((test) => (
-                  <TestItem key={test.id} test={test} isTeacher={isTeacher} classStudents={students} userId={clerkUser?.id || ""} />
-                ))}
-              </List>
+              <Divider sx={{ mb: 2 }} />
+              
+              {/* マイページのレイアウトデータに基づいたツリー描画 */}
+              {renderTreeTests()}
+
             </CardContent>
           </Card>
         </Grid>

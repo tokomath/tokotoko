@@ -19,11 +19,20 @@ import {
     Menu,
     MenuItem,
     Checkbox,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    List,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
 } from "@mui/material";
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import DeleteIcon from "@mui/icons-material/Delete";
 import FolderIcon from '@mui/icons-material/Folder';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import { useRouter } from "next/navigation";
 import { Test } from "@prisma/client";
 import { removeTest } from "@/app/api/test/removeTest";
@@ -80,7 +89,8 @@ const DeleteTestButton = ({ testId, testTitle, onSuccess }: DeleteTestButtonProp
 };
 
 interface props {
-    testData: Test[]
+    testData: Test[];
+    isClassDetail?: boolean;
 }
 
 const TestCardItem = ({ testData, onDeleted }: { testData: Test, onDeleted: (id: number) => void }) => {
@@ -132,10 +142,11 @@ type LayoutNode = {
     color?: string;
 };
 
-export function TestCards({ testData }: props) {
+export function TestCards({ testData, isClassDetail = false }: props) {
     const [tests, setTests] = useState<Test[]>(testData);
     const [layout, setLayout] = useState<LayoutNode[]>([]);
     const [isClient, setIsClient] = useState(false);
+    const router = useRouter();
 
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSelecting, setIsSelecting] = useState(false);
@@ -178,13 +189,15 @@ export function TestCards({ testData }: props) {
 
         const finalLayout = [...parsed, ...newNodes];
         setLayout(finalLayout);
-        if (hasNew) {
+        
+        if (hasNew && !isClassDetail) {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalLayout));
         }
         setTests(testData);
-    }, [testData]);
+    }, [testData, isClassDetail]);
 
     const handleMouseDown = (e: React.MouseEvent) => {
+        if (isClassDetail) return; 
         if (e.button !== 0) return; 
         setIsSelecting(true);
         setSelectionBox({ startX: e.clientX, startY: e.clientY, endX: e.clientX, endY: e.clientY });
@@ -192,6 +205,8 @@ export function TestCards({ testData }: props) {
     };
 
     useEffect(() => {
+        if (isClassDetail) return;
+
         const handleMouseMove = (e: MouseEvent) => {
             if (!isSelecting) return;
             setSelectionBox(prev => ({ ...prev, endX: e.clientX, endY: e.clientY }));
@@ -222,14 +237,16 @@ export function TestCards({ testData }: props) {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isSelecting, selectionBox.startX, selectionBox.startY]);
+    }, [isSelecting, selectionBox.startX, selectionBox.startY, isClassDetail]);
 
     const handleBgContextMenu = (event: React.MouseEvent) => {
+        if (isClassDetail) return; 
         event.preventDefault();
         setBgContextMenu(bgContextMenu === null ? { mouseX: event.clientX + 2, mouseY: event.clientY - 6 } : null);
     };
 
     const handleFolderContextMenu = (event: React.MouseEvent, folderId: string) => {
+        if (isClassDetail) return;
         event.preventDefault();
         event.stopPropagation();
         setFolderContextMenu(folderContextMenu === null ? { mouseX: event.clientX + 2, mouseY: event.clientY - 6, folderId } : null);
@@ -314,25 +331,28 @@ export function TestCards({ testData }: props) {
 
     const handleRemoveFromState = (deletedId: number) => {
         setTests((prev) => prev.filter((t) => t.id !== deletedId));
-        setLayout(prev => {
-            const newLayout = prev.filter(n => n.id !== deletedId.toString());
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLayout));
-            return newLayout;
-        });
+        if (!isClassDetail) {
+            setLayout(prev => {
+                const newLayout = prev.filter(n => n.id !== String(deletedId));
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLayout));
+                return newLayout;
+            });
+        }
     };
 
     const handleDragStart = (e: DragEvent, id: string) => {
+        if (isClassDetail) return;
         e.stopPropagation();
         setDraggedId(id);
         e.dataTransfer.setData('text/plain', id);
         e.dataTransfer.effectAllowed = "move";
-        
         if (!selectedIds.includes(id)) {
             setSelectedIds([id]);
         }
     };
 
     const handleDragOver = (e: DragEvent) => {
+        if (isClassDetail) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
     };
@@ -343,6 +363,7 @@ export function TestCards({ testData }: props) {
     };
 
     const executeDrop = (targetParentId: string | null, insertBeforeNodeId: string | null = null) => {
+        if (isClassDetail) return;
         const movingIds = getMovingIds(draggedId);
         if (movingIds.length === 0) return;
         
@@ -375,23 +396,27 @@ export function TestCards({ testData }: props) {
     };
 
     const handleDropOnItem = (e: DragEvent, targetId: string) => {
+        if (isClassDetail) return;
         e.preventDefault();
         e.stopPropagation();
         executeDrop(layout.find(n => n.id === targetId)?.parentId || null, targetId);
     };
 
     const handleDropOnFolder = (e: DragEvent, targetFolderId: string) => {
+        if (isClassDetail) return;
         e.preventDefault();
         e.stopPropagation();
         executeDrop(targetFolderId, null);
     };
 
     const handleDropOnRoot = (e: DragEvent) => {
+        if (isClassDetail) return;
         e.preventDefault();
         executeDrop(null, null);
     };
 
     const handleItemClickCapture = (e: React.MouseEvent, id: string) => {
+        if (isClassDetail) return;
         if (e.button !== 0) return; 
         if (e.ctrlKey || e.metaKey) {
             e.stopPropagation();
@@ -404,7 +429,83 @@ export function TestCards({ testData }: props) {
 
     if (!isClient) return <CircularProgress />;
 
+    const currentTestIds = new Set(tests.map(t => String(t.id)));
     const rootNodes = layout.filter(n => n.parentId === null).sort((a, b) => a.order - b.order);
+
+    if (isClassDetail) {
+        if (tests.length === 0) return <Typography color="text.secondary">テストがありません</Typography>;
+
+        return (
+            <Box>
+                {rootNodes.map(node => {
+                    if (node.type === 'folder') {
+                        const allChildren = layout.filter(n => n.parentId === node.id).sort((a, b) => a.order - b.order);
+                        const visibleChildren = allChildren.filter(c => currentTestIds.has(c.id));
+                        
+                        if (visibleChildren.length === 0) return null;
+
+                        return (
+                            <Accordion key={node.id} disableGutters elevation={0} sx={{ border: '1px solid', borderColor: 'divider', mb: 1, '&:before': { display: 'none' } }}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: 'grey.50' }}>
+                                    <Box display="flex" alignItems="center" gap={2}>
+                                        <FolderIcon sx={{ color: node.color || 'primary.main' }} />
+                                        <Typography fontWeight="bold">{node.name}</Typography>
+                                        <Typography variant="caption" color="text.secondary">({visibleChildren.length} {msg.ITEMS})</Typography>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 0, bgcolor: 'background.default' }}>
+                                    <List disablePadding>
+                                        {visibleChildren.map(child => {
+                                            const t = tests.find(test => String(test.id) === child.id);
+                                            if (!t) return null;
+                                            return (
+                                                <ListItemButton key={child.id} onClick={() => router.push("/solve/" + t.id)} divider>
+                                                    <ListItemIcon>
+                                                        <AssignmentIcon color="primary" />
+                                                    </ListItemIcon>
+                                                    <ListItemText 
+                                                        primary={t.title} 
+                                                        secondary={
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                {msg.START + " : " + t.startDate.toLocaleString()} | {msg.END + " : " + t.endDate.toLocaleString()}
+                                                            </Typography>
+                                                        } 
+                                                    />
+                                                </ListItemButton>
+                                            );
+                                        })}
+                                    </List>
+                                </AccordionDetails>
+                            </Accordion>
+                        );
+                    } else {
+                        if (!currentTestIds.has(node.id)) return null;
+                        const t = tests.find(test => String(test.id) === node.id);
+                        if (!t) return null;
+                        return (
+                            <Box key={node.id} sx={{ border: '1px solid', borderColor: 'divider', mb: 1 }}>
+                                <List disablePadding>
+                                    <ListItemButton onClick={() => router.push("/solve/" + t.id)}>
+                                        <ListItemIcon>
+                                            <AssignmentIcon color="primary" />
+                                        </ListItemIcon>
+                                        <ListItemText 
+                                            primary={t.title} 
+                                            secondary={
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {msg.START + " : " + t.startDate.toLocaleString()} | {msg.END + " : " + t.endDate.toLocaleString()}
+                                                </Typography>
+                                            } 
+                                        />
+                                    </ListItemButton>
+                                </List>
+                            </Box>
+                        );
+                    }
+                })}
+            </Box>
+        );
+    }
 
     return (
         <Box 
@@ -442,7 +543,11 @@ export function TestCards({ testData }: props) {
                 {rootNodes.map(node => {
                     const isSelected = selectedIds.includes(node.id);
                     if (node.type === 'folder') {
-                        const children = layout.filter(n => n.parentId === node.id).sort((a, b) => a.order - b.order);
+                        const allChildren = layout.filter(n => n.parentId === node.id).sort((a, b) => a.order - b.order);
+                        const visibleChildren = allChildren.filter(c => currentTestIds.has(c.id));
+                        
+                        if (allChildren.length > 0 && visibleChildren.length === 0 && isClassDetail) return null;
+
                         return (
                             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={node.id}>
                                 <Card 
@@ -466,7 +571,7 @@ export function TestCards({ testData }: props) {
                                                 {node.name}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
-                                                {children.length}  {msg.TEST}
+                                                {allChildren.length} {msg.ITEMS}
                                             </Typography>
                                         </CardActionArea>
                                     </Box>
@@ -474,8 +579,10 @@ export function TestCards({ testData }: props) {
                             </Grid>
                         );
                     } else {
-                        const t = tests.find(test => test.id.toString() === node.id);
+                        if (!currentTestIds.has(node.id)) return null;
+                        const t = tests.find(test => String(test.id) === node.id);
                         if (!t) return null;
+                        
                         return (
                             <Grid size={{ xs: 12, sm: 6, md: 3 }} key={node.id}>
                                 <Card 
@@ -520,8 +627,10 @@ export function TestCards({ testData }: props) {
                         <DialogContent dividers sx={{ minHeight: '30vh', bgcolor: 'grey.50' }}>
                             <Grid container spacing={2}>
                                 {layout.filter(n => n.parentId === openFolderId).sort((a, b) => a.order - b.order).map(child => {
-                                    const t = tests.find(test => test.id.toString() === child.id);
+                                    if (!currentTestIds.has(child.id)) return null;
+                                    const t = tests.find(test => String(test.id) === child.id);
                                     if (!t) return null;
+                                    
                                     const isSelected = selectedIds.includes(child.id);
                                     return (
                                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={child.id}>
@@ -546,7 +655,7 @@ export function TestCards({ testData }: props) {
                                         </Grid>
                                     );
                                 })}
-                                {layout.filter(n => n.parentId === openFolderId).length === 0 && (
+                                {layout.filter(n => n.parentId === openFolderId && currentTestIds.has(n.id)).length === 0 && (
                                     <Grid size={{ xs: 12 }}><Typography textAlign="center" color="text.secondary" mt={4}>空のフォルダです</Typography></Grid>
                                 )}
                             </Grid>
