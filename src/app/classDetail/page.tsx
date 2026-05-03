@@ -131,6 +131,10 @@ function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTe
               <Button variant="contained" size="small" color="primary" onClick={() => router.push(`/teacher/grading/${test.id}?classId=${classId}`)}>
                 {msg.GRADE}
               </Button>
+              <Button variant="contained" size="small" color="primary" onClick={() => router.push(`/teacher/createTest?testId=${test.id}`)}>
+                {msg.EDIT_TEST}
+              </Button>
+              
             </Stack>
           ) : (
             <Stack direction="row" spacing={2} alignItems="center">
@@ -346,7 +350,7 @@ function ClassDetailContent() {
               </List>
               <Divider sx={{ my: 2 }} />
               <Typography variant="subtitle2" color="textSecondary" gutterBottom>{msg.STUDENT_SECTION} ({students.length})</Typography>
-              <List dense sx={{ maxHeight: 300, overflow: 'auto' }}>
+              <List dense sx={{ maxHeight: "100%", overflow: 'auto' }}>
                 {students.map(u => (<MemberItem key={u.id} user={u} />))}
               </List>
             </CardContent>
