@@ -218,7 +218,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   }, []);
 
   useEffect(() => {
-    const paramClassId = searchParams.get("classid");
+    const paramClassId = searchParams.get("classId");
     if (paramClassId) {
       setClassId(paramClassId);
     } else {
@@ -621,17 +621,16 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               </>)
           }
           {Test_ ?
-            <TableContainer component={Paper}>
-              <Table>
+            <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 250px)' }}>
+              <Table stickyHeader>
                 <TableHead>
                   <TableRow>
-
-                    <TableCell sx={{ textAlign: "center" }} className={styles.username_cell}></TableCell>
-                    <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>{msg.TOTAL_POINT}</TableCell>
-                    <TableCell sx={{ textAlign: "center" }} className={styles.point_cell}>{msg.UNGRADED_COUNT}</TableCell>
+                    <TableCell sx={{ textAlign: "center", bgcolor: "background.paper" }} className={styles.username_cell}></TableCell>
+                    <TableCell sx={{ textAlign: "center", bgcolor: "background.paper" }} className={styles.point_cell}>{msg.TOTAL_POINT}</TableCell>
+                    <TableCell sx={{ textAlign: "center", bgcolor: "background.paper" }} className={styles.point_cell}>{msg.UNGRADED_COUNT}</TableCell>
                     {
                       visibleQuestions.questions.map((question: Question, index: number) =>
-                        <TableCell key={"question" + question.id} sx={{ textAlign: "center" }}>
+                        <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper" }}>
                           <Typography variant="caption" color="text.secondary" display="block" mb={1}>
                             [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
                           </Typography>
