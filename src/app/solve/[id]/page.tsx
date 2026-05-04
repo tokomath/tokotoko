@@ -10,11 +10,9 @@ import {
   Typography,
   Divider,
 } from "@mui/material";
-import "katex/dist/katex.min.css";
 import Stack from "@mui/material/Stack";
 import Question from "@/compornents/Question";
 import SendIcon from "@mui/icons-material/Send";
-import Latex from "react-latex-next";
 import { SectionFrame, TestFrame } from "@/app/api/test/testFrames";
 import { getTestById } from "@/app/api/test/getTestById";
 import { isAlreadySubmit, submitProps, submitTest } from "@/app/api/test/submit";
@@ -24,6 +22,7 @@ import { useUser } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { msg } from "@/msg-ja";
+import LaTeXViewer from "@/compornents/LaTeXViewer";
 
 const EXPIRATION_TIME = 30 * 24 * 60 * 60 * 1000;
 
@@ -484,7 +483,7 @@ function Solve(
               <Typography variant="h6">
                 {msg.SECTION_NUMBER} {s.section.number}
               </Typography>
-              <Latex>{s.section.summary}</Latex>
+              <LaTeXViewer>{s.section.summary}</LaTeXViewer>
               {s.questions.map((question) => (
                 <React.Fragment key={question.id}>
                   <Divider sx={{ my: 1 }} />
