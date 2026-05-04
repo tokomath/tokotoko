@@ -1,9 +1,8 @@
 "use client"
 
 import React, { useEffect, useState, useMemo, useCallback, use } from "react";
-import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
-import 'katex/dist/katex.min.css';
-import Latex from "react-latex-next";
+import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material";
+import InfoIcon from '@mui/icons-material/Info';
 
 import { User, Class, Question, Section, Answer, Submission as PrismaSubmission } from "@prisma/client";
 import { getTestById } from "@/app/api/test/getTestById";
@@ -15,7 +14,7 @@ import { TeacherGuard } from "@/lib/guard";
 import judge, { format } from "@/lib/judge";
 import { msg } from "@/msg-ja";
 
-
+import LaTeXViewer from "@/compornents/LaTeXViewer";
 import styles from "./styles.module.css";
 
 interface Point {
@@ -84,8 +83,8 @@ function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTab
       {
         sections.map((section, index) => (
           <CustomTabPanel value={sectionValue} index={index} key={index}>
-            <Typography sx={{ m: 1 }}>
-              <Latex >{section.summary}</Latex>
+            <Typography sx={{ m: 1 }} component="div">
+              <LaTeXViewer>{section.summary}</LaTeXViewer>
             </Typography>
           </CustomTabPanel>
         ))
@@ -119,7 +118,7 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
   return (<>
     <TableCell onClick={click_handle} onKeyDown={keydown_handle} onContextMenu={contextMenuHandle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
       <div className={((point === -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
-      <div className={styles.matharea}><Latex>{String(answer)}</Latex></div>
+      <div className={styles.matharea}><LaTeXViewer>{String(answer)}</LaTeXViewer></div>
     </TableCell>
   </>)
 });
@@ -173,6 +172,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
   const [texDialogOpen, setTexDialogOpen] = useState(false);
   const [currentTexContent, setCurrentTexContent] = useState("");
   const [autoGradingDialogOpen, setAutoGradingDialogOpen] = useState(false);
+  const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
+  const [currentQuestionContent, setCurrentQuestionContent] = useState("");
+  const [currentQuestionTitle, setCurrentQuestionTitle] = useState("");
 
   const autoGradingHandle = useCallback(() => {
     if (!Test_ || !submissionData) return;
@@ -252,7 +254,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       router.replace(`/teacher/grading/${testid}?classid=${defaultClassId}`);
     }
   }, [Test_, classId, testid, router]);
-
 
   useEffect(() => {
     if (!testid || classId === null || !user?.id || !Test_) return;
@@ -355,9 +356,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     const send_res = await setAnswerPoints(send_data);
     setIsSaving(false);
     if (send_res === 0) {
-      //alert(msg.SUCCESS_SAVE_GRADING);
+
     } else {
-      //alert(msg.ERROR_OCCURRED);
+
     }
   }, [submissionData, points]);
 
@@ -370,7 +371,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
     return () => clearTimeout(timer);
   }, [points, submissionData, savebuttonHandle]);
-
 
   const userMetrics = useMemo(() => {
     if (!Test_ || !submissionData) return [];
@@ -509,8 +509,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     return { questions, startIndex };
   }, [Test_, sectionValue]);
 
-
-
   const renderSubmissionStatus = useCallback((user_index: number) => {
     const data_index = submission_index[user_index];
     const submission = data_index !== undefined && submissionData ? submissionData[data_index] : null;
@@ -573,12 +571,11 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
             </Box>
 
             <Box display="flex" alignItems="flex-start" gap={1}>
-              {/* 自動採点ボタン */}
               <Button
                 variant="outlined"
                 color="primary"
                 onClick={() => setAutoGradingDialogOpen(true)}
-                sx={{ height: '56px', whiteSpace: 'nowrap' }} // TextField(select)の高さに合わせる
+                sx={{ height: '56px', whiteSpace: 'nowrap' }}
               >
                 {msg.AUTO_GRADING}
               </Button>
@@ -629,18 +626,33 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                     <TableCell sx={{ textAlign: "center", bgcolor: "background.paper" }} className={styles.point_cell}>{msg.TOTAL_POINT}</TableCell>
                     <TableCell sx={{ textAlign: "center", bgcolor: "background.paper" }} className={styles.point_cell}>{msg.UNGRADED_COUNT}</TableCell>
                     {
-                      visibleQuestions.questions.map((question: Question, index: number) =>
-                        <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper" }}>
-                          <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                            [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
-                          </Typography>
-                          <Latex>{question.question}</Latex>
-                          <hr />
-                          <Box onContextMenu={(e) => handleOpenTexDialog(question.answer, e)} sx={{ cursor: 'context-menu' }}>
-                            <Latex>{question.answer}</Latex>
-                          </Box>
-                        </TableCell>
-                      )
+                      visibleQuestions.questions.map((question: Question, index: number) => {
+                        const qNum = question.number ?? index + 1;
+
+                        return (
+                          <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper", verticalAlign: "top", pt: 2 }}>
+                            <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
+                              <Typography variant="caption" color="text.secondary">
+                                [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setCurrentQuestionContent(question.question);
+                                  setCurrentQuestionTitle(`${msg.SECTION_NUMBER}${sectionValue + 1} - ${msg.QUESTION_NUMBER_PREFIX}${qNum}`);
+                                  setQuestionDialogOpen(true);
+                                }}
+                                title={msg.SHOW_QUESTION || "問題を表示"}
+                              >
+                                <InfoIcon fontSize="small" color="action" />
+                              </IconButton>
+                            </Box>
+                            <Box onContextMenu={(e) => handleOpenTexDialog(question.answer, e)} sx={{ cursor: 'context-menu' }}>
+                              <LaTeXViewer>{question.answer}</LaTeXViewer>
+                            </Box>
+                          </TableCell>
+                        )
+                      })
                     }
                   </TableRow>
                 </TableHead>
@@ -736,7 +748,6 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           <Button onClick={handleCloseTexDialog}>{msg.CLOSE}</Button>
         </DialogActions>
       </Dialog>
-      {/* 自動採点確認ダイアログ */}
       <Dialog open={autoGradingDialogOpen} onClose={() => setAutoGradingDialogOpen(false)}>
         <DialogTitle>{msg.AUTO_GRADING_CONFIRM_TITLE}</DialogTitle>
         <DialogContent>
@@ -747,6 +758,17 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           <Button onClick={autoGradingHandle} color="primary" variant="contained">
             {msg.EXECUTE}
           </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={questionDialogOpen} onClose={() => setQuestionDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>{currentQuestionTitle}</DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ minHeight: '100px' }}>
+            <LaTeXViewer>{currentQuestionContent}</LaTeXViewer>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setQuestionDialogOpen(false)}>{msg.CLOSE}</Button>
         </DialogActions>
       </Dialog>
     </TeacherGuard>

@@ -6,7 +6,7 @@ import { parse, HtmlGenerator } from 'latex.js';
 
 export default function LaTeXViewer({ children }: { children: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -17,7 +17,7 @@ export default function LaTeXViewer({ children }: { children: string }) {
     
     const shadow = containerRef.current.shadowRoot!;
     shadow.innerHTML = '';
-    setErrorMsg(null);
+    setHasError(false);
 
     if (!children || !children.trim()) return;
 
@@ -46,16 +46,16 @@ export default function LaTeXViewer({ children }: { children: string }) {
 
       shadow.appendChild(doc.domFragment());
     } catch (error: any) {
-      setErrorMsg(error.message);
+      setHasError(true);
     }
   }, [children]);
 
   return (
-    <Box sx={{ width: '100%', overflowX: 'auto', py: 1 }}>
-      <div ref={containerRef} />
-      {errorMsg && (
-        <Typography color="error" variant="body2" sx={{ mt: 1, fontFamily: 'monospace' }}>
-          {errorMsg}
+    <Box sx={{ width: '100%', overflowX: 'auto', py: hasError ? 0 : 1 }}>
+      <div ref={containerRef} style={{ display: hasError ? 'none' : 'block' }} />
+      {hasError && (
+        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+          {children}
         </Typography>
       )}
     </Box>
