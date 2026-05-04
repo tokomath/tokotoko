@@ -26,6 +26,7 @@
     "dayjs": "^1.11.11",
     "install": "^0.13.0",
     "js-yaml-loader": "^1.2.2",
+    "latex.js": "^0.12.6",
     "nerdamer": "^1.1.13",
     "next": "^16.1.6",
     "qrcode.react": "^4.2.0",

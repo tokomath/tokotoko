@@ -29,7 +29,6 @@ import {
   Switch,
   FormControlLabel,
 } from "@mui/material";
-import "katex/dist/katex.min.css";
 
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
@@ -54,13 +53,13 @@ import dayjs, { Dayjs } from "dayjs";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
-import Latex from "react-latex-next";
 import { useRouter, useSearchParams } from "next/navigation"
 import { useUser } from '@clerk/nextjs'
 
 import { getClassByUserId } from "@/app/api/class/getClass";
 
 import InsertFrame from "@/compornents/InsertFrame";
+import LaTeXViewer from "@/compornents/LaTeXViewer";
 import { TeacherGuard } from "@/lib/guard"
 
 import { msg } from "@/msg-ja";
@@ -84,8 +83,7 @@ function ClientSearchParamWrapper() {
   const [currentTestId, setCurrentTestId] = useState<number | null>(param_testId ? Number(param_testId) : null);
 
   const initialSectionsRef = useRef<string>("");
-  const fileInputRef = useRef<HTMLInputElement>(null); 
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getInitialStartDate = () => {
     const now = dayjs();
@@ -342,7 +340,6 @@ function ClientSearchParamWrapper() {
         </Stack>
 
         <Stack direction="row" spacing={2} alignItems="center">
-          {/* JSON読み込み用隠しインプット */}
           <input
             type="file"
             accept="application/json"
@@ -364,7 +361,7 @@ function ClientSearchParamWrapper() {
           >
             {msg.SAVE_JSON}
           </Button>
-          
+
           <Button
             variant="contained"
             size="large"
@@ -388,8 +385,7 @@ function ClientSearchParamWrapper() {
           />
         </Stack>
       </Stack>
-      
-      {/* 以下のコンテンツ部分は変更なし */}
+
       <Box sx={{ flexGrow: 1, minHeight: 0, p: 1.5, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Paper elevation={3} sx={{ flexGrow: 1, minHeight: 0, display: 'flex', overflow: 'hidden', borderRadius: 2 }}>
           <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", bgcolor: 'grey.50', overflowY: 'auto', height: '100%' }}>
@@ -744,7 +740,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                   {msg.PREVIEW}
                 </Typography>
                 <Box>
-                  <Latex>{section.section.summary}</Latex>
+                  <LaTeXViewer>{section.section.summary}</LaTeXViewer>
                 </Box>
               </Paper>
             </Grid>
@@ -920,7 +916,7 @@ const QuestionPage = ({
               </Typography>
               <Box sx={{ display: 'flex' }}>
                 <Typography component="span" fontWeight="bold" mr={1}>({question.number})</Typography>
-                <Latex>{question.question}</Latex>
+                <LaTeXViewer>{question.question}</LaTeXViewer>
               </Box>
             </Paper>
           </Grid>
@@ -1027,10 +1023,18 @@ const QuestionPage = ({
             <TextField
               label={msg.ANSWER_FORMULA_LABEL}
               fullWidth
+              multiline
+              minRows={3}
               value={question.answer}
               onChange={(e) => setAns(e.target.value)}
               placeholder={msg.ANSWER_PLACEHOLDER}
-              sx={{ flexGrow: 1 }}
+              sx={{
+                flexGrow: 1,
+                "& .MuiInputBase-root": {
+                  height: "100%",
+                  alignItems: "flex-start"
+                }
+              }}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -1039,14 +1043,18 @@ const QuestionPage = ({
               sx={{
                 p: 2,
                 flexGrow: 1,
-                display: 'flex',
-                alignItems: 'center',
                 bgcolor: 'grey.50',
+                display: 'flex',
+                flexDirection: 'column',
                 borderColor: 'rgba(0, 0, 0, 0.23)'
               }}
             >
-              <Typography variant="body2" color="text.secondary" mr={1}>{msg.PREVIEW}:</Typography>
-              <Latex>{question.answer}</Latex>
+              <Typography variant="caption" color="text.secondary" gutterBottom>
+                {msg.PREVIEW}
+              </Typography>
+              <Box sx={{ display: 'flex' }}>
+                <LaTeXViewer>{question.answer}</LaTeXViewer>
+              </Box>
             </Paper>
           </Grid>
         </Grid>

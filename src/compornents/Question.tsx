@@ -1,15 +1,14 @@
-import { Box, Button, IconButton, TextField, Typography } from "@mui/material";
-import { InlineMath, BlockMath } from "react-katex";
+import { Box, Button, IconButton, Paper, TextField, Typography } from "@mui/material";
+import { InlineMath } from "react-katex";
 import Stack from '@mui/material/Stack';
-import Latex from "react-latex-next";
 import React, { useEffect } from "react";
 import 'katex/dist/katex.min.css';
-import { ArrowBack, ArrowForward, Clear, WidthFull } from "@mui/icons-material";
+import { ArrowBack, ArrowForward, Clear } from "@mui/icons-material";
 import { red } from "@mui/material/colors";
 
-import Image from "next/image";
-
 import InsertFrame from "@/compornents/InsertFrame"
+import LaTeXViewer from "@/compornents/LaTeXViewer";
+import { msg } from "@/msg-ja";
 
 interface QuestionProps {
   id: string;
@@ -82,11 +81,11 @@ export default function Question({ id, number, question, answer, insertType, ins
   const AnswerBox = () => {
     if (answer) {
       return (
-        <Latex>{answer}</Latex>
+        <LaTeXViewer>{answer}</LaTeXViewer>
       )
     } else {
       return (
-        <Latex>?</Latex>
+        <LaTeXViewer>$?$</LaTeXViewer>
       )
     }
   }
@@ -106,25 +105,38 @@ export default function Question({ id, number, question, answer, insertType, ins
     <Stack spacing={0}>
       <Box display="flex" alignItems="center">
         <Typography variant="h2" fontSize={17}>({number})　</Typography>
-        <Latex>{question}</Latex>
+        <LaTeXViewer>{question}</LaTeXViewer>
       </Box>
       <Box>
         <InsertFrame insertType={insertType} insertContent={insertContent} />
       </Box>
-      <Box
-        display="flex"
-        minHeight={80}
-        alignItems="center"
+      
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2,
+          my: 1.5,
+          display: 'flex',
+          flexDirection: 'column',
+          borderColor: 'rgba(0, 0, 0, 0.23)'
+        }}
       >
-        <AnswerBox />
-        <IconButton aria-label="clear" sx={{ ml: 'auto' }} onClick={() => changeAnswer("")}>
-          <Clear sx={{ color: red[700] }} />
-        </IconButton>
-      </Box>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+          <Typography variant="caption" color="text.secondary" gutterBottom>
+            {msg.PREVIEW}
+          </Typography>
+          <IconButton aria-label="clear" size="small" sx={{ mt: -1, mr: -1 }} onClick={() => changeAnswer("")}>
+            <Clear sx={{ color: red[700] }} fontSize="small" />
+          </IconButton>
+        </Box>
+        <Box sx={{ minHeight: 40, overflowX: 'auto' }}>
+          <AnswerBox />
+        </Box>
+      </Paper>
 
       <Box onFocus={handleFocus} onBlur={handleBlur}>
         <TextField
-          placeholder="Answer"
+          placeholder={msg.ENTER_ANSWER}
           hiddenLabel
           fullWidth
           size="small"

@@ -177,6 +177,7 @@ export const msg = {
     "UPLOAD_FILE": "アップロード",
     "FILE_UPLOADED": "ファイルアップロード済",
     "ATTACHMENT_PREVIEW": "添付プレビュー",
+    "ENTER_ANSWER":"解答を入力",
     "ANSWER_KEY": "解答設定",
     "ANSWER_FORMULA_LABEL": "正答 (LaTeX)",
     "ANSWER_PLACEHOLDER": "例: x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}",
@@ -292,5 +293,6 @@ export const msg = {
     "AUTO_GRADING_CONFIRM_MESSAGE": "自動採点を実行すると、現在入力されている点数が上書きされます。よろしいですか？",
     "EXECUTE": "実行",
     "FORMATED_TEX": "フォーマットされたTeX",
-    "ITEMS": "アイテム"
+    "ITEMS": "アイテム",
+    "SHOW_QUESTION": "問題を表示",
 }

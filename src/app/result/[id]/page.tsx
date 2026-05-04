@@ -9,12 +9,11 @@ import {
   Typography,
   Divider,
 } from "@mui/material";
-import "katex/dist/katex.min.css";
 import Stack from "@mui/material/Stack";
-import Latex from "react-latex-next";
 import { useUser } from '@clerk/nextjs';
 import { getSubmission } from "@/app/api/test/result";
 import InsertFrame from "@/compornents/InsertFrame";
+import LaTeXViewer from "@/compornents/LaTeXViewer";
 import { msg } from "@/msg-ja";
 import { useRouter } from "next/navigation";
 
@@ -166,7 +165,6 @@ function Result({ id, userid }: { id: string, userid: string }) {
             alignItems="flex-start"
             gap={3}
           >
-            {/* 左側: テスト情報 */}
             <Stack spacing={1.5} sx={{ width: "100%", flex: 1 }}>
               <Typography variant="h1" fontSize={30} fontWeight="bold">
                 {data.test.title}
@@ -179,7 +177,6 @@ function Result({ id, userid }: { id: string, userid: string }) {
               </Typography>
             </Stack>
 
-            {/* 右側 (モバイル時は下側): メタデータ・アクション・スコア */}
             <Stack
               spacing={2}
               sx={{
@@ -189,7 +186,6 @@ function Result({ id, userid }: { id: string, userid: string }) {
                 width: { xs: "100%", sm: "auto" }
               }}
             >
-              {/* フォームID & 再提出コントロール */}
               <Stack spacing={1} sx={{ alignItems: { xs: "flex-start", sm: "flex-end" } }}>
                 <Typography fontFamily="monospace" variant="body2" color="text.secondary">
                   {msg.FORM_ID}{id}
@@ -211,7 +207,6 @@ function Result({ id, userid }: { id: string, userid: string }) {
                 )}
               </Stack>
 
-              {/* 点数 & 提出時間 */}
               <Box>
                 {point === -1 ? (
                   <Typography variant="h5" color="text.secondary" fontWeight="bold">
@@ -253,7 +248,7 @@ function Result({ id, userid }: { id: string, userid: string }) {
               <Typography variant="h6">
                 {msg.SECTION_NUMBER} {section.number}
               </Typography>
-              <Latex>{section.summary}</Latex>
+              <LaTeXViewer>{section.summary}</LaTeXViewer>
             </Box>
             {section.questions.map((question: any) => {
               return (
@@ -332,14 +327,18 @@ function Next({
   );
 }
 
-function Question({ id, number, question, insertType, insertContent, myAns, trueAns, point,allocationPoint }: any) {
+function Question({ id, number, question, insertType, insertContent, myAns, trueAns, point, allocationPoint }: any) {
   return (
     <Stack spacing={2}>
       <Box display="flex" alignItems="center">
-        <Typography variant="h2" fontSize={17}>({number})</Typography>
-        <Box width="10px"></Box>
-        <Latex>{question}</Latex>
-        <Box sx={{ml:3}}>[ {allocationPoint} {msg.POINTS} ]</Box>
+        <Typography variant="h2" fontSize={17} sx={{ flexShrink: 0 }}>({number})</Typography>
+        <Box width="10px" sx={{ flexShrink: 0 }}></Box>
+        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          <LaTeXViewer>{question}</LaTeXViewer>
+        </Box>
+        <Box sx={{ ml: 3, whiteSpace: "nowrap", flexShrink: 0 }}>
+          [ {allocationPoint} {msg.POINTS} ]
+        </Box>
       </Box>
       {insertType !== "None" ? (
         <>
@@ -355,20 +354,9 @@ function Question({ id, number, question, insertType, insertContent, myAns, true
         alignItems="center"
         paddingX={2}
       >
-        <Latex>{myAns}</Latex>
+        <LaTeXViewer>{myAns}</LaTeXViewer>
       </Box>
       <Divider />
-      {/*
-      <Box
-        display="flex"
-        minHeight={40}
-        alignItems="center"
-        paddingX={2}
-      >
-        <Typography>{msg.TRUE_ANS}</Typography>
-        <Box minWidth={20} />
-        <Latex>{trueAns}</Latex>
-      </Box>*/}
       {point === -1 ? (
         <div>{msg.NOT_GRADED}</div>
       ) : (
