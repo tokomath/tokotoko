@@ -1,12 +1,13 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import { parse, HtmlGenerator } from 'latex.js';
 
 export default function LaTeXViewer({ children }: { children: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); 
 
   useEffect(() => {
     const katexGlobalId = 'katex-global';
@@ -25,15 +26,22 @@ export default function LaTeXViewer({ children }: { children: string }) {
     }
     
     const shadow = containerRef.current.shadowRoot!;
-    shadow.innerHTML = '';
-    setHasError(false);
 
-    if (!children || !children.trim()) return;
+    if (!children || !children.trim()) {
+      shadow.innerHTML = '';
+      setHasError(false);
+      setErrorMessage("");
+      return;
+    }
 
     try {
       const generator = new HtmlGenerator({ hyphenate: false });
       const doc = parse(children, { generator });
       
+      shadow.innerHTML = '';
+      setHasError(false);
+      setErrorMessage("");
+
       const styles = doc.stylesAndScripts("https://cdn.jsdelivr.net/npm/latex.js@0.12.4/dist/");
       shadow.appendChild(styles);
 
@@ -69,17 +77,41 @@ export default function LaTeXViewer({ children }: { children: string }) {
       shadow.appendChild(doc.domFragment());
     } catch (error: any) {
       setHasError(true);
+      setErrorMessage(error.message || "パースエラーが発生しました");
     }
   }, [children]);
 
   return (
-    <Box sx={{ width: '100%', overflowX: 'auto', py: hasError ? 0 : 1 }}>
-      <div ref={containerRef} style={{ display: hasError ? 'none' : 'block' }} />
-      {hasError && (
-        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: '"Yu Mincho", "MS Mincho", serif' }}>
-          {children}
-        </Typography>
-      )}
-    </Box>
+    <Tooltip 
+      title={hasError ? errorMessage : ""} 
+      arrow 
+      placement="top-start"
+      slotProps={{
+        tooltip: {
+          sx: { 
+            fontFamily: 'monospace', 
+            fontSize: '0.8rem',
+            whiteSpace: 'pre-wrap' 
+          }
+        }
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+          overflowX: 'auto',
+          p: 1,
+          border: '1px solid',
+          borderColor: hasError ? 'error.light' : 'transparent',
+          backgroundColor: hasError ? 'rgba(211, 47, 47, 0.03)' : 'transparent',
+          opacity: hasError ? 0.7 : 1,
+          transition: 'all 0.2s ease',
+          borderRadius: 1,
+          cursor: hasError ? 'help' : 'auto' 
+        }}
+      >
+        <div ref={containerRef} />
+      </Box>
+    </Tooltip>
   );
 }
