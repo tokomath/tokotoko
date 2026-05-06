@@ -622,12 +622,14 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               <Table stickyHeader>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ textAlign: "center", backgroundColor: "background.paper" }} className={styles.username_cell}></TableCell><TableCell sx={{ textAlign: "center", backgroundColor: "background.paper" }} className={styles.point_cell}>{msg.TOTAL_POINT}</TableCell>
-                    <TableCell sx={{ textAlign: "center", backgroundColor: "background.paper" }} className={styles.point_cell}>{msg.UNGRADED_COUNT}</TableCell>{
+                    <TableCell sx={{ textAlign: "center", backgroundColor: "background.paper", zIndex: 100 }} className={styles.username_cell}></TableCell>
+                    <TableCell sx={{ textAlign: "center", backgroundColor: "background.paper", zIndex: 100 }} className={styles.point_cell}>{msg.TOTAL_POINT}</TableCell>
+                    <TableCell sx={{ textAlign: "center", backgroundColor: "background.paper", zIndex: 100 }} className={styles.point_cell}>{msg.UNGRADED_COUNT}</TableCell>
+                    {
                       visibleQuestions.questions.map((question: Question, index: number) => {
                         const qNum = question.number ?? index + 1;
                         return (
-                          <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper", verticalAlign: "top", pt: 2, backgroundColor: "background.paper" }}>                            
+                          <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper", verticalAlign: "top", pt: 2, zIndex: 100 }}>                            
                           <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
                             <Typography variant="caption" color="text.secondary">
                               [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
