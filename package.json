@@ -10,9 +10,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/backend": "^3.2.0",
+    "@clerk/backend": "^3.2.14",
     "@clerk/localizations": "^4.2.3",
-    "@clerk/nextjs": "^7.0.4",
+    "@clerk/nextjs": "^7.3.1",
     "@emotion/cache": "^11.11.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
@@ -24,11 +24,12 @@
     "@mui/x-date-pickers": "^8.27.2",
     "@prisma/client": "6.19.2",
     "dayjs": "^1.11.11",
+    "effect": "^3.21.2",
     "install": "^0.13.0",
     "js-yaml-loader": "^1.2.2",
     "latex.js": "^0.12.6",
     "nerdamer": "^1.1.13",
-    "next": "^16.1.6",
+    "next": "^16.2.4",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -38,7 +39,7 @@
     "react-mathquill": "^1.0.3",
     "react-table": "^7.8.0",
     "svix": "^1.67.0",
-    "yaml": "^2.8.1",
+    "yaml": "^2.8.3",
     "zustand": "^4.5.2"
   },
   "resolutions": {
@@ -47,7 +48,15 @@
     "glob": "^10.5.0",
     "nanoid": "^3.3.8",
     "js-yaml": "^4.1.1",
-    "flatted": "^3.4.0"
+    "flatted": "3.4.2",
+    "@clerk/shared": "^4.10.0",
+    "@clerk/backend": "^3.4.5",
+    "picomatch": "^2.3.2",
+    "brace-expansion": "2.0.3",
+    "yaml": "2.8.3",
+    "cosmiconfig/**/yaml": "1.10.3",
+    "@hono/node-server": "1.19.13",
+    "postcss": "8.5.10"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -55,8 +64,8 @@
     "@types/react-dom": "^18",
     "@types/react-katex": "^3.0.4",
     "eslint": "^8",
-    "eslint-config-next": "14.2.2",
-    "prisma": "6.19.2",
+    "eslint-config-next": "16.2.4",
+    "prisma": "^7.8.0",
     "raw-loader": "^4.0.2",
     "typescript": "^5"
   }
