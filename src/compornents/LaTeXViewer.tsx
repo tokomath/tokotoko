@@ -1,13 +1,14 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Box, Tooltip } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { parse, HtmlGenerator } from 'latex.js';
 
 export default function LaTeXViewer({ children }: { children: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hasError, setHasError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); 
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isEmpty, setIsEmpty] = useState(true); 
 
   useEffect(() => {
     const katexGlobalId = 'katex-global';
@@ -31,6 +32,7 @@ export default function LaTeXViewer({ children }: { children: string }) {
       shadow.innerHTML = '';
       setHasError(false);
       setErrorMessage("");
+      setIsEmpty(true);
       return;
     }
 
@@ -75,6 +77,7 @@ export default function LaTeXViewer({ children }: { children: string }) {
       shadow.appendChild(customStyle);
 
       shadow.appendChild(doc.domFragment());
+      setIsEmpty(false); 
     } catch (error: any) {
       setHasError(true);
       setErrorMessage(error.message || "パースエラーが発生しました");
@@ -89,9 +92,9 @@ export default function LaTeXViewer({ children }: { children: string }) {
       slotProps={{
         tooltip: {
           sx: { 
-            fontFamily: 'monospace', 
+            fontFamily: 'monospace',
             fontSize: '0.8rem',
-            whiteSpace: 'pre-wrap' 
+            whiteSpace: 'pre-wrap'
           }
         }
       }}
@@ -104,13 +107,28 @@ export default function LaTeXViewer({ children }: { children: string }) {
           border: '1px solid',
           borderColor: hasError ? 'error.light' : 'transparent',
           backgroundColor: hasError ? 'rgba(211, 47, 47, 0.03)' : 'transparent',
-          opacity: hasError ? 0.7 : 1,
+          opacity: hasError && !isEmpty ? 0.7 : 1,
           transition: 'all 0.2s ease',
           borderRadius: 1,
           cursor: hasError ? 'help' : 'auto' 
         }}
       >
-        <div ref={containerRef} />
+        <div ref={containerRef} style={{ display: isEmpty && hasError ? 'none' : 'block' }} />
+        
+        {/*  */}
+        {hasError && isEmpty && (
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontFamily: 'monospace',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              color: 'error.main' 
+            }}
+          >
+            {children}
+          </Typography>
+        )}
       </Box>
     </Tooltip>
   );
