@@ -622,31 +622,28 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               <Table stickyHeader>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ textAlign: "center", bgcolor: "background.paper" }} className={styles.username_cell}></TableCell>
-                    <TableCell sx={{ textAlign: "center", bgcolor: "background.paper" }} className={styles.point_cell}>{msg.TOTAL_POINT}</TableCell>
-                    <TableCell sx={{ textAlign: "center", bgcolor: "background.paper" }} className={styles.point_cell}>{msg.UNGRADED_COUNT}</TableCell>
-                    {
+                    <TableCell sx={{ textAlign: "center", backgroundColor: "background.paper" }} className={styles.username_cell}></TableCell><TableCell sx={{ textAlign: "center", backgroundColor: "background.paper" }} className={styles.point_cell}>{msg.TOTAL_POINT}</TableCell>
+                    <TableCell sx={{ textAlign: "center", backgroundColor: "background.paper" }} className={styles.point_cell}>{msg.UNGRADED_COUNT}</TableCell>{
                       visibleQuestions.questions.map((question: Question, index: number) => {
                         const qNum = question.number ?? index + 1;
-
                         return (
-                          <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper", verticalAlign: "top", pt: 2 }}>
-                            <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
-                              <Typography variant="caption" color="text.secondary">
-                                [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
-                              </Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() => {
-                                  setCurrentQuestionContent(question.question);
-                                  setCurrentQuestionTitle(`${msg.SECTION_NUMBER}${sectionValue + 1} - ${msg.QUESTION_NUMBER_PREFIX}${qNum}`);
-                                  setQuestionDialogOpen(true);
-                                }}
-                                title={msg.SHOW_QUESTION || "問題を表示"}
-                              >
-                                <InfoIcon fontSize="small" color="action" />
-                              </IconButton>
-                            </Box>
+                          <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper", verticalAlign: "top", pt: 2, backgroundColor: "background.paper" }}>                            
+                          <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
+                            <Typography variant="caption" color="text.secondary">
+                              [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
+                            </Typography>
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setCurrentQuestionContent(question.question);
+                                setCurrentQuestionTitle(`${msg.SECTION_NUMBER}${sectionValue + 1} - ${msg.QUESTION_NUMBER_PREFIX}${qNum}`);
+                                setQuestionDialogOpen(true);
+                              }}
+                              title={msg.SHOW_QUESTION || "問題を表示"}
+                            >
+                              <InfoIcon fontSize="small" color="action" />
+                            </IconButton>
+                          </Box>
                             <Box onContextMenu={(e) => handleOpenTexDialog(question.answer, e)} sx={{ cursor: 'context-menu' }}>
                               <LaTeXViewer>{question.answer}</LaTeXViewer>
                             </Box>
