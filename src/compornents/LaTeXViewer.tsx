@@ -53,34 +53,43 @@ export default function LaTeXViewer({ children }: { children: string }) {
 
       const customStyle = document.createElement('style');
       customStyle.textContent = `
-        :host {
-          display: block;
-          width: 100%;
+        * {
+          box-sizing: border-box !important;
         }
         
-        /* latex.jsが生成するコンテナの絶対配置を解除し、通常のブロック要素に戻す */
+        :host {
+          display: block;
+          max-width: 100%;
+        }
+        
         .page, .body {
           position: static !important; 
           display: block !important;
-          width: 100% !important;
+          width: auto !important; 
+          max-width: 100% !important;
           height: auto !important;
           margin: 0 !important;
           padding: 0 !important;
         }
 
-        /* テキストのスタイルと、十分な行高の確保 */
         p {
           margin: 0.5em 0;
           line-height: 1.8 !important;
           font-family: "KaTeX_Main", "Times New Roman", "Yu Mincho", serif;
           word-wrap: break-word;
+          overflow-wrap: break-word;
+          max-width: 100%;
         }
 
-        /* ディスプレイ数式（$$）の上下の余白 */
         .katex-display {
           margin: 1em 0 !important;
+          max-width: 100%;
           overflow-x: auto;
-          overflow-y: hidden;
+          overflow-y: hidden; 
+        }
+
+        .katex {
+          max-width: 100%;
         }
       `;
       shadow.appendChild(customStyle);
@@ -89,7 +98,7 @@ export default function LaTeXViewer({ children }: { children: string }) {
       setIsEmpty(false);
     } catch (error: any) {
       setHasError(true);
-      setErrorMessage(error?.message || "パースエラーが発生しました");
+      setErrorMessage(error?.message);
     }
   }, [content]);
 
@@ -106,8 +115,10 @@ export default function LaTeXViewer({ children }: { children: string }) {
     >
       <Box
         sx={{
-          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box',
           overflowX: 'auto',
+          overflowY: 'hidden',
           p: hasError ? 1 : 0, 
           border: hasError ? '1px solid' : 'none',
           borderColor: hasError ? 'error.light' : 'transparent',
@@ -126,9 +137,10 @@ export default function LaTeXViewer({ children }: { children: string }) {
             sx={{
               fontFamily: 'monospace',
               whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
+              wordBreak: 'break-all', 
               color: 'error.main',
-              p: 1
+              m: 0,
+              maxWidth: '100%'
             }}
           >
             {content}
