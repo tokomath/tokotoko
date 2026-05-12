@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-
+import { msg } from "@/msg-ja"
 export const metadata: Metadata = {
-  title: "Formula Form",
-  description: "E-learning for math",
+  title: msg.APP_NAME,
+  description: "Numazu Mathematics Assignment Submission and Communication Hub",
 };
