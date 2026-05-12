@@ -1,4 +1,5 @@
 export const msg = {
+    "APP_NAME": "NuMASCH",
     // 汎用
     "DAY": "日",
     "HOUR": "時間",
