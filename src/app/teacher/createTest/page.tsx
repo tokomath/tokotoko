@@ -388,7 +388,7 @@ function ClientSearchParamWrapper() {
 
       <Box sx={{ flexGrow: 1, minHeight: 0, p: 1.5, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Paper elevation={3} sx={{ flexGrow: 1, minHeight: 0, display: 'flex', overflow: 'hidden', borderRadius: 2 }}>
-          <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", bgcolor: 'grey.50', overflowY: 'auto', height: '100%' }}>
+          <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", overflowY: 'auto', height: '100%' }}>
             <Tabs
               value={value}
               onChange={(_, v) => setValue(v)}
@@ -696,7 +696,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Card variant="outlined" sx={{ bgcolor: 'grey.50', mb: 4 }}>
+      <Card variant="outlined" sx={{  mb: 4 }}>
         <CardHeader
           title={`${msg.SECTION_NUMBER} ${index + 1} ${msg.SECTION_SETTINGS}`}
           action={
@@ -730,8 +730,6 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 sx={{
                   p: 2,
                   flexGrow: 1,
-                  bgcolor: 'common.white',
-                  borderColor: 'rgba(0, 0, 0, 0.23)',
                   display: 'flex',
                   flexDirection: 'column'
                 }}
@@ -878,7 +876,7 @@ const QuestionPage = ({
             </IconButton>
           </Stack>
         }
-        sx={{ bgcolor: 'grey.100', py: 1 }}
+        sx={{  py: 1 }}
       />
       <CardContent>
         <Grid container spacing={3} alignItems="stretch">
@@ -905,7 +903,6 @@ const QuestionPage = ({
               sx={{
                 p: 2,
                 flexGrow: 1,
-                bgcolor: 'grey.50',
                 display: 'flex',
                 flexDirection: 'column',
                 borderColor: 'rgba(0, 0, 0, 0.23)'
@@ -1043,7 +1040,6 @@ const QuestionPage = ({
               sx={{
                 p: 2,
                 flexGrow: 1,
-                bgcolor: 'grey.50',
                 display: 'flex',
                 flexDirection: 'column',
                 borderColor: 'rgba(0, 0, 0, 0.23)'

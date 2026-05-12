@@ -1,4 +1,5 @@
 export const msg = {
+    "APP_NAME": "NuMASCH",
     // 汎用
     "DAY": "日",
     "HOUR": "時間",
@@ -58,6 +59,10 @@ export const msg = {
     "MANAGE_ACCOUNT_INFO": "アカウント情報管理",
     "PROFILE": "プロフィール",
     "SECURITY": "セキュリティ",
+    "APPEARANCE": "外観", 
+    "THEME": "テーマ",
+    "THEME_LIGHT": "ライトモード", 
+    "THEME_DARK": "ダークモード",
     "PROFILE_DETAILS": "プロフィール詳細",
     "UPDATE_PROFILE": "プロフィールを更新",
     "PASSWORD": "パスワード",

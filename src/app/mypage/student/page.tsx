@@ -122,7 +122,7 @@ function ClassCard({ classData }: ClassCardProp) {
                 sx={{
                   width: 56,
                   height: 56,
-                  bgcolor: !classData.icon && classData.name ? stringToBrightColor(classData.name) : "#e0e0e0",
+                  bgcolor: !classData.icon && classData.name ? stringToBrightColor(classData.name) : "action.disabledBackground",
                   fontSize: "1.5rem",
                 }}
               >
@@ -139,8 +139,8 @@ function ClassCard({ classData }: ClassCardProp) {
                       <Typography width="50%">{classData.tests.at(i)?.test?.title}</Typography>
                       {
                         classData.tests.at(i)?.submitted ?
-                          <Typography width="50%" textAlign="right" color="rgba(0,200,64,0.7)">{msg.SUBMITTED}</Typography> :
-                          <Typography width="50%" textAlign="right" color="rgba(255,0,0,0.9)" fontWeight="bold">{msg.NOT_SUBMITTED}</Typography>
+                          <Typography width="50%" textAlign="right" color="success.main">{msg.SUBMITTED}</Typography> :
+                          <Typography width="50%" textAlign="right" color="error.main" fontWeight="bold">{msg.NOT_SUBMITTED}</Typography>
                       }
                     </Box>
                   );

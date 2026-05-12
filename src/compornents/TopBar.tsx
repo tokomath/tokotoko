@@ -1,12 +1,17 @@
 "use client"
 
-import { AccountCircle, ExitToAppSharp } from "@mui/icons-material";
-import { AppBar, Button, Toolbar, Typography, Paper, Box } from "@mui/material";
+import { AppBar, Button, Toolbar, Typography, Box, useTheme } from "@mui/material";
 import React from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
-import { useUser, SignInButton, UserButton } from '@clerk/nextjs';
+import { useUser, SignInButton } from '@clerk/nextjs';
 import CustomUserButton from "./CustomUserButton";
+
+import logoLight from "@/app/logo_light.png";
+import logoDark from "@/app/logo_dark.png";
+
+import { msg } from "@/msg-ja"
 
 interface QuestionProps {
   page_name?: string;
@@ -15,6 +20,7 @@ interface QuestionProps {
 export default function TopBar({ page_name = "" }: QuestionProps) {
   const { user, isSignedIn, isLoaded } = useUser();
   const router = useRouter();
+  const theme = useTheme();
 
   const titleEvent = () => {
     router.push("/");
@@ -24,52 +30,88 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
   if (isSignedIn && user) {
     name = `${user.lastName || ""} ${user.firstName || ""}`.trim();
   }
-
+  const logoImg = theme.palette.mode === 'dark' ? logoDark : logoLight;
   return (
     <>
-      <Toolbar sx={{ display: "flex", flexDirection: "row", flexWrap: "nowrap", alignItems: "center", justifyContent: "space-between" }}>
-        <Box width="calc(100%/3)" sx={{ display: "flex", justifyContent: "flex-start" }}>
-          <Button
-            variant="text"
-            onClick={titleEvent}
-            sx={{
-              color: "white",
-              fontSize: "22px",
-              whiteSpace: "nowrap",
-              textTransform: "none",
-              padding: 0,
-              minWidth: "auto",
-              lineHeight: 1.2
-            }}
-          >
-            Formula Form
-          </Button>
-        </Box>
+      <AppBar
+        position="fixed"
+        color="inherit"
+        elevation={2}
+        sx={{
+          bgcolor: "background.paper",
+          color: "text.primary",
+          borderBottom: "4px solid",
+          borderColor: "primary.main",
+          zIndex: theme.zIndex.appBar,
+        }}
+      >
+        <Toolbar sx={{
+          display: "flex",
+          flexDirection: "row",
+          flexWrap: "nowrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: { xs: "0 8px", sm: "0 16px" },
+        }}>
+          <Box width="calc(100%/3)" sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
+            <Button
+              variant="text"
+              onClick={titleEvent}
+              sx={{
+                padding: 0,
+                minWidth: "auto",
+                ml: { xs: 0, sm: 1 },
+              }}
+            >
+              <Image
+                src={logoImg}
+                alt="Formula Form Logo"
+                width={150}
+                height={40}
+                style={{ objectFit: "contain" }}
+                priority
+              />
+            </Button>
+          </Box>
 
-        <Box width="calc(100%/3)" sx={{ textAlign: "center" }}>
-          <Typography variant="h4" sx={{ fontSize: { xs: "1.5rem", sm: "2.125rem" } }}>
-            {page_name}
-          </Typography>
-        </Box>
+          <Box width="calc(100%/3)" sx={{ textAlign: "center" }}>
+            <Typography variant="h4" sx={{
+              fontSize: { xs: "1.25rem", sm: "1.75rem" },
+              fontWeight: "bold",
+              color: "primary.main",
+            }}>
+              {page_name}
+            </Typography>
+          </Box>
 
-        <Box width="calc(100%/3)" sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-          <Typography sx={{ display: "flex", alignItems: "center", marginRight: "5px" }}>
-            {name}
-          </Typography>
+          <Box width="calc(100%/3)" sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 1.5 }}>
+            <Typography sx={{
+              display: "flex",
+              alignItems: "center",
+              color: "text.secondary",
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            }}>
+              {name}
+            </Typography>
 
-          {isLoaded && !isSignedIn && (
-            <Box sx={{ height: "fit-content", ml: 2, bgcolor: "primary.main", borderRadius: 1, color: "white", fontSize: "0.875 margin-toprem", fontWeight: "bold" }}>
-              {/*<SignInButton />*/}
-            </Box>
-          )}
+            {isLoaded && !isSignedIn && (
+              <SignInButton>
+                <Button variant="contained" color="primary" size="small" sx={{ textTransform: "none", fontWeight: "bold" }}>
+                  {msg.SIGN_IN_TITLE}
+                </Button>
+              </SignInButton>
+            )}
 
-          {isLoaded && isSignedIn && (
-            <Box sx={{ height: "fit-content", ml: 2 }}>
-              <CustomUserButton />
-            </Box>
-          )}
-        </Box>
-      </Toolbar>
+            {isLoaded && isSignedIn && (
+              <Box sx={{ height: "fit-content" }}>
+                <CustomUserButton />
+              </Box>
+            )}
+          </Box>
+        </Toolbar>
+      </AppBar>
+      <Toolbar />
+      <Box sx={{ height: "4px" }} />
     </>
   )
 }
