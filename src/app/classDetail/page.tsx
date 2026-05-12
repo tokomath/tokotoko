@@ -198,7 +198,7 @@ function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTe
                 <Chip 
                   label={msg.UNPUBLISHED} 
                   size="small" 
-                  sx={{ height: "20px", fontSize: "0.75rem", bgcolor: "#9e9e9e", color: "white" }} 
+                  sx={{ height: "20px", fontSize: "0.75rem", color:"default"}} 
                 />
               )}
             </Box>
@@ -311,7 +311,7 @@ function ClassDetailContent() {
 
             return (
               <Accordion key={node.id} disableGutters elevation={0} sx={{ border: '1px solid', borderColor: 'divider', mb: 1, '&:before': { display: 'none' } }}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: 'grey.50', minHeight: 48, '& .MuiAccordionSummary-content': { my: 1 } }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: 'background.default', minHeight: 48, '& .MuiAccordionSummary-content': { my: 1 } }}>
                   <Box display="flex" alignItems="center" gap={2}>
                     <FolderIcon sx={{ color: node.color || 'primary.main' }} />
                     <Typography fontWeight="bold">{node.name}</Typography>
@@ -373,7 +373,7 @@ function ClassDetailContent() {
                 </Avatar>
                 <Box flex={1}>
                   <Typography variant="h4" gutterBottom>{classData.name}</Typography>
-                  <Box display="flex" alignItems="center" bgcolor="#f5f5f5" px={2} py={0.5} borderRadius={1} width="fit-content">
+                  <Box display="flex" alignItems="center" bgcolor="background.default" px={2} py={0.5} borderRadius={1} width="fit-content">
                     <Typography variant="body2" color="textSecondary" mr={1}>{msg.CLASS_ID}: {classData.id}</Typography>
                     <IconButton size="small" onClick={() => copyToClipboard(classData.id)}><ContentCopy fontSize="small" /></IconButton>
                   </Box>
@@ -390,7 +390,7 @@ function ClassDetailContent() {
                   </Paper>
                   <Box flex={1} width="100%">
                     <Typography variant="caption" color="textSecondary" gutterBottom>{msg.INVITATION_URL}</Typography>
-                    <Box display="flex" alignItems="center" gap={1} bgcolor="#f5f5f5" p={1} borderRadius={1}>
+                    <Box display="flex" alignItems="center" gap={1} bgcolor="background.default" p={1} borderRadius={1}>
                       <Typography variant="body2" sx={{ wordBreak: "break-all" }}>{joinUrl}</Typography>
                       <IconButton onClick={() => copyToClipboard(joinUrl)}><ContentCopy fontSize="small" /></IconButton>
                     </Box>

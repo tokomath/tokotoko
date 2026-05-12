@@ -446,7 +446,7 @@ export function TestCards({ testData, isClassDetail = false }: props) {
 
                         return (
                             <Accordion key={node.id} disableGutters elevation={0} sx={{ border: '1px solid', borderColor: 'divider', mb: 1, '&:before': { display: 'none' } }}>
-                                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: 'grey.50' }}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: 'background.default' }}>
                                     <Box display="flex" alignItems="center" gap={2}>
                                         <FolderIcon sx={{ color: node.color || 'primary.main' }} />
                                         <Typography fontWeight="bold">{node.name}</Typography>
@@ -554,7 +554,7 @@ export function TestCards({ testData, isClassDetail = false }: props) {
                                     className="draggable-item" data-id={node.id}
                                     draggable onDragStart={(e) => handleDragStart(e, node.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnFolder(e, node.id)} onContextMenu={(e) => handleFolderContextMenu(e, node.id)} onMouseDown={(e) => e.stopPropagation()} 
                                     onClickCapture={(e) => handleItemClickCapture(e, node.id)}
-                                    sx={{ display: 'flex', height: '100%', cursor: 'grab', bgcolor: 'grey.50', '&:hover': { bgcolor: 'grey.100' }, '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px' }) }}
+                                    sx={{ display: 'flex', height: '100%', cursor: 'grab', '&:hover': { bgcolor: 'action.hover' }, '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: '-2px' }) }}
                                 >
                                     <Box sx={{ width: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                         <Checkbox
@@ -589,9 +589,9 @@ export function TestCards({ testData, isClassDetail = false }: props) {
                                     className="draggable-item" data-id={node.id}
                                     draggable onDragStart={(e) => handleDragStart(e, node.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnItem(e, node.id)} onMouseDown={(e) => e.stopPropagation()} 
                                     onClickCapture={(e) => handleItemClickCapture(e, node.id)}
-                                    sx={{ display: 'flex', height: '100%', cursor: 'grab', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px' }) }}
+                                    sx={{ display: 'flex', height: '100%', cursor: 'grab', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid', outlineOffset: '-2px' }) }}
                                 >
-                                    <Box sx={{ width: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, bgcolor: 'grey.50' }}>
+                                    <Box sx={{ width: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}>
                                         <Checkbox
                                             className="select-checkbox"
                                             checked={isSelected}
@@ -624,7 +624,7 @@ export function TestCards({ testData, isClassDetail = false }: props) {
                                 <Typography variant="h6">{layout.find(n => n.id === openFolderId)?.name}</Typography>
                             </Box>
                         </DialogTitle>
-                        <DialogContent dividers sx={{ minHeight: '30vh', bgcolor: 'grey.50' }}>
+                        <DialogContent dividers sx={{ minHeight: '30vh', bgcolor: 'background.default' }}>
                             <Grid container spacing={2}>
                                 {layout.filter(n => n.parentId === openFolderId).sort((a, b) => a.order - b.order).map(child => {
                                     if (!currentTestIds.has(child.id)) return null;
@@ -638,9 +638,9 @@ export function TestCards({ testData, isClassDetail = false }: props) {
                                                 className="draggable-item" data-id={child.id}
                                                 draggable onDragStart={(e) => handleDragStart(e, child.id)} onDragOver={handleDragOver} onDrop={(e) => handleDropOnItem(e, child.id)} onMouseDown={(e) => e.stopPropagation()} 
                                                 onClickCapture={(e) => handleItemClickCapture(e, child.id)}
-                                                sx={{ display: 'flex', height: '100%', cursor: 'grab', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid #1976d2', outlineOffset: '-2px' }) }}
+                                                sx={{ display: 'flex', height: '100%', cursor: 'grab', '&:hover .select-checkbox': { opacity: 1 }, ...(isSelected && { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: '-2px' }) }}
                                             >
-                                                <Box sx={{ width: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, bgcolor: 'grey.50' }}>
+                                                <Box sx={{ width: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}>
                                                     <Checkbox
                                                         className="select-checkbox"
                                                         checked={isSelected}

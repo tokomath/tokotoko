@@ -196,7 +196,7 @@ function ClassEditForm() {
                       sx={{
                         width: 128,
                         height: 128,
-                        bgcolor: !icon && className ? stringToBrightColor(className) : "#e0e0e0",
+                        bgcolor: !icon && className ? stringToBrightColor(className) : "background.default",
                         fontSize: "3rem",
                       }}
                       variant="rounded"
@@ -237,7 +237,7 @@ function ClassEditForm() {
                       </Button>
 
                       {isEditMode && classId && (
-                        <Box display="flex" alignItems="center" bgcolor="#f5f5f5" px={2} py={0.5} borderRadius={1}>
+                        <Box display="flex" alignItems="center" bgcolor="background.paper" px={2} py={0.5} borderRadius={1}>
                           <Typography variant="body2" color="textSecondary" mr={1}>
                             {msg.CLASS_ID}: {classId}
                           </Typography>
@@ -266,7 +266,7 @@ function ClassEditForm() {
                       <Typography variant="caption" color="textSecondary" gutterBottom>
                         {msg.INVITATION_URL}
                       </Typography>
-                      <Box display="flex" alignItems="center" gap={1} bgcolor="#f5f5f5" p={1} borderRadius={1}>
+                      <Box display="flex" alignItems="center" gap={1} bgcolor="background.paper" p={1} borderRadius={1}>
                         <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
                           {joinUrl}
                         </Typography>

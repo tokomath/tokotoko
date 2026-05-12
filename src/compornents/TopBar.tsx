@@ -8,8 +8,10 @@ import Image from "next/image";
 import { useUser, SignInButton } from '@clerk/nextjs';
 import CustomUserButton from "./CustomUserButton";
 
-import logoImg from "@/app/logo.png"; 
-import {msg} from "@/msg-ja"
+import logoLight from "@/app/logo_light.png";
+import logoDark from "@/app/logo_dark.png";
+
+import { msg } from "@/msg-ja"
 
 interface QuestionProps {
   page_name?: string;
@@ -18,7 +20,7 @@ interface QuestionProps {
 export default function TopBar({ page_name = "" }: QuestionProps) {
   const { user, isSignedIn, isLoaded } = useUser();
   const router = useRouter();
-  const theme = useTheme(); 
+  const theme = useTheme();
 
   const titleEvent = () => {
     router.push("/");
@@ -28,26 +30,26 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
   if (isSignedIn && user) {
     name = `${user.lastName || ""} ${user.firstName || ""}`.trim();
   }
-
+  const logoImg = theme.palette.mode === 'dark' ? logoDark : logoLight;
   return (
     <>
-      <AppBar 
-        position="fixed" 
-        color="inherit" 
-        elevation={2} 
-        sx={{ 
-          bgcolor: "white", 
-          color: "text.primary", 
+      <AppBar
+        position="fixed"
+        color="inherit"
+        elevation={2}
+        sx={{
+          bgcolor: "background.paper",
+          color: "text.primary",
           borderBottom: "4px solid",
           borderColor: "primary.main",
-          zIndex: theme.zIndex.appBar, 
+          zIndex: theme.zIndex.appBar,
         }}
       >
-        <Toolbar sx={{ 
-          display: "flex", 
-          flexDirection: "row", 
-          flexWrap: "nowrap", 
-          alignItems: "center", 
+        <Toolbar sx={{
+          display: "flex",
+          flexDirection: "row",
+          flexWrap: "nowrap",
+          alignItems: "center",
           justifyContent: "space-between",
           padding: { xs: "0 8px", sm: "0 16px" },
         }}>
@@ -58,14 +60,14 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
               sx={{
                 padding: 0,
                 minWidth: "auto",
-                ml: { xs: 0, sm: 1 }, 
+                ml: { xs: 0, sm: 1 },
               }}
             >
               <Image
                 src={logoImg}
                 alt="Formula Form Logo"
-                width={150} 
-                height={40} 
+                width={150}
+                height={40}
                 style={{ objectFit: "contain" }}
                 priority
               />
@@ -73,9 +75,9 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
           </Box>
 
           <Box width="calc(100%/3)" sx={{ textAlign: "center" }}>
-            <Typography variant="h4" sx={{ 
-              fontSize: { xs: "1.25rem", sm: "1.75rem" }, 
-              fontWeight: "bold", 
+            <Typography variant="h4" sx={{
+              fontSize: { xs: "1.25rem", sm: "1.75rem" },
+              fontWeight: "bold",
               color: "primary.main",
             }}>
               {page_name}
@@ -83,11 +85,11 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
           </Box>
 
           <Box width="calc(100%/3)" sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 1.5 }}>
-            <Typography sx={{ 
-              display: "flex", 
-              alignItems: "center", 
-              color: "text.secondary", 
-              fontSize: { xs: "0.75rem", sm: "0.875rem" }, 
+            <Typography sx={{
+              display: "flex",
+              alignItems: "center",
+              color: "text.secondary",
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
             }}>
               {name}
             </Typography>
@@ -108,8 +110,8 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
           </Box>
         </Toolbar>
       </AppBar>
-      <Toolbar/>
-      <Box sx={{ height: "4px" }}/> 
+      <Toolbar />
+      <Box sx={{ height: "4px" }} />
     </>
   )
 }
