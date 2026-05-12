@@ -9,6 +9,7 @@ import { useUser, SignInButton } from '@clerk/nextjs';
 import CustomUserButton from "./CustomUserButton";
 
 import logoImg from "@/app/logo.png"; 
+import {msg} from "@/msg-ja"
 
 interface QuestionProps {
   page_name?: string;
@@ -94,7 +95,7 @@ export default function TopBar({ page_name = "" }: QuestionProps) {
             {isLoaded && !isSignedIn && (
               <SignInButton>
                 <Button variant="contained" color="primary" size="small" sx={{ textTransform: "none", fontWeight: "bold" }}>
-                  Sign In
+                  {msg.SIGN_IN_TITLE}
                 </Button>
               </SignInButton>
             )}
