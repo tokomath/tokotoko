@@ -616,6 +616,6 @@ const dicts = {
 };
 
 export const useMsg = () => {
-    const lang = useContext(LangContext);
+    const { lang } = useContext(LangContext);
     return dicts[lang] || dicts.ja;
 };
