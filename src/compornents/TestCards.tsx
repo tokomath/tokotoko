@@ -72,10 +72,10 @@ const DeleteTestButton = ({ testId, testTitle, onSuccess }: DeleteTestButtonProp
                 {msg.DELETE_ACTION}
             </Button>
             <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>テストの削除</DialogTitle>
+                <DialogTitle>{msg.DELETE_TEST}</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        「{testTitle}」を削除してもよろしいですか？この操作は取り消せません。
+                        "{testTitle}" {msg.WILL_BE_DELETED}
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

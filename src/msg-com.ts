@@ -304,6 +304,8 @@ export const jaDict = {
     "FORMATED_TEX": "フォーマットされたTeX",
     "ITEMS": "アイテム",
     "SHOW_QUESTION": "問題を表示",
+    "DELETE_TEST" : "テストを削除",
+    "WILL_BE_DELETED": "を削除してもよろしいですか？この操作は取り消せません。",
 };
 
 export const enDict = {
@@ -492,7 +494,7 @@ export const enDict = {
     "ATTACHMENT_PREVIEW": "Attachment Preview",
     "ENTER_ANSWER": "Enter Answer",
     "ANSWER_KEY": "Answer Key",
-    "ANSWER_FORMULA_LABEL": "Correct Answer (LaTeX)",
+    "ANSWER_FORMULA_LABEL": "Correct Answer",
     "ANSWER_PLACEHOLDER": "Example: x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}",
 
     "CONFIRM_DELETE_SUBMISSIONS_TITLE": "Confirm Deletion of Submissions",
@@ -607,7 +609,9 @@ export const enDict = {
     "EXECUTE": "Execute",
     "FORMATED_TEX": "Formatted TeX",
     "ITEMS": "Items",
-    "SHOW_QUESTION": "Show Question"
+    "SHOW_QUESTION": "Show Question",
+    "DELETE_TEST" : "Delete Test",
+    "WILL_BE_DELETED": "will be deleted. This action cannot be undone.",
 };
 
 const dicts = {

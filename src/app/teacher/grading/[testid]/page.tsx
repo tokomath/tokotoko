@@ -732,7 +732,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       <Dialog open={texDialogOpen} onClose={handleCloseTexDialog} maxWidth="sm" fullWidth>
         <DialogTitle>{msg.RAW_TEX}</DialogTitle>
         <DialogContent dividers>
-          <Box sx={{ p: 2, bgcolor: 'grey.100', borderRadius: 1, overflowX: 'auto' }}>
+          <Box sx={{ p: 2, bgcolor: "paper", borderRadius: 1, overflowX: 'auto' }}>
             <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
               {currentTexContent}
             </pre>
