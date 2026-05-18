@@ -14,7 +14,7 @@ import { useUser } from '@clerk/nextjs';
 import { getSubmission } from "@/app/api/test/result";
 import InsertFrame from "@/compornents/InsertFrame";
 import LaTeXViewer from "@/compornents/LaTeXViewer";
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 import { useRouter } from "next/navigation";
 
 interface TabPanelProps {

@@ -10,7 +10,7 @@ import { joinUserToClass } from "../api/class/addUserToClass";
 import { getClassByClassId } from "../api/class/getClass";
 import { Class } from "@prisma/client"
 
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 
 

@@ -46,7 +46,7 @@ import {
   ExpandMore as ExpandMoreIcon
 } from "@mui/icons-material";
 import { useSearchParams, useRouter } from "next/navigation";
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 type UserWithImage = User & { image?: string };
 type ClassWithUsers = Class & { users: UserWithImage[] };

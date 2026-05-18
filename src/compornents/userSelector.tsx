@@ -8,7 +8,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { getUsersFromQuery } from "@/app/api/User/getUsersFromQuery";
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 interface UserSelectorProps {
   role: number;

@@ -39,7 +39,7 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 import { ColorModeContext } from "@/app/ThemeProvider";
 
 interface Props {

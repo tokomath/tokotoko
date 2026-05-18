@@ -37,7 +37,7 @@ import { useRouter } from "next/navigation";
 import { Test } from "@prisma/client";
 import { removeTest } from "@/app/api/test/removeTest";
 
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 interface DeleteTestButtonProps {
     testId: number;

@@ -11,7 +11,7 @@ import CustomUserButton from "./CustomUserButton";
 import logoLight from "@/app/logo_light.png";
 import logoDark from "@/app/logo_dark.png";
 
-import { msg } from "@/msg-ja"
+import { msg } from "@/msg-com"
 
 interface QuestionProps {
   page_name?: string;

@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from '@clerk/nextjs';
 import { TeacherGuard } from "@/lib/guard";
 import judge, { format } from "@/lib/judge";
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 import LaTeXViewer from "@/compornents/LaTeXViewer";
 import styles from "./styles.module.css";

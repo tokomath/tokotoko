@@ -32,7 +32,7 @@ import {
 import { Clear, Upload, ContentCopy } from "@mui/icons-material";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TeacherGuard } from "@/lib/guard";
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 const stringToBrightColor = (str: string) => {
   let hash = 0;

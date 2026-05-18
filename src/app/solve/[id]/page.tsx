@@ -21,7 +21,7 @@ import { Answer } from "@prisma/client";
 import { useUser } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 import LaTeXViewer from "@/compornents/LaTeXViewer";
 
 const EXPIRATION_TIME = 30 * 24 * 60 * 60 * 1000;

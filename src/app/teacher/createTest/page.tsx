@@ -62,7 +62,7 @@ import InsertFrame from "@/compornents/InsertFrame";
 import LaTeXViewer from "@/compornents/LaTeXViewer";
 import { TeacherGuard } from "@/lib/guard"
 
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 const insert_options = ["None", "Image", "HTML"];
 

@@ -8,7 +8,7 @@ import { red } from "@mui/material/colors";
 
 import InsertFrame from "@/compornents/InsertFrame"
 import LaTeXViewer from "@/compornents/LaTeXViewer";
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 interface QuestionProps {
   id: string;

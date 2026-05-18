@@ -2,7 +2,7 @@ import { Tab, Tabs, Box, Card, CardContent, Typography, CardActionArea, Grid } f
 import dayjs from "dayjs";
 import { Test, Class } from "@prisma/client";
 
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 interface TestInterface {
   test: Test;

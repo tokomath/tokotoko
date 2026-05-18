@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { Test, User, Class } from "@prisma/client";
 import { getTestsByUserId } from "@/app/api/test/getTestsByUserId";
 import { getClassByUserId } from "@/app/api/class/getClass";
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;

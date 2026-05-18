@@ -29,7 +29,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { StudentTestCard } from "@/compornents/StudentTestCard";
 
-import { msg } from "@/msg-ja";
+import { msg } from "@/msg-com";
 
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;
