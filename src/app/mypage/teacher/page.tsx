@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { Test, User, Class } from "@prisma/client";
 import { getTestsByUserId } from "@/app/api/test/getTestsByUserId";
 import { getClassByUserId } from "@/app/api/class/getClass";
-import { msg } from "@/msg-ja";
+import { useMsg } from "@/msg-com";
 
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;
@@ -33,6 +33,7 @@ interface TabPanelProps {
 }
 
 function TabPanel({ children, value, index, ...other }: TabPanelProps) {
+  const msg = useMsg();
     return (
         <div
             role="tabpanel"
@@ -51,6 +52,7 @@ function TabPanel({ children, value, index, ...other }: TabPanelProps) {
 }
 
 function a11yProps(index: number) {
+  const msg = useMsg();
     return {
         id: `vertical-tab-${index}`,
         "aria-controls": `vertical-tabpanel-${index}`,
@@ -58,6 +60,7 @@ function a11yProps(index: number) {
 }
 
 export default function MyPage() {
+  const msg = useMsg();
     const { isLoaded, isSignedIn, user } = useUser();
     const [value, setValue] = useState(0);
     const handleChange = (_: React.SyntheticEvent, newValue: number) => setValue(newValue);

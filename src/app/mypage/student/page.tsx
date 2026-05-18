@@ -29,7 +29,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { StudentTestCard } from "@/compornents/StudentTestCard";
 
-import { msg } from "@/msg-ja";
+import { useMsg } from "@/msg-com";
 
 const TAB_WIDTH = 100;
 const HEADER_HEIGHT = 64;
@@ -61,6 +61,7 @@ interface TabPanelProps {
 }
 
 function TabPanel({ children, value, index, ...other }: TabPanelProps) {
+  const msg = useMsg();
   return (
     <div
       role="tabpanel"
@@ -83,6 +84,7 @@ const a11yProps = (i: number) => ({
 });
 
 export default function Mypage() {
+  const msg = useMsg();
   const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser();
 
@@ -95,6 +97,7 @@ interface ClassCardProp {
   classData: ClassWithTests;
 }
 function ClassCard({ classData }: ClassCardProp) {
+  const msg = useMsg();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const router = useRouter();
@@ -191,6 +194,7 @@ function ClassCard({ classData }: ClassCardProp) {
 }
 
 const Page = () => {
+  const msg = useMsg();
   const [tab, setTab] = useState(0);
 
   const [tests, setTests] = useState<TestWithSubmitStatus[]>([]);

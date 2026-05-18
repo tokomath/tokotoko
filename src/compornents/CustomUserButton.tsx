@@ -16,9 +16,10 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import LogoutIcon from '@mui/icons-material/Logout';
 
 import CustomProfileDialog from './CustomProfileDialog';
-import { msg } from "@/msg-ja";
+import { useMsg } from "@/msg-com";
 
 export default function CustomUserButton() {
+  const msg = useMsg();
   const { user } = useUser();
   const { signOut } = useClerk();
 

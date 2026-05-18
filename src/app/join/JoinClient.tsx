@@ -10,11 +10,12 @@ import { joinUserToClass } from "../api/class/addUserToClass";
 import { getClassByClassId } from "../api/class/getClass";
 import { Class } from "@prisma/client"
 
-import { msg } from "@/msg-ja";
+import { useMsg } from "@/msg-com";
 
 
 
-export default function JoinClient() { 
+export default function JoinClient() {
+  const msg = useMsg(); 
     const { user } = useUser();
     const router = useRouter();
     const searchParams = useSearchParams();
