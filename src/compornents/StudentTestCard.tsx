@@ -2,7 +2,7 @@ import { Tab, Tabs, Box, Card, CardContent, Typography, CardActionArea, Grid } f
 import dayjs from "dayjs";
 import { Test, Class } from "@prisma/client";
 
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 
 interface TestInterface {
   test: Test;
@@ -14,6 +14,7 @@ interface TestWithSubmitStatus extends TestInterface {
 }
 
 export function StudentTestCard({ test }: { test: TestWithSubmitStatus }){
+  const msg = useMsg();
     const submitted = test.submitted;
 
     const nowDate = dayjs();

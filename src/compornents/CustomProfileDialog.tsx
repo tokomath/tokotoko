@@ -39,7 +39,7 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 import { ColorModeContext } from "@/app/ThemeProvider";
 
 interface Props {
@@ -48,6 +48,7 @@ interface Props {
 }
 
 export default function CustomProfileDialog({ open, onClose }: Props) {
+  const msg = useMsg();
   const { user } = useUser();
   const { session: currentSession, isLoaded: isSessionLoaded } = useSession();
   

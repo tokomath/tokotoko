@@ -46,7 +46,7 @@ import {
   ExpandMore as ExpandMoreIcon
 } from "@mui/icons-material";
 import { useSearchParams, useRouter } from "next/navigation";
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 
 type UserWithImage = User & { image?: string };
 type ClassWithUsers = Class & { users: UserWithImage[] };
@@ -70,6 +70,7 @@ type LayoutNode = {
 };
 
 function MemberItem({ user }: { user: UserWithImage }) {
+  const msg = useMsg();
   return (
     <ListItem>
       <ListItemAvatar>
@@ -105,6 +106,7 @@ function MemberItem({ user }: { user: UserWithImage }) {
 }
 
 function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTeacher: boolean; classStudents: UserWithImage[]; userId: string }) {
+  const msg = useMsg();
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -231,6 +233,7 @@ function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTe
 }
 
 function ClassDetailContent() {
+  const msg = useMsg();
   const searchParams = useSearchParams();
   const classId = searchParams.get("classId");
   const { user: clerkUser, isLoaded: isUserLoaded } = useUser();
@@ -452,6 +455,7 @@ function ClassDetailContent() {
 }
 
 export default function ClassDetailPage() {
+  const msg = useMsg();
   return (
     <Suspense fallback={<div>{msg.LOADING}</div>}>
       <ClassDetailContent />

@@ -16,9 +16,10 @@ import {
   CircularProgress
 } from '@mui/material';
 
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 
 export default function SignInPage() {
+  const msg = useMsg();
   const { signIn } = useSignIn();
   const router = useRouter();
 

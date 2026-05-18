@@ -37,7 +37,7 @@ import { useRouter } from "next/navigation";
 import { Test } from "@prisma/client";
 import { removeTest } from "@/app/api/test/removeTest";
 
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 
 interface DeleteTestButtonProps {
     testId: number;
@@ -46,6 +46,7 @@ interface DeleteTestButtonProps {
 }
 
 const DeleteTestButton = ({ testId, testTitle, onSuccess }: DeleteTestButtonProps) => {
+  const msg = useMsg();
     const [open, setOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -94,6 +95,7 @@ interface props {
 }
 
 const TestCardItem = ({ testData, onDeleted }: { testData: Test, onDeleted: (id: number) => void }) => {
+    const msg = useMsg();
     const router = useRouter();
     const solveButtonFunction = () => router.push("/solve/" + testData.id);
     const gradingTestButtonFunction = () => router.push("/teacher/grading/" + testData.id);
@@ -143,6 +145,7 @@ type LayoutNode = {
 };
 
 export function TestCards({ testData, isClassDetail = false }: props) {
+    const msg = useMsg();
     const [tests, setTests] = useState<Test[]>(testData);
     const [layout, setLayout] = useState<LayoutNode[]>([]);
     const [isClient, setIsClient] = useState(false);

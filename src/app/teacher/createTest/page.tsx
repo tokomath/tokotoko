@@ -62,11 +62,12 @@ import InsertFrame from "@/compornents/InsertFrame";
 import LaTeXViewer from "@/compornents/LaTeXViewer";
 import { TeacherGuard } from "@/lib/guard"
 
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 
 const insert_options = ["None", "Image", "HTML"];
 
 function ClientSearchParamWrapper() {
+  const msg = useMsg();
   const searchParams = useSearchParams();
   const router = useRouter();
   const param_classId = searchParams.get("classId");
@@ -493,6 +494,7 @@ const MetaDataPage = ({
   handleClassChange,
   classList,
 }: any) => {
+  const msg = useMsg();
   const dateWarning = () => {
     if (startDate.isBefore(dayjs())) {
       return <Alert severity="warning">{msg.WARNING_START_DATE_PAST}</Alert>;
@@ -500,6 +502,7 @@ const MetaDataPage = ({
   };
 
   const ClassAssign = () => {
+  const msg = useMsg();
     return (
       <FormControl fullWidth>
         <InputLabel id={"ClassAssign"}>{msg.TARGET_CLASS}</InputLabel>
@@ -618,6 +621,7 @@ const MetaDataPage = ({
 };
 
 const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
+  const msg = useMsg();
   const addQuestion = () => {
     const dummyId = -Math.floor(Math.random() * 1000000);
     const question: Question = {
@@ -834,6 +838,7 @@ const QuestionPage = ({
   setQuestion,
   deleteQuestion,
 }: any) => {
+  const msg = useMsg();
   const setAns = (newAns: string) => {
     setQuestion({ ...question, answer: newAns });
   };
@@ -1060,6 +1065,7 @@ const QuestionPage = ({
 };
 
 export default function Page() {
+  const msg = useMsg();
   return (
     <TeacherGuard>
       <Suspense fallback={<div>{msg.LOADING || "Loading..."}</div>}>

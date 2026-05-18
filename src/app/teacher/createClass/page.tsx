@@ -32,7 +32,7 @@ import {
 import { Clear, Upload, ContentCopy } from "@mui/icons-material";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TeacherGuard } from "@/lib/guard";
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 
 const stringToBrightColor = (str: string) => {
   let hash = 0;
@@ -44,6 +44,7 @@ const stringToBrightColor = (str: string) => {
 };
 
 function ClassEditForm() {
+  const msg = useMsg();
   const [teachers, setTeachers] = useState<User[]>([]);
   const [students, setStudents] = useState<User[]>([]);
   const [className, setClassName] = useState<string>("");
@@ -384,6 +385,7 @@ function ClassEditForm() {
 }
 
 export default function DualRoleUserSelectors() {
+  const msg = useMsg();
   return (
     <Suspense fallback={<div>{msg.LOADING}</div>}>
       <ClassEditForm />

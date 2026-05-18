@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { msg } from "@/msg-com"
+import { jaDict } from "@/msg-com";
 export const metadata: Metadata = {
-  title: msg.APP_NAME,
+  title: jaDict.APP_NAME,
   description: "Numazu Mathematics Assignment Submission and Communication Hub",
 };

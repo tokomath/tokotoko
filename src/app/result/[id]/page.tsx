@@ -14,7 +14,7 @@ import { useUser } from '@clerk/nextjs';
 import { getSubmission } from "@/app/api/test/result";
 import InsertFrame from "@/compornents/InsertFrame";
 import LaTeXViewer from "@/compornents/LaTeXViewer";
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 import { useRouter } from "next/navigation";
 
 interface TabPanelProps {
@@ -46,6 +46,7 @@ function a11yProps(index: number) {
 }
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
+  const msg = useMsg();
   const { user, isSignedIn, isLoaded } = useUser();
   const testId = use(params).id;
 
@@ -61,6 +62,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 }
 
 function Result({ id, userid }: { id: string, userid: string }) {
+  const msg = useMsg();
   const [data, setData] = useState<any | null | undefined>(undefined);
   const [partIndex, setPartIndex] = useState(0);
   const [point, setPoint] = useState(0);
@@ -297,6 +299,7 @@ function Previous({
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
 }) {
+  const msg = useMsg();
   if (index === 0) {
     return <div></div>;
   }
@@ -312,6 +315,7 @@ function Next({
   setIndex: React.Dispatch<React.SetStateAction<number>>;
   maxIndex: number;
 }) {
+  const msg = useMsg();
   if (index === maxIndex - 1) {
     return <></>;
   }
@@ -328,6 +332,7 @@ function Next({
 }
 
 function Question({ id, number, question, insertType, insertContent, myAns, trueAns, point, allocationPoint }: any) {
+  const msg = useMsg();
   return (
     <Stack spacing={2}>
       <Box display="flex" alignItems="center">

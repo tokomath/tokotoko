@@ -8,7 +8,7 @@ import { red } from "@mui/material/colors";
 
 import InsertFrame from "@/compornents/InsertFrame"
 import LaTeXViewer from "@/compornents/LaTeXViewer";
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 
 interface QuestionProps {
   id: string;
@@ -21,6 +21,7 @@ interface QuestionProps {
 }
 
 export default function Question({ id, number, question, answer, insertType, insertContent, changeAnswer }: QuestionProps) {
+  const msg = useMsg();
   const inputRef = React.useRef<HTMLInputElement>();
 
   const [selectionStart, setSelectionStart] = React.useState(0);
@@ -79,6 +80,7 @@ export default function Question({ id, number, question, answer, insertType, ins
   }
 
   const AnswerBox = () => {
+  const msg = useMsg();
     if (answer) {
       return (
         <LaTeXViewer>{answer}</LaTeXViewer>

@@ -8,7 +8,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { getUsersFromQuery } from "@/app/api/User/getUsersFromQuery";
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 
 interface UserSelectorProps {
   role: number;
@@ -17,6 +17,7 @@ interface UserSelectorProps {
 }
 
 export function UserSelector({ role, onAddUser, excludeUsers }: UserSelectorProps) {
+  const msg = useMsg();
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [inputValue, setInputValue] = useState('');

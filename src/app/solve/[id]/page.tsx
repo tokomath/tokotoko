@@ -21,7 +21,7 @@ import { Answer } from "@prisma/client";
 import { useUser } from '@clerk/nextjs'
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 import LaTeXViewer from "@/compornents/LaTeXViewer";
 
 const EXPIRATION_TIME = 30 * 24 * 60 * 60 * 1000;
@@ -55,6 +55,7 @@ function a11yProps(index: number) {
 }
 
 export default function Page({ params }: { params: Promise<{ id: number }> }) {
+  const msg = useMsg();
   const searchParams = useSearchParams();
   const isResubmitMode = searchParams.get("resubmit") === "true";
 
@@ -159,6 +160,7 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
 }
 
 function Completed({ id, submitDate, endDate }: { id: string, submitDate: Date | null, endDate: Date | null }) {
+  const msg = useMsg();
   let url = "/result/" + id;
   let statusDisplay = null;
 
@@ -221,7 +223,7 @@ function Solve(
   const [sendingStatus, setSendingStatus] = useState(false);
   const [isBeforeStart, setIsBeforeStart] = useState(false);
   const router = useRouter();
-
+  const msg = useMsg();
   useEffect(() => {
     const fetchForm = async () => {
       const res = await getTestById(Number(id), (user != null && user != undefined) ? user.id : "");
@@ -531,6 +533,7 @@ function Previous({
   index: number;
   setIndex: React.Dispatch<React.SetStateAction<number>>;
 }) {
+  const msg = useMsg();
   if (index === 0) {
     return <div></div>;
   }
@@ -550,6 +553,7 @@ function Next({
   handleSubmit: () => void;
   sendingStatus: boolean;
 }) {
+  const msg = useMsg();
   if (index === maxIndex - 1 && !sendingStatus) {
     return (
       <Button variant="contained" endIcon={<SendIcon />} onClick={handleSubmit}>

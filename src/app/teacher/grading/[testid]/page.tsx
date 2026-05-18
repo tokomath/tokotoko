@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from '@clerk/nextjs';
 import { TeacherGuard } from "@/lib/guard";
 import judge, { format } from "@/lib/judge";
-import { msg } from "@/msg-com";
+import { useMsg } from "@/msg-com";
 
 import LaTeXViewer from "@/compornents/LaTeXViewer";
 import styles from "./styles.module.css";
@@ -42,6 +42,7 @@ interface TabPanelProps {
 }
 
 function CustomTabPanel(props: TabPanelProps) {
+  const msg = useMsg();
   const { children, value, index, ...other } = props;
 
   return (
@@ -58,6 +59,7 @@ function CustomTabPanel(props: TabPanelProps) {
 }
 
 function a11yProps(index0: number) {
+  const msg = useMsg();
   return {
     id: `simple-tab-${index0}`,
     'aria-controls': `simple-tabpanel-${index0}`,
@@ -71,6 +73,7 @@ interface SectionTabProps {
 }
 
 function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTabProps) {
+  const msg = useMsg();
   return (
     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
       <Tabs value={sectionValue} onChange={sectionHandleChange} aria-label="section tabs" variant="fullWidth">
@@ -124,6 +127,7 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
 });
 
 const UngradedCountCell = React.memo(function UngradedCountCell({ ungraded_count }: { ungraded_count: number }) {
+  const msg = useMsg();
   return (
     <TableCell sx={{ textAlign: "center" }} className={styles.point_cell + " " + ((ungraded_count === 0) ? styles.ungraded_false : styles.ungraded_true)}>
       {ungraded_count}
@@ -153,6 +157,7 @@ function generateCursor(): string {
 }
 
 export default function GradingPage({ params }: { params: Promise<{ testid: number }> }) {
+  const msg = useMsg();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isSignedIn } = useUser();
