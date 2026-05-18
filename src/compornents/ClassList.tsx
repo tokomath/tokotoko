@@ -406,7 +406,7 @@ sx={{ display: 'flex', height: '100%', cursor: 'grab', bgcolor: 'background.pape
                                                     {node.name}
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    {children.length}  {msg.CLASS}
+                                                    {children.length}  {msg.ITEMS}
                                                 </Typography>
                                             </CardActionArea>
                                         </Box>
