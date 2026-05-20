@@ -85,9 +85,10 @@ function Result({ id, userid }: { id: string, userid: string }) {
         res.test.sections.forEach((sec: any) => {
           sec.questions.forEach((q: any) => {
             q["ans"] = res.answers[i];
-            mp += q.allocationPoint ?? 1;
+            const alloc = q.allocationPoint ?? 1;
+            mp += alloc;
             if (res.answers[i].point >= 0) {
-              p += res.answers[i].point;
+              p += res.answers[i].point * alloc;
             } else {
               misaiten = true;
             }
@@ -216,7 +217,7 @@ function Result({ id, userid }: { id: string, userid: string }) {
                   </Typography>
                 ) : (
                   <Typography variant="h6" color="primary.main" fontWeight="bold">
-                    {msg.SCORE}: {point} / {totalMaxPoint} {msg.POINTS}
+                    {msg.SCORE}: {Number.isInteger(point) ? point : point.toFixed(1)} / {totalMaxPoint} {msg.POINTS}
                   </Typography>
                 )}
                 {statusDisplay}
@@ -264,7 +265,7 @@ function Result({ id, userid }: { id: string, userid: string }) {
                       insertType={question.insertType}
                       insertContent={question.insertContent}
                       trueAns={question.answer}
-                      point={question.ans.point}
+                      point={question.ans.point === -1 ? -1 : question.ans.point * (question.allocationPoint ?? 1)} // 評価ランク * 配点
                       allocationPoint={question.allocationPoint}
                     />
                   </React.Fragment>
@@ -365,7 +366,7 @@ function Question({ id, number, question, insertType, insertContent, myAns, true
       {point === -1 ? (
         <div>{msg.NOT_GRADED}</div>
       ) : (
-        <div>{msg.SCORE}: {point} {msg.POINTS}</div>
+        <div>{msg.SCORE}: {Number.isInteger(point) ? point : point.toFixed(1)} {msg.POINTS}</div>
       )}
     </Stack>
   );

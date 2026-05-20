@@ -73,7 +73,7 @@ model Answer {
   id           Int        @id @default(autoincrement())
   submissionId Int
   questionId   Int
-  point        Int
+  point        Float
   text         String
   question     Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
   submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
