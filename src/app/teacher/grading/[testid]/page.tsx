@@ -102,17 +102,15 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
   }
 
   const click_handle = () => {
-    let new_point = 0;
-    if (point === -1 || (point > 0 && point !== allocationPoint)) {
-      new_point = 0;
-    } else if (point === 0) {
-      new_point = allocationPoint;
-    } else if (point === allocationPoint) {
-      new_point = allocationPoint * 0.5;
-    } else {
-      new_point = 0;
+    let nextStatus = 0;
+    if (point === -1 || point === 0) {
+      nextStatus = 1;
+    } else if (point === 1) {
+      nextStatus = 0.5;
+    } else if (point === 0.5) {
+      nextStatus = 0;
     }
-    answerCellHandle(new_point, userIndex, questionIndex);
+    answerCellHandle(nextStatus, userIndex, questionIndex);
   }
 
   const keydown_handle = (event: React.KeyboardEvent<HTMLTableCellElement>) => {
@@ -129,7 +127,7 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
 
   return (<>
     <TableCell onClick={click_handle} onKeyDown={keydown_handle} onContextMenu={contextMenuHandle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
-      <div className={point === -1 ? styles.ungraded_cell : point === allocationPoint ? styles.correct_cell : point > 0 ? styles.partial_cell : styles.wrong_cell} ></div>
+      <div className={point === -1 ? styles.ungraded_cell : point === 1 ? styles.correct_cell : point === 0.5 ? styles.partial_cell : styles.wrong_cell} ></div>
       <div className={styles.matharea}><LaTeXViewer>{String(answer)}</LaTeXViewer></div>
     </TableCell>
   </>)
@@ -209,7 +207,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           } else {
             const result = judge(question.answer, answer.text);
             if (result === 1 || result === 2) {
-              studentPoints[qIndex] = question.allocationPoint ?? 1;
+              studentPoints[qIndex] = 1;
             } else {
               studentPoints[qIndex] = -1;
             }
@@ -392,6 +390,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     const currentClass = Test_.classes.at(classIndex);
     if (!currentClass) return [];
 
+    const allQuestions = Test_.sections.flatMap((s: any) => s.questions);
+
     return currentClass.users.map((user: User, user_index: number) => {
       const data_index = submission_index[user_index];
       if (data_index === undefined) {
@@ -408,11 +408,12 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       for (let i = 0; i < totalQuestionsCount; i++) {
         const answer = submissionAnswers[i];
         if (answer) {
-          const point = userPoints?.[i] ?? answer.point;
-          if (point === -1) {
+          const rank = userPoints?.[i] ?? answer.point;
+          if (rank === -1) {
             ungradedCount++;
           } else {
-            totalPoints += point;
+            const allocation = allQuestions[i]?.allocationPoint ?? 1;
+            totalPoints += rank * allocation;
           }
         }
       }
@@ -484,10 +485,14 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         rn += `${metrics.ungradedCount},`;
 
         if (submission) {
+          const allQuestions = Test_.sections.flatMap((s: any) => s.questions);
           for (let i = 0; i < totalQuestionsCount; i++) {
             const answer = submission.answers[i];
             if (answer) {
-              rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
+              const rank = points[data_index]?.[i] ?? answer.point;
+              const allocation = allQuestions[i]?.allocationPoint ?? 1;
+              const score = rank === -1 ? 0 : rank * allocation;
+              rn += `${format_text(answer.text)},${score},`;
             } else {
               rn += ",,";
             }
@@ -495,6 +500,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         } else {
           rn += ",".repeat(totalQuestionsCount * 2);
         }
+        
         rn = rn.slice(0, rn.length - 1) + "\n";
         exportdata_csv += rn;
       });
@@ -643,23 +649,23 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                       visibleQuestions.questions.map((question: Question, index: number) => {
                         const qNum = question.number ?? index + 1;
                         return (
-                          <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper", verticalAlign: "top", pt: 2, zIndex: 100 }}>                            
-                          <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
-                            <Typography variant="caption" color="text.secondary">
-                              [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
-                            </Typography>
-                            <IconButton
-                              size="small"
-                              onClick={() => {
-                                setCurrentQuestionContent(question.question);
-                                setCurrentQuestionTitle(`${msg.SECTION_NUMBER}${sectionValue + 1} - ${msg.QUESTION_NUMBER_PREFIX}${qNum}`);
-                                setQuestionDialogOpen(true);
-                              }}
-                              title={msg.SHOW_QUESTION || "問題を表示"}
-                            >
-                              <InfoIcon fontSize="small" color="action" />
-                            </IconButton>
-                          </Box>
+                          <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper", verticalAlign: "top", pt: 2, zIndex: 100 }}>
+                            <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
+                              <Typography variant="caption" color="text.secondary">
+                                [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setCurrentQuestionContent(question.question);
+                                  setCurrentQuestionTitle(`${msg.SECTION_NUMBER}${sectionValue + 1} - ${msg.QUESTION_NUMBER_PREFIX}${qNum}`);
+                                  setQuestionDialogOpen(true);
+                                }}
+                                title={msg.SHOW_QUESTION || "問題を表示"}
+                              >
+                                <InfoIcon fontSize="small" color="action" />
+                              </IconButton>
+                            </Box>
                             <Box onContextMenu={(e) => handleOpenTexDialog(question.answer, e)} sx={{ cursor: 'context-menu' }}>
                               <LaTeXViewer>{question.answer}</LaTeXViewer>
                             </Box>
@@ -687,7 +693,13 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                             </Box>
                           </TableCell>
                           <TableCell key={"totalPoints-" + user.id} sx={{ textAlign: "center" }} className={styles.point_cell}>
-                            {metrics.totalPoints}
+                            <Tooltip title={metrics.totalPoints} arrow>
+                              <span>
+                                {Number.isInteger(metrics.totalPoints)
+                                  ? metrics.totalPoints
+                                  : metrics.totalPoints.toFixed(1)}
+                              </span>
+                            </Tooltip>
                           </TableCell>
                           <UngradedCountCell key={"ungraded-" + user.id} ungraded_count={metrics.ungradedCount} />
                           {
