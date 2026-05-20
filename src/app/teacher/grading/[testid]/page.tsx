@@ -102,7 +102,16 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
   }
 
   const click_handle = () => {
-    const new_point = (point <= 0 ? allocationPoint : 0);
+    let new_point = 0;
+    if (point === -1 || (point > 0 && point !== allocationPoint)) {
+      new_point = 0;
+    } else if (point === 0) {
+      new_point = allocationPoint;
+    } else if (point === allocationPoint) {
+      new_point = allocationPoint * 0.5;
+    } else {
+      new_point = 0;
+    }
     answerCellHandle(new_point, userIndex, questionIndex);
   }
 
@@ -120,7 +129,7 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
 
   return (<>
     <TableCell onClick={click_handle} onKeyDown={keydown_handle} onContextMenu={contextMenuHandle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
-      <div className={((point === -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
+      <div className={point === -1 ? styles.ungraded_cell : point === allocationPoint ? styles.correct_cell : point > 0 ? styles.partial_cell : styles.wrong_cell} ></div>
       <div className={styles.matharea}><LaTeXViewer>{String(answer)}</LaTeXViewer></div>
     </TableCell>
   </>)
