@@ -103,12 +103,12 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
 
   const click_handle = () => {
     let nextStatus = 0;
-    if (point === -1 || point === 0) {
+    if (point === -1 || point === 0.5) {
+      nextStatus = 0;
+    } else if (point === 0) {
       nextStatus = 1;
     } else if (point === 1) {
       nextStatus = 0.5;
-    } else if (point === 0.5) {
-      nextStatus = 0;
     }
     answerCellHandle(nextStatus, userIndex, questionIndex);
   }
