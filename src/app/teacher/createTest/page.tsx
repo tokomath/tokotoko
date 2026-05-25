@@ -62,12 +62,12 @@ import InsertFrame from "@/compornents/InsertFrame";
 import LaTeXViewer from "@/compornents/LaTeXViewer";
 import { TeacherGuard } from "@/lib/guard"
 
-import { msg } from "@/msg-ja";
-import test from "node:test";
+import { useMsg } from "@/msg-com";
 
 const insert_options = ["None", "Image", "HTML"];
 
 function ClientSearchParamWrapper() {
+  const msg = useMsg();
   const searchParams = useSearchParams();
   const router = useRouter();
   const param_classId = searchParams.get("classId");
@@ -376,13 +376,22 @@ function ClientSearchParamWrapper() {
       </Stack>
 
       <Box sx={{ flexGrow: 1, minHeight: 0, p: 1.5, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <Paper elevation={3} sx={{ flexGrow: 1, minHeight: 0, display: 'flex', overflow: 'hidden', borderRadius: 2 }}>
-          <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", overflowY: 'auto', height: '100%' }}>
+        <Paper elevation={3} sx={{ flexGrow: 1, minHeight: 0, display: 'flex', overflow: 'hidden', borderRadius: 2, bgcolor: 'background.paper' }}>
+          <Box sx={{ width: '200px', flexShrink: 0, borderRight: 1, borderColor: "divider", overflowY: 'auto', height: '100%', bgcolor: 'background.paper' }}>
             <Tabs
               value={value}
               onChange={(_, v) => setValue(v)}
               orientation="vertical"
               variant="scrollable"
+              sx={{
+                '& .MuiTab-root.Mui-selected': {
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: 'primary.main',
+                }
+              }}
             >
               <Tab label={msg.METADATA} />
               {sections.map((_, index) => (
@@ -482,6 +491,7 @@ const MetaDataPage = ({
   handleClassChange,
   classList,
 }: any) => {
+  const msg = useMsg();
   const dateWarning = () => {
     if (startDate.isBefore(dayjs())) {
       return <Alert severity="warning">{msg.WARNING_START_DATE_PAST}</Alert>;
@@ -489,6 +499,7 @@ const MetaDataPage = ({
   };
 
   const ClassAssign = () => {
+  const msg = useMsg();
     return (
       <FormControl fullWidth>
         <InputLabel id={"ClassAssign"}>{msg.TARGET_CLASS}</InputLabel>
@@ -607,6 +618,7 @@ const MetaDataPage = ({
 };
 
 const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
+  const msg = useMsg();
   const addQuestion = () => {
     const dummyId = -Math.floor(Math.random() * 1000000);
     const question: Question = {
@@ -701,7 +713,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           }
         />
         <Divider />
-        <CardContent>
+        <CardContent sx={{ borderRadius: 1}}>
           <Grid container spacing={3} alignItems="stretch">
             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
               <TextField
@@ -713,14 +725,14 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 onChange={(e) => handleSectionSummaryChange(e.target.value)}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column'}}>
               <Paper
                 variant="outlined"
                 sx={{
                   p: 2,
                   flexGrow: 1,
                   display: 'flex',
-                  flexDirection: 'column'
+                  flexDirection: 'column',
                 }}
               >
                 <Typography variant="caption" color="text.secondary" gutterBottom>
@@ -823,6 +835,7 @@ const QuestionPage = ({
   setQuestion,
   deleteQuestion,
 }: any) => {
+  const msg = useMsg();
   const setAns = (newAns: string) => {
     setQuestion({ ...question, answer: newAns });
   };
@@ -886,7 +899,7 @@ const QuestionPage = ({
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column'}}>
             <Paper
               variant="outlined"
               sx={{
@@ -894,7 +907,6 @@ const QuestionPage = ({
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                borderColor: 'rgba(0, 0, 0, 0.23)'
               }}
             >
               <Typography variant="caption" color="text.secondary" gutterBottom>
@@ -936,7 +948,7 @@ const QuestionPage = ({
 
                   switch (question.insertType) {
                     case "None":
-                      return (<Box sx={{ p: 2, border: '1px dashed grey', borderRadius: 1, color: 'text.disabled', textAlign: 'center' }}>{msg.NO_ATTACHMENT}</Box>)
+                      return (<Box sx={{ p: 2, border: '1px dashed',borderColor: 'divider', borderRadius: 1, color: 'text.disabled', textAlign: 'center' }}>{msg.NO_ATTACHMENT}</Box>)
                     case "Image":
                       acceptFileType = "image/*";
                       icon = <ImageIcon />;
@@ -1031,7 +1043,7 @@ const QuestionPage = ({
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                borderColor: 'rgba(0, 0, 0, 0.23)'
+                borderColor: 'divider',
               }}
             >
               <Typography variant="caption" color="text.secondary" gutterBottom>
@@ -1049,6 +1061,7 @@ const QuestionPage = ({
 };
 
 export default function Page() {
+  const msg = useMsg();
   return (
     <TeacherGuard>
       <Suspense fallback={<div>{msg.LOADING || "Loading..."}</div>}>

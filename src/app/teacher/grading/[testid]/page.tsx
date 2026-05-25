@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from '@clerk/nextjs';
 import { TeacherGuard } from "@/lib/guard";
 import judge, { format } from "@/lib/judge";
-import { msg } from "@/msg-ja";
+import { useMsg } from "@/msg-com";
 
 import LaTeXViewer from "@/compornents/LaTeXViewer";
 import styles from "./styles.module.css";
@@ -42,6 +42,7 @@ interface TabPanelProps {
 }
 
 function CustomTabPanel(props: TabPanelProps) {
+  const msg = useMsg();
   const { children, value, index, ...other } = props;
 
   return (
@@ -58,6 +59,7 @@ function CustomTabPanel(props: TabPanelProps) {
 }
 
 function a11yProps(index0: number) {
+  const msg = useMsg();
   return {
     id: `simple-tab-${index0}`,
     'aria-controls': `simple-tabpanel-${index0}`,
@@ -71,6 +73,7 @@ interface SectionTabProps {
 }
 
 function SectionTabs({ sections, sectionValue, sectionHandleChange }: SectionTabProps) {
+  const msg = useMsg();
   return (
     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
       <Tabs value={sectionValue} onChange={sectionHandleChange} aria-label="section tabs" variant="fullWidth">
@@ -99,8 +102,15 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
   }
 
   const click_handle = () => {
-    const new_point = (point <= 0 ? allocationPoint : 0);
-    answerCellHandle(new_point, userIndex, questionIndex);
+    let nextStatus = 0;
+    if (point === -1 || point === 0.5) {
+      nextStatus = 0;
+    } else if (point === 0) {
+      nextStatus = 1;
+    } else if (point === 1) {
+      nextStatus = 0.5;
+    }
+    answerCellHandle(nextStatus, userIndex, questionIndex);
   }
 
   const keydown_handle = (event: React.KeyboardEvent<HTMLTableCellElement>) => {
@@ -117,13 +127,14 @@ const AnswerCell = React.memo(function AnswerCell({ answer, point, allocationPoi
 
   return (<>
     <TableCell onClick={click_handle} onKeyDown={keydown_handle} onContextMenu={contextMenuHandle} tabIndex={0} className={styles.answer_cell} style={{ cursor: cursorImage ? `url(${cursorImage}), auto` : 'pointer' }}>
-      <div className={((point === -1) ? styles.ungraded_cell : (point > 0) ? styles.correct_cell : styles.wrong_cell)} ></div>
+      <div className={point === -1 ? styles.ungraded_cell : point === 1 ? styles.correct_cell : point === 0.5 ? styles.partial_cell : styles.wrong_cell} ></div>
       <div className={styles.matharea}><LaTeXViewer>{String(answer)}</LaTeXViewer></div>
     </TableCell>
   </>)
 });
 
 const UngradedCountCell = React.memo(function UngradedCountCell({ ungraded_count }: { ungraded_count: number }) {
+  const msg = useMsg();
   return (
     <TableCell sx={{ textAlign: "center" }} className={styles.point_cell + " " + ((ungraded_count === 0) ? styles.ungraded_false : styles.ungraded_true)}>
       {ungraded_count}
@@ -153,6 +164,7 @@ function generateCursor(): string {
 }
 
 export default function GradingPage({ params }: { params: Promise<{ testid: number }> }) {
+  const msg = useMsg();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, isSignedIn } = useUser();
@@ -195,7 +207,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
           } else {
             const result = judge(question.answer, answer.text);
             if (result === 1 || result === 2) {
-              studentPoints[qIndex] = question.allocationPoint ?? 1;
+              studentPoints[qIndex] = 1;
             } else {
               studentPoints[qIndex] = -1;
             }
@@ -378,6 +390,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
     const currentClass = Test_.classes.at(classIndex);
     if (!currentClass) return [];
 
+    const allQuestions = Test_.sections.flatMap((s: any) => s.questions);
+
     return currentClass.users.map((user: User, user_index: number) => {
       const data_index = submission_index[user_index];
       if (data_index === undefined) {
@@ -394,11 +408,12 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       for (let i = 0; i < totalQuestionsCount; i++) {
         const answer = submissionAnswers[i];
         if (answer) {
-          const point = userPoints?.[i] ?? answer.point;
-          if (point === -1) {
+          const rank = userPoints?.[i] ?? answer.point;
+          if (rank === -1) {
             ungradedCount++;
           } else {
-            totalPoints += point;
+            const allocation = allQuestions[i]?.allocationPoint ?? 1;
+            totalPoints += rank * allocation;
           }
         }
       }
@@ -470,10 +485,14 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         rn += `${metrics.ungradedCount},`;
 
         if (submission) {
+          const allQuestions = Test_.sections.flatMap((s: any) => s.questions);
           for (let i = 0; i < totalQuestionsCount; i++) {
             const answer = submission.answers[i];
             if (answer) {
-              rn += `${format_text(answer.text)},${points[data_index]?.[i] ?? 0},`;
+              const rank = points[data_index]?.[i] ?? answer.point;
+              const allocation = allQuestions[i]?.allocationPoint ?? 1;
+              const score = rank === -1 ? 0 : rank * allocation;
+              rn += `${format_text(answer.text)},${score},`;
             } else {
               rn += ",,";
             }
@@ -481,6 +500,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         } else {
           rn += ",".repeat(totalQuestionsCount * 2);
         }
+        
         rn = rn.slice(0, rn.length - 1) + "\n";
         exportdata_csv += rn;
       });
@@ -629,23 +649,23 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                       visibleQuestions.questions.map((question: Question, index: number) => {
                         const qNum = question.number ?? index + 1;
                         return (
-                          <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper", verticalAlign: "top", pt: 2, zIndex: 100 }}>                            
-                          <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
-                            <Typography variant="caption" color="text.secondary">
-                              [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
-                            </Typography>
-                            <IconButton
-                              size="small"
-                              onClick={() => {
-                                setCurrentQuestionContent(question.question);
-                                setCurrentQuestionTitle(`${msg.SECTION_NUMBER}${sectionValue + 1} - ${msg.QUESTION_NUMBER_PREFIX}${qNum}`);
-                                setQuestionDialogOpen(true);
-                              }}
-                              title={msg.SHOW_QUESTION || "問題を表示"}
-                            >
-                              <InfoIcon fontSize="small" color="action" />
-                            </IconButton>
-                          </Box>
+                          <TableCell key={"question" + question.id} sx={{ textAlign: "center", bgcolor: "background.paper", verticalAlign: "top", pt: 2, zIndex: 100 }}>
+                            <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
+                              <Typography variant="caption" color="text.secondary">
+                                [{msg.ALLOCATION_POINT}: {question.allocationPoint ?? 1}]
+                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  setCurrentQuestionContent(question.question);
+                                  setCurrentQuestionTitle(`${msg.SECTION_NUMBER}${sectionValue + 1} - ${msg.QUESTION_NUMBER_PREFIX}${qNum}`);
+                                  setQuestionDialogOpen(true);
+                                }}
+                                title={msg.SHOW_QUESTION || "問題を表示"}
+                              >
+                                <InfoIcon fontSize="small" color="action" />
+                              </IconButton>
+                            </Box>
                             <Box onContextMenu={(e) => handleOpenTexDialog(question.answer, e)} sx={{ cursor: 'context-menu' }}>
                               <LaTeXViewer>{question.answer}</LaTeXViewer>
                             </Box>
@@ -673,7 +693,13 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                             </Box>
                           </TableCell>
                           <TableCell key={"totalPoints-" + user.id} sx={{ textAlign: "center" }} className={styles.point_cell}>
-                            {metrics.totalPoints}
+                            <Tooltip title={metrics.totalPoints} arrow>
+                              <span>
+                                {Number.isInteger(metrics.totalPoints)
+                                  ? metrics.totalPoints
+                                  : metrics.totalPoints.toFixed(1)}
+                              </span>
+                            </Tooltip>
                           </TableCell>
                           <UngradedCountCell key={"ungraded-" + user.id} ungraded_count={metrics.ungradedCount} />
                           {
@@ -727,7 +753,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       <Dialog open={texDialogOpen} onClose={handleCloseTexDialog} maxWidth="sm" fullWidth>
         <DialogTitle>{msg.RAW_TEX}</DialogTitle>
         <DialogContent dividers>
-          <Box sx={{ p: 2, bgcolor: 'grey.100', borderRadius: 1, overflowX: 'auto' }}>
+          <Box sx={{ p: 2, bgcolor: "paper", borderRadius: 1, overflowX: 'auto' }}>
             <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
               {currentTexContent}
             </pre>

@@ -24,12 +24,10 @@
 
 .ungraded_cell
 {
-
     position:absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-
 }
 
 .ungraded_true
@@ -44,7 +42,6 @@
     font-weight: bold;
 }
 
-
 .correct_cell
 {
     position:absolute;
@@ -56,7 +53,21 @@
     text-align:center;
     line-height: 80px;
     border-radius: 50%;
-    border: solid 3px #1976d2
+    border: solid 3px #1976d2;
+}
+
+.partial_cell
+{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1.8em;
+    height: 1.8em;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2L1 21h22L12 2zm0 3.83l7.1 12.17H4.9L12 5.83z' fill='%23d69200'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .wrong_cell
@@ -72,6 +83,7 @@
     left: 50%;
     transform: translate(-50%, -50%) rotate(45deg);
 }
+
 .wrong_cell::before
 {
     z-index: 1;

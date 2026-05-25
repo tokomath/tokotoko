@@ -25,7 +25,7 @@ import FolderIcon from '@mui/icons-material/Folder';
 import { User } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { TeacherGuard } from "@/lib/guard";
-import { msg } from "@/msg-ja";
+import { useMsg } from "@/msg-com";
 
 const stringToBrightColor = (str: string) => {
     let hash = 0;
@@ -59,6 +59,7 @@ type LayoutNode = {
 };
 
 export function TeacherClassCards({ classes }: Props) {
+  const msg = useMsg();
     const [layout, setLayout] = useState<LayoutNode[]>([]);
     const [isClient, setIsClient] = useState(false);
 
@@ -318,6 +319,7 @@ export function TeacherClassCards({ classes }: Props) {
     };
 
     const ClassCardItem = ({ classData }: { classData: ClassData }) => {
+  const msg = useMsg();
         const router = useRouter();
 
         const detailButtonFunction = () => router.push("/classDetail?classId=" + classData.id);
@@ -404,7 +406,7 @@ sx={{ display: 'flex', height: '100%', cursor: 'grab', bgcolor: 'background.pape
                                                     {node.name}
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary">
-                                                    {children.length}  {msg.CLASS}
+                                                    {children.length}  {msg.ITEMS}
                                                 </Typography>
                                             </CardActionArea>
                                         </Box>

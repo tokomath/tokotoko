@@ -11,13 +11,14 @@ import CustomUserButton from "./CustomUserButton";
 import logoLight from "@/app/logo_light.png";
 import logoDark from "@/app/logo_dark.png";
 
-import { msg } from "@/msg-ja"
+import { useMsg } from "@/msg-com";
 
 interface QuestionProps {
   page_name?: string;
 }
 
 export default function TopBar({ page_name = "" }: QuestionProps) {
+  const msg = useMsg();
   const { user, isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const theme = useTheme();
