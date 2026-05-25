@@ -260,24 +260,8 @@ function ClientSearchParamWrapper() {
     };
 
     if (isEditing) {
-      const currentSectionsJson = JSON.stringify(sections);
-      const isStructureChanged = currentSectionsJson !== initialSectionsRef.current;
-
-      if (isStructureChanged) {
-        await updateTest(testFrame);
-        initialSectionsRef.current = currentSectionsJson;
-      } else {
-        await updateTestMetadata(testFrame);
-      }
+      await updateTest(testFrame);
       alert(msg.SUCCESS_SAVE_TEST);
-    } else {
-      const newId = await createTest(testFrame);
-      if (newId) {
-        setCurrentTestId(newId);
-        setIsEditing(true);
-        router.replace(window.location.pathname + "?testId=" + newId);
-      }
-      alert(msg.SUCCESS_CREATE_TEST);
     }
   };
 
@@ -399,7 +383,7 @@ function ClientSearchParamWrapper() {
               {sections.map((_, index) => (
                 <Tab
                   label={`${msg.SECTION_NUMBER} ${index + 1}`}
-                  key={index}
+                  key={sections[index].section.id}
                   draggable
                   onDragStart={() => setDraggedSectionIndex(index)}
                   onDragOver={(e) => e.preventDefault()}
@@ -434,7 +418,7 @@ function ClientSearchParamWrapper() {
               </Box>
             )}
             {sections.map((s, index) => (
-              <Box key={index} hidden={value !== index + 1}>
+              <Box key={s.section.id} hidden={value !== index + 1}>
                 <SectionPage
                   index={index}
                   section={s}
@@ -555,7 +539,7 @@ const MetaDataPage = ({
                 onChange={(e) => setTestSummary(e.target.value)}
               />
               <TextField
-                label={msg.MAX_RESUBMISSIONS || "再提出回数の上限"}
+                label={msg.MAX_RESUBMISSIONS}
                 variant="outlined"
                 type="number"
                 fullWidth
@@ -643,9 +627,9 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
   const handleQuestionChange = (item: Question, index: number) => {
     const newQ = section.questions.map((q: Question, i: number) => {
       if (i === index) {
-        return item;
+        return { ...item, number: i + 1 };
       } else {
-        return { ...q, number: i + 1 };
+        return q;
       }
     });
     setSection({ ...section, questions: newQ });
@@ -696,7 +680,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Card variant="outlined" sx={{  mb: 4 }}>
+      <Card variant="outlined" sx={{ mb: 4 }}>
         <CardHeader
           title={`${msg.SECTION_NUMBER} ${index + 1} ${msg.SECTION_SETTINGS}`}
           action={
@@ -811,11 +795,11 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
         <MenuItem onClick={() => {
           if (questionContextMenu) moveQuestion(questionContextMenu.index, questionContextMenu.index - 1);
           handleQuestionContextMenuClose();
-        }} disabled={questionContextMenu?.index === 0}>上へ</MenuItem>
+        }} disabled={questionContextMenu?.index === 0}>{msg.MOVE_UP}</MenuItem>
         <MenuItem onClick={() => {
           if (questionContextMenu) moveQuestion(questionContextMenu.index, questionContextMenu.index + 1);
           handleQuestionContextMenuClose();
-        }} disabled={questionContextMenu?.index === section.questions.length - 1}>下へ</MenuItem>
+        }} disabled={questionContextMenu?.index === section.questions.length - 1}>{msg.MOVE_DOWN}</MenuItem>
         <Divider />
         <MenuItem onClick={() => {
           if (questionContextMenu) duplicateQuestion(questionContextMenu.index);
@@ -876,7 +860,7 @@ const QuestionPage = ({
             </IconButton>
           </Stack>
         }
-        sx={{  py: 1 }}
+        sx={{ py: 1 }}
       />
       <CardContent>
         <Grid container spacing={3} alignItems="stretch">
