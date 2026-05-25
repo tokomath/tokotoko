@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useMemo, useCallback, use } from "react";
-import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material";
+import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, useMediaQuery } from "@mui/material";
 import InfoIcon from '@mui/icons-material/Info';
 
 import { User, Class, Question, Section, Answer, Submission as PrismaSubmission } from "@prisma/client";
@@ -43,6 +43,7 @@ interface TabPanelProps {
 
 function CustomTabPanel(props: TabPanelProps) {
   const msg = useMsg();
+
   const { children, value, index, ...other } = props;
 
   return (
@@ -500,7 +501,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         } else {
           rn += ",".repeat(totalQuestionsCount * 2);
         }
-        
+
         rn = rn.slice(0, rn.length - 1) + "\n";
         exportdata_csv += rn;
       });
@@ -567,6 +568,11 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       </Tooltip>
     );
   }, [submission_index, submissionData, Test_]);
+
+  const isLandscape = useMediaQuery('(orientation: landscape)');
+  const threshold = isLandscape ? 5 : 3;
+  const questionCount = visibleQuestions.questions.length;
+  const needsScroll = questionCount > threshold;
 
   return (
     <TeacherGuard>
@@ -638,8 +644,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               </>)
           }
           {Test_ ?
-            <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 250px)' }}>
-              <Table stickyHeader>
+            <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 250px)', overflowX: needsScroll ? 'auto' : 'hidden' }}>
+              <Table stickyHeader sx={{ tableLayout: needsScroll ? 'auto' : 'fixed', width: needsScroll ? 'max-content' : '100%' }}>
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ textAlign: "center", backgroundColor: "background.paper", zIndex: 100 }} className={styles.username_cell}></TableCell>
@@ -750,23 +756,52 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         )}
       </Container>
 
-      <Dialog open={texDialogOpen} onClose={handleCloseTexDialog} maxWidth="sm" fullWidth>
+      <Dialog open={texDialogOpen} onClose={handleCloseTexDialog} maxWidth="xl" fullWidth>
         <DialogTitle>{msg.RAW_TEX}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ p: 2, bgcolor: "paper", borderRadius: 1, overflowX: 'auto' }}>
-            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
-              {currentTexContent}
-            </pre>
-          </Box>
-        </DialogContent>
-        <DialogContent>
-          <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-            {msg.FORMATED_TEX}
-          </Typography>
-          <Box sx={{ p: 2, bgcolor: 'blue.50', borderRadius: 1, overflowX: 'auto', border: '1px solid', borderColor: 'blue.100' }}>
-            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
-              {format(currentTexContent)}
-            </pre>
+        <DialogContent dividers sx={{ p: 0 }}>
+          <Box display="flex" sx={{ minHeight: 300 }}>
+            <Box sx={{ width: '50%', borderRight: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }} display="block" gutterBottom>
+                  {msg.RAW_TEX}
+                </Typography>
+                <Box sx={{ flex: 1, overflowX: 'auto' }}>
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                    {currentTexContent}
+                  </pre>
+                </Box>
+              </Box>
+              <Box sx={{ flex: 1, p: 2, borderTop: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }} display="block" gutterBottom>
+                  {msg.FORMATED_TEX}
+                </Typography>
+                <Box sx={{ flex: 1, overflowX: 'auto' }}>
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                    {format(currentTexContent)}
+                  </pre>
+                </Box>
+              </Box>
+            </Box>
+
+            <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }} display="block" gutterBottom>
+                  {msg.RAW_TEX} {msg.PREVIEW}
+                </Typography>
+                <Box sx={{ flex: 1, p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1, overflowX: 'auto' }}>
+                  <LaTeXViewer>{currentTexContent}</LaTeXViewer>
+                </Box>
+              </Box>
+              <Box sx={{ flex: 1, p: 2, pt: 0, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }} display="block" gutterBottom>
+                  {msg.FORMATED_TEX} {msg.PREVIEW}
+                </Typography>
+                <Box sx={{ flex: 1, p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1, overflowX: 'auto' }}>
+                  <LaTeXViewer>{format(currentTexContent)}</LaTeXViewer>
+                </Box>
+              </Box>
+            </Box>
+
           </Box>
         </DialogContent>
         <DialogActions>
