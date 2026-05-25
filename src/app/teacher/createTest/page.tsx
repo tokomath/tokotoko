@@ -499,7 +499,7 @@ const MetaDataPage = ({
   };
 
   const ClassAssign = () => {
-  const msg = useMsg();
+    const msg = useMsg();
     return (
       <FormControl fullWidth>
         <InputLabel id={"ClassAssign"}>{msg.TARGET_CLASS}</InputLabel>
@@ -713,7 +713,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           }
         />
         <Divider />
-        <CardContent sx={{ borderRadius: 1}}>
+        <CardContent sx={{ borderRadius: 1 }}>
           <Grid container spacing={3} alignItems="stretch">
             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
               <TextField
@@ -725,7 +725,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 onChange={(e) => handleSectionSummaryChange(e.target.value)}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column'}}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
               <Paper
                 variant="outlined"
                 sx={{
@@ -738,7 +738,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 <Typography variant="caption" color="text.secondary" gutterBottom>
                   {msg.PREVIEW}
                 </Typography>
-                <Box>
+                <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
                   <LaTeXViewer>{section.section.summary}</LaTeXViewer>
                 </Box>
               </Paper>
@@ -899,7 +899,7 @@ const QuestionPage = ({
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column'}}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <Paper
               variant="outlined"
               sx={{
@@ -912,9 +912,11 @@ const QuestionPage = ({
               <Typography variant="caption" color="text.secondary" gutterBottom>
                 {msg.QUESTION_PREVIEW}
               </Typography>
-              <Box sx={{ display: 'flex' }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
                 <Typography component="span" fontWeight="bold" mr={1}>({question.number})</Typography>
-                <LaTeXViewer>{question.question}</LaTeXViewer>
+                <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
+                  <LaTeXViewer>{question.question}</LaTeXViewer>
+                </Box>
               </Box>
             </Paper>
           </Grid>
@@ -948,7 +950,7 @@ const QuestionPage = ({
 
                   switch (question.insertType) {
                     case "None":
-                      return (<Box sx={{ p: 2, border: '1px dashed',borderColor: 'divider', borderRadius: 1, color: 'text.disabled', textAlign: 'center' }}>{msg.NO_ATTACHMENT}</Box>)
+                      return (<Box sx={{ p: 2, border: '1px dashed', borderColor: 'divider', borderRadius: 1, color: 'text.disabled', textAlign: 'center' }}>{msg.NO_ATTACHMENT}</Box>)
                     case "Image":
                       acceptFileType = "image/*";
                       icon = <ImageIcon />;
@@ -1049,7 +1051,7 @@ const QuestionPage = ({
               <Typography variant="caption" color="text.secondary" gutterBottom>
                 {msg.PREVIEW}
               </Typography>
-              <Box sx={{ display: 'flex' }}>
+              <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
                 <LaTeXViewer>{question.answer}</LaTeXViewer>
               </Box>
             </Paper>
