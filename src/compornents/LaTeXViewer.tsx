@@ -92,7 +92,9 @@ export default function LaTeXViewer({ children }: { children: string }) {
           max-width: 100%;
         }
       `;
+      
       shadow.appendChild(customStyle);
+      
 
       shadow.appendChild(doc.domFragment());
       setIsEmpty(false);
@@ -117,9 +119,9 @@ export default function LaTeXViewer({ children }: { children: string }) {
         sx={{
           maxWidth: '100%',
           boxSizing: 'border-box',
-          overflowX: 'auto',
+          overflowX: 'hidden',
           overflowY: 'hidden',
-          p: hasError ? 1 : 0, 
+          p: hasError ? 1 : 0,
           border: hasError ? '1px solid' : 'none',
           borderColor: hasError ? 'error.light' : 'transparent',
           backgroundColor: hasError ? 'rgba(211, 47, 47, 0.03)' : 'transparent',
@@ -137,7 +139,7 @@ export default function LaTeXViewer({ children }: { children: string }) {
             sx={{
               fontFamily: 'monospace',
               whiteSpace: 'pre-wrap',
-              wordBreak: 'break-all', 
+              wordBreak: 'break-all',
               color: 'error.main',
               m: 0,
               maxWidth: '100%'
