@@ -131,7 +131,7 @@ export default function Question({ id, number, question, answer, insertType, ins
             <Clear sx={{ color: red[700] }} fontSize="small" />
           </IconButton>
         </Box>
-        <Box sx={{ minHeight: 40, overflowX: 'auto' }}>
+        <Box sx={{ minHeight: 40 }}>
           <AnswerBox />
         </Box>
       </Paper>
