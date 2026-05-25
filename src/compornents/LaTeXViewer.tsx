@@ -84,7 +84,6 @@ export default function LaTeXViewer({ children }: { children: string }) {
         .katex-display {
           margin: 1em 0 !important;
           max-width: 100%;
-          overflow-x: auto;
           overflow-y: hidden; 
         }
 
