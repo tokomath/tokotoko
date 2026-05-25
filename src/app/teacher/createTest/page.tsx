@@ -63,6 +63,7 @@ import LaTeXViewer from "@/compornents/LaTeXViewer";
 import { TeacherGuard } from "@/lib/guard"
 
 import { msg } from "@/msg-ja";
+import test from "node:test";
 
 const insert_options = ["None", "Image", "HTML"];
 
@@ -303,7 +304,7 @@ function ClientSearchParamWrapper() {
     <Container
       maxWidth="xl"
       sx={{
-        height: "calc(100vh - 80px)",
+        height: "calc(100vh - 100px)",
         display: "flex",
         flexDirection: "column",
         pt: 2,
@@ -314,9 +315,13 @@ function ClientSearchParamWrapper() {
 
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} sx={{ flexShrink: 0 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
-          <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
+          <Typography variant="h5" color="text.secondary">
+            {testTitle}
+          </Typography>
+          <Typography variant="h6" component="h1" fontWeight="bold" color="primary">
             {isEditing ? msg.EDIT_TEST : msg.CREATE_NEW_TEST}
           </Typography>
+
           <Chip
             label={isCurrentPublished ? msg.PUBLISHED : msg.UNPUBLISHED}
             color={isCurrentPublished ? "success" : "default"}
