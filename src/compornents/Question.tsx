@@ -167,7 +167,7 @@ export default function Question({ id, number, question, answer, insertType, ins
           <>
             <Box sx={{ paddingTop: 0.5, paddingBottom: 0.5, width: "100%" }}>
               <Box display="flex" justifyContent="space-between" width="100%">
-                <IconButton aria-label="move left" onClick={
+                <IconButton aria-label="move left" sx={{flexShrink: 0}} onClick={
                   () => {
                     if (selectionStart != selectionEnd) {
                       setSelectionStart(selectionStart);
@@ -181,7 +181,7 @@ export default function Question({ id, number, question, answer, insertType, ins
                   }}>
                   <ArrowBack />
                 </IconButton>
-                <Box display="flex">
+                <Box sx={{ flex: 1, overflowX: 'auto', display: 'flex' }}>
                   <Button variant="outlined" sx={{ textTransform: 'none', width: 10, whiteSpace: 'nowrap' }} onClick={() => { insertCommand("\\") }}>
                     \
                   </Button>
@@ -201,7 +201,7 @@ export default function Question({ id, number, question, answer, insertType, ins
                     <InlineMath math="≠"></InlineMath>
                   </Button>
                 </Box>
-                <IconButton aria-label="move right" onClick={
+                <IconButton aria-label="move right" sx={{flexShrink: 0}} onClick={
                   () => {
                     if (selectionStart != selectionEnd) {
                       setSelectionStart(selectionEnd);
@@ -224,7 +224,7 @@ export default function Question({ id, number, question, answer, insertType, ins
                     <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("+")}>
                       <InlineMath math="+"></InlineMath>
                     </Button>
-                    <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\minus")}>
+                    <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("-")}>
                       <InlineMath math="-"></InlineMath>
                     </Button>
                   </Stack>
