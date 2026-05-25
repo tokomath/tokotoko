@@ -14,20 +14,19 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin']
 
 const HEADER_HEIGHT = 64;
 
-export default async function RootLayout ({ children }: { children: ReactNode })
-{
+export default async function RootLayout({ children }: { children: ReactNode }) {
   const cookieStore = await cookies();
-  const initialLang = await getLangServer();  
-  
+  const initialLang = await getLangServer();
+
   return (
     <ClerkProvider localization={jaJP}>
       <html lang="ja" className={`${geistSans.variable} ${geistMono.variable}`}>
         <body
           style={{
             margin: 0,
-            minHeight: '100vh',
+            height: '100vh',
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
           }}
         >
           <LangProvider initialLang={initialLang}>
@@ -45,6 +44,7 @@ export default async function RootLayout ({ children }: { children: ReactNode })
                 component="main"
                 sx={{
                   flex: 1,
+                  minHeight: 0,
                   display: 'flex',
                   flexDirection: 'column',
                 }}
