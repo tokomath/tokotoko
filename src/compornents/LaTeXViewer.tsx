@@ -53,10 +53,6 @@ export default function LaTeXViewer({ children }: { children: string }) {
 
       const customStyle = document.createElement('style');
       customStyle.textContent = `
-        * {
-          box-sizing: border-box !important;
-        }
-        
         :host {
           display: block;
           max-width: 100%;
@@ -68,8 +64,15 @@ export default function LaTeXViewer({ children }: { children: string }) {
           width: auto !important; 
           max-width: 100% !important;
           height: auto !important;
+          min-height: 0 !important;
           margin: 0 !important;
           padding: 0 !important;
+          box-shadow: none !important;
+          background: transparent !important;
+        }
+
+        .katex-mathml {
+          display: none !important;
         }
 
         p {
@@ -83,9 +86,9 @@ export default function LaTeXViewer({ children }: { children: string }) {
 
         .katex-display {
           margin: 1em 0 !important;
-          overflow-x: clip;
-          max-width: 100%;
+          overflow-x: auto;
           overflow-y: hidden; 
+          max-width: 100%;
         }
 
         .katex {
@@ -95,8 +98,10 @@ export default function LaTeXViewer({ children }: { children: string }) {
       
       shadow.appendChild(customStyle);
       
+      const fragment = doc.domFragment();
+      fragment.querySelectorAll('style').forEach((s : HTMLStyleElement) => s.remove());
 
-      shadow.appendChild(doc.domFragment());
+      shadow.appendChild(fragment);
       setIsEmpty(false);
     } catch (error: any) {
       setHasError(true);
