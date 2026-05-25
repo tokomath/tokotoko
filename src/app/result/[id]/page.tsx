@@ -337,7 +337,7 @@ function Question({ id, number, question, insertType, insertContent, myAns, true
   return (
     <Stack spacing={2}>
       <Box display="flex" alignItems="center">
-        <Typography variant="h2" fontSize={17} sx={{ flexShrink: 0 }}>({number})</Typography>
+        <Typography variant="h2" fontSize={17} sx={{ flexShrink: 0 }}>{msg.QUESTION_NUMBER_PREFIX}{number}</Typography>
         <Box width="10px" sx={{ flexShrink: 0 }}></Box>
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>
           <LaTeXViewer>{question}</LaTeXViewer>

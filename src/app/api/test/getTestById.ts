@@ -12,8 +12,11 @@ export async function getTestById(testId: number, userid: string) {
     where: { id: testId },
     include: {
       sections: {
+        orderBy: { number: 'asc' },
         include: {
-          questions: true
+          questions: {
+            orderBy: { number: 'asc' }
+          }
         }
       },
       classes: { include: { users: true } }
@@ -27,13 +30,13 @@ export async function getTestById(testId: number, userid: string) {
       return u.id === userid
     })
   });
-  
+
   if (!ok) return null;
 
 
-  const isStudent = user.role === 1; 
+  const isStudent = user.role === 1;
   if (isStudent && res.isPublished === false) {
-    return null; 
+    return null;
   }
 
   return res;
