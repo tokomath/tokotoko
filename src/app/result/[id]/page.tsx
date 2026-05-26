@@ -78,13 +78,21 @@ function Result({ id, userid }: { id: string, userid: string }) {
       const res = await getSubmission({ testId: Number(id), userid: userid });
       if (res) {
         setData(res);
-        let i = 0;
         let p = 0;
         let mp = 0;
         let misaiten = false;
         res.test.sections.forEach((sec: any) => {
           sec.questions.forEach((q: any) => {
-            q["ans"] = res.answers.find((a: any) => a.questionId === q.id);
+            const ans = res.answers.find((a: any) => a.questionId === q.id);
+            q["ans"] = ans;
+
+            const alloc = q.allocationPoint ?? 1;
+            mp += alloc; 
+            if (ans && Number(ans.point) >= 0) {
+              p += Number(ans.point) * alloc; 
+            } else {
+              misaiten = true; 
+            }
           });
         });
 
