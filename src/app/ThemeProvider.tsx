@@ -4,9 +4,9 @@ import React, { createContext, useState, useMemo, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
-export const ColorModeContext = createContext({ 
-  toggleColorMode: () => {},
-  setThemeMode: (mode: 'light' | 'dark') => {}
+export const ColorModeContext = createContext({
+  toggleColorMode: () => { },
+  setThemeMode: (mode: 'light' | 'dark') => { }
 });
 
 export default function ThemeRegistry({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
       toggleColorMode: () => {
         setMode((prevMode) => {
           const newMode = prevMode === 'light' ? 'dark' : 'light';
-          localStorage.setItem('themeMode', newMode); 
+          localStorage.setItem('themeMode', newMode);
           return newMode;
         });
       },
@@ -45,38 +45,38 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
           mode,
           ...(mode === 'light'
             ? {
-                primary: {
-                  main: '#009786',
-                  light: '#79c5bc',
-                  dark: '#01554b',
-                  contrastText: '#dfdfdf',
-                },
-                secondary: {
-                  main: '#f50057',
-                },
-                background: {
-                  default: '#f7f7f7',
-                  paper: '#f4f6f8',
-                },
-                text: {
-                  primary: '#2c3e50',
-                },
-              }
+              primary: {
+                main: '#009786',
+                light: '#79c5bc',
+                dark: '#01554b',
+                contrastText: '#dfdfdf',
+              },
+              secondary: {
+                main: '#f50057',
+              },
+              background: {
+                default: '#f7f7f7',
+                paper: '#f4f6f8',
+              },
+              text: {
+                primary: '#2c3e50',
+              },
+            }
             : {
-                primary: {
-                  main: '#009786',
-                  light: '#79c5bc',
-                  dark: '#01554b',
-                  contrastText: '#dfdfdf',
-                },
-                secondary: {
-                  main: '#f50057',
-                },
-                background: {
-                  default: '#0a1929',
-                  paper: '#001e3c',
-                },
-              }),
+              primary: {
+                main: '#009786',
+                light: '#79c5bc',
+                dark: '#01554b',
+                contrastText: '#dfdfdf',
+              },
+              secondary: {
+                main: '#f50057',
+              },
+              background: {
+                default: '#0a1929',
+                paper: '#001e3c',
+              },
+            }),
         },
         typography: {
           fontFamily: 'Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -86,13 +86,17 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
   );
 
   if (!mounted) {
-    return <div style={{ visibility: 'hidden' }}>{children}</div>;
+    return (
+      <div style={{ visibility: 'hidden', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        {children}
+      </div>
+    );
   }
 
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
-        <CssBaseline />
+        <CssBaseline enableColorScheme />
         {children}
       </ThemeProvider>
     </ColorModeContext.Provider>

@@ -13,8 +13,11 @@ export const getSubmission = async (props: { userid: string, testId: number }) =
       test: {
         include: {
           sections: {
+            orderBy: { number: 'asc' },
             include: {
-              questions: true
+              questions: {
+                orderBy: { number: 'asc' }
+              }
             }
           }
         }
@@ -28,9 +31,9 @@ export const getSubmissionsByTestAndClass = async (props: { testId: number, clas
   try {
     const submissions = await prisma.submission.findMany({
       where: {
-        testId: props.testId, 
-        user: { 
-          classes: { 
+        testId: props.testId,
+        user: {
+          classes: {
             some: {
               id: props.classId,
             },
@@ -38,7 +41,7 @@ export const getSubmissionsByTestAndClass = async (props: { testId: number, clas
         },
       },
       include: {
-        answers: true, 
+        answers: true,
         test: {
           select: {
             id: true,
@@ -48,8 +51,11 @@ export const getSubmissionsByTestAndClass = async (props: { testId: number, clas
             endDate: true,
             maxResubmissions: true,
             sections: {
-              include: { 
-                questions: true
+              orderBy: { number: 'asc' },
+              include: {
+                questions: {
+                  orderBy: { number: 'asc' }
+                }
               }
             }
           }

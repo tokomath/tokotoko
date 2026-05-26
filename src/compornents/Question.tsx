@@ -80,7 +80,7 @@ export default function Question({ id, number, question, answer, insertType, ins
   }
 
   const AnswerBox = () => {
-  const msg = useMsg();
+    const msg = useMsg();
     if (answer) {
       return (
         <LaTeXViewer>{answer}</LaTeXViewer>
@@ -106,13 +106,13 @@ export default function Question({ id, number, question, answer, insertType, ins
 
     <Stack spacing={0}>
       <Box display="flex" alignItems="center">
-        <Typography variant="h2" fontSize={17}>({number})　</Typography>
+        <Typography variant="h2" fontSize={17}>{msg.QUESTION_NUMBER_PREFIX} {number}　</Typography>
         <LaTeXViewer>{question}</LaTeXViewer>
       </Box>
       <Box>
         <InsertFrame insertType={insertType} insertContent={insertContent} />
       </Box>
-      
+
       <Paper
         variant="outlined"
         sx={{
@@ -131,7 +131,7 @@ export default function Question({ id, number, question, answer, insertType, ins
             <Clear sx={{ color: red[700] }} fontSize="small" />
           </IconButton>
         </Box>
-        <Box sx={{ minHeight: 40, overflowX: 'auto' }}>
+        <Box sx={{ minHeight: 40 }}>
           <AnswerBox />
         </Box>
       </Paper>
@@ -167,7 +167,7 @@ export default function Question({ id, number, question, answer, insertType, ins
           <>
             <Box sx={{ paddingTop: 0.5, paddingBottom: 0.5, width: "100%" }}>
               <Box display="flex" justifyContent="space-between" width="100%">
-                <IconButton aria-label="move left" onClick={
+                <IconButton aria-label="move left" sx={{flexShrink: 0}} onClick={
                   () => {
                     if (selectionStart != selectionEnd) {
                       setSelectionStart(selectionStart);
@@ -181,7 +181,7 @@ export default function Question({ id, number, question, answer, insertType, ins
                   }}>
                   <ArrowBack />
                 </IconButton>
-                <Box display="flex">
+                <Box sx={{ flex: 1, overflowX: 'auto', display: 'flex' }}>
                   <Button variant="outlined" sx={{ textTransform: 'none', width: 10, whiteSpace: 'nowrap' }} onClick={() => { insertCommand("\\") }}>
                     \
                   </Button>
@@ -194,8 +194,14 @@ export default function Question({ id, number, question, answer, insertType, ins
                   <Button variant="outlined" sx={{ textTransform: 'none', width: 10, whiteSpace: 'nowrap' }} onClick={() => insertCommand(",")}>
                     {","}
                   </Button>
+                  <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("=")}>
+                    <InlineMath math="="></InlineMath>
+                  </Button>
+                  <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\neq")}>
+                    <InlineMath math="≠"></InlineMath>
+                  </Button>
                 </Box>
-                <IconButton aria-label="move right" onClick={
+                <IconButton aria-label="move right" sx={{flexShrink: 0}} onClick={
                   () => {
                     if (selectionStart != selectionEnd) {
                       setSelectionStart(selectionEnd);
@@ -218,21 +224,13 @@ export default function Question({ id, number, question, answer, insertType, ins
                     <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("+")}>
                       <InlineMath math="+"></InlineMath>
                     </Button>
-                    <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("=")}>
-                      <InlineMath math="="></InlineMath>
-                    </Button>
-                  </Stack>
-                  <Stack>
-                    <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\geqq")}>
-                      <InlineMath math="\geqq"></InlineMath>
-                    </Button>
-                    <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\leqq")}>
-                      <InlineMath math="\leqq"></InlineMath>
-                    </Button>
-                  </Stack>
-                  <Stack>
                     <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("-")}>
                       <InlineMath math="-"></InlineMath>
+                    </Button>
+                  </Stack>
+                  <Stack>
+                    <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\div")}>
+                      <InlineMath math="\div"></InlineMath>
                     </Button>
                     <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\times")}>
                       <InlineMath math="\times"></InlineMath>
@@ -246,6 +244,15 @@ export default function Question({ id, number, question, answer, insertType, ins
                       <InlineMath math="\pi"></InlineMath>
                     </Button>
                   </Stack>
+                  <Stack>
+                    <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\geqq")}>
+                      <InlineMath math="\geqq"></InlineMath>
+                    </Button>
+                    <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\leqq")}>
+                      <InlineMath math="\leqq"></InlineMath>
+                    </Button>
+                  </Stack>
+
                   <Stack>
                     <Button variant="outlined" sx={{ textTransform: 'none', width: 15, whiteSpace: 'nowrap' }} onClick={() => insertCommand("\\frac{a}{b}", 6, 7)}>
                       <InlineMath math="\frac{a}{b}"></InlineMath>

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState, useMemo, useCallback, use } from "react";
-import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material";
+import { Box, Container, Paper, Button, Tab, Tabs, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, TextField, MenuItem, Chip, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, useMediaQuery } from "@mui/material";
 import InfoIcon from '@mui/icons-material/Info';
 
 import { User, Class, Question, Section, Answer, Submission as PrismaSubmission } from "@prisma/client";
@@ -43,6 +43,7 @@ interface TabPanelProps {
 
 function CustomTabPanel(props: TabPanelProps) {
   const msg = useMsg();
+
   const { children, value, index, ...other } = props;
 
   return (
@@ -198,18 +199,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       submissionData.forEach((submission, dataIndex) => {
         const studentPoints = { ...newPoints[dataIndex] };
 
-        submission.answers.forEach((answer: Answer, qIndex: number) => {
-          const question = allQuestions[qIndex];
-          if (!question) return;
+        submission.answers.forEach((answer: Answer) => {
+          const question = allQuestions.find((q: any) => q.id === answer.questionId);
+          if (!question)
+            return;
 
           if (answer.text.trim() === "") {
-            studentPoints[qIndex] = 0;
+            studentPoints[answer.questionId] = 0;
           } else {
             const result = judge(question.answer, answer.text);
             if (result === 1 || result === 2) {
-              studentPoints[qIndex] = 1;
+              studentPoints[answer.questionId] = 1;
             } else {
-              studentPoints[qIndex] = -1;
+              studentPoints[answer.questionId] = -1;
             }
           }
         });
@@ -314,8 +316,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
             newSubmissionIndex[user_index] = dataIndex;
 
             const userPoints: Record<number, number> = {};
-            submission_res.answers.forEach((answer: Answer, answer_index: number) => {
-              userPoints[answer_index] = Number(answer.point);
+            submission_res.answers.forEach((answer: Answer) => {
+              userPoints[answer.questionId] = Number(answer.point);
             });
             newPoints[dataIndex] = userPoints;
           }
@@ -359,8 +361,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
     let send_data: Array<Point> = [];
     submissionData.forEach((submission, dataIndex) => {
-      submission.answers.forEach((answer: Answer, answerIndex: number) => {
-        const newPoint = points[dataIndex]?.[answerIndex] ?? answer.point;
+      submission.answers.forEach((answer: Answer) => {
+        const newPoint = points[dataIndex]?.[answer.questionId] ?? answer.point;
         send_data.push({ answerId: Number(answer.id), point: Number(newPoint) });
       });
     });
@@ -500,7 +502,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         } else {
           rn += ",".repeat(totalQuestionsCount * 2);
         }
-        
+
         rn = rn.slice(0, rn.length - 1) + "\n";
         exportdata_csv += rn;
       });
@@ -567,6 +569,11 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       </Tooltip>
     );
   }, [submission_index, submissionData, Test_]);
+
+  const isLandscape = useMediaQuery('(orientation: landscape)');
+  const threshold = isLandscape ? 5 : 3;
+  const questionCount = visibleQuestions.questions.length;
+  const needsScroll = questionCount > threshold;
 
   return (
     <TeacherGuard>
@@ -638,8 +645,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
               </>)
           }
           {Test_ ?
-            <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 250px)' }}>
-              <Table stickyHeader>
+            <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 250px)', overflowX: needsScroll ? 'auto' : 'hidden' }}>
+              <Table stickyHeader sx={{ tableLayout: needsScroll ? 'auto' : 'fixed', width: needsScroll ? 'max-content' : '100%' }}>
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ textAlign: "center", backgroundColor: "background.paper", zIndex: 100 }} className={styles.username_cell}></TableCell>
@@ -706,10 +713,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                             visibleQuestions.questions.map((question: Question, index: number) => {
                               const questionGlobalIndex = visibleQuestions.startIndex + index;
 
-                              if (data_index !== undefined && submissionData?.[data_index]?.answers?.[questionGlobalIndex]) {
-                                const answer = submissionData[data_index].answers[questionGlobalIndex];
-                                const currentPoint = points[data_index]?.[questionGlobalIndex] ?? Number(answer.point);
-
+                              const answer = submissionData?.[data_index]?.answers?.find((a: Answer) => a.questionId === question.id);
+                              if (data_index !== undefined && answer) {
+                                const currentPoint = points[data_index]?.[question.id] ?? Number(answer.point);
                                 return (
                                   <AnswerCell
                                     answer={(answer.text === "" ? " " : answer.text)}
@@ -718,7 +724,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                                     allocationPoint={question.allocationPoint ?? 1}
                                     key={`answer-${user.id}-${question.id}`}
                                     userIndex={data_index}
-                                    questionIndex={questionGlobalIndex}
+                                    questionIndex={question.id}
                                     cursorImage={cursorImage}
                                     onRightClick={handleOpenTexDialog}
                                   />
@@ -750,23 +756,52 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
         )}
       </Container>
 
-      <Dialog open={texDialogOpen} onClose={handleCloseTexDialog} maxWidth="sm" fullWidth>
+      <Dialog open={texDialogOpen} onClose={handleCloseTexDialog} maxWidth="xl" fullWidth>
         <DialogTitle>{msg.RAW_TEX}</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ p: 2, bgcolor: "paper", borderRadius: 1, overflowX: 'auto' }}>
-            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
-              {currentTexContent}
-            </pre>
-          </Box>
-        </DialogContent>
-        <DialogContent>
-          <Typography variant="caption" color="text.secondary" gutterBottom display="block">
-            {msg.FORMATED_TEX}
-          </Typography>
-          <Box sx={{ p: 2, bgcolor: 'blue.50', borderRadius: 1, overflowX: 'auto', border: '1px solid', borderColor: 'blue.100' }}>
-            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace' }}>
-              {format(currentTexContent)}
-            </pre>
+        <DialogContent dividers sx={{ p: 0 }}>
+          <Box display="flex" sx={{ minHeight: 300 }}>
+            <Box sx={{ width: '50%', borderRight: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }} display="block" gutterBottom>
+                  {msg.RAW_TEX}
+                </Typography>
+                <Box sx={{ flex: 1, overflowX: 'auto' }}>
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                    {currentTexContent}
+                  </pre>
+                </Box>
+              </Box>
+              <Box sx={{ flex: 1, p: 2, borderTop: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }} display="block" gutterBottom>
+                  {msg.FORMATED_TEX}
+                </Typography>
+                <Box sx={{ flex: 1, overflowX: 'auto' }}>
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                    {format(currentTexContent)}
+                  </pre>
+                </Box>
+              </Box>
+            </Box>
+
+            <Box sx={{ width: '50%', display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ flex: 1, p: 2, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }} display="block" gutterBottom>
+                  {msg.RAW_TEX} {msg.PREVIEW}
+                </Typography>
+                <Box sx={{ flex: 1, p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1, overflowX: 'auto' }}>
+                  <LaTeXViewer>{currentTexContent}</LaTeXViewer>
+                </Box>
+              </Box>
+              <Box sx={{ flex: 1, p: 2, pt: 0, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }} display="block" gutterBottom>
+                  {msg.FORMATED_TEX} {msg.PREVIEW}
+                </Typography>
+                <Box sx={{ flex: 1, p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1, overflowX: 'auto' }}>
+                  <LaTeXViewer>{format(currentTexContent)}</LaTeXViewer>
+                </Box>
+              </Box>
+            </Box>
+
           </Box>
         </DialogContent>
         <DialogActions>

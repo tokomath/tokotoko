@@ -261,24 +261,8 @@ function ClientSearchParamWrapper() {
     };
 
     if (isEditing) {
-      const currentSectionsJson = JSON.stringify(sections);
-      const isStructureChanged = currentSectionsJson !== initialSectionsRef.current;
-
-      if (isStructureChanged) {
-        await updateTest(testFrame);
-        initialSectionsRef.current = currentSectionsJson;
-      } else {
-        await updateTestMetadata(testFrame);
-      }
+      await updateTest(testFrame);
       alert(msg.SUCCESS_SAVE_TEST);
-    } else {
-      const newId = await createTest(testFrame);
-      if (newId) {
-        setCurrentTestId(newId);
-        setIsEditing(true);
-        router.replace(window.location.pathname + "?testId=" + newId);
-      }
-      alert(msg.SUCCESS_CREATE_TEST);
     }
   };
 
@@ -320,7 +304,7 @@ function ClientSearchParamWrapper() {
     <Container
       maxWidth="xl"
       sx={{
-        height: "calc(100vh - 80px)",
+        height: "calc(100vh - 100px)",
         display: "flex",
         flexDirection: "column",
         pt: 2,
@@ -331,9 +315,13 @@ function ClientSearchParamWrapper() {
 
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} sx={{ flexShrink: 0 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
-          <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
+          <Typography variant="h5" color="text.secondary">
+            {testTitle}
+          </Typography>
+          <Typography variant="h6" component="h1" fontWeight="bold" color="primary">
             {isEditing ? msg.EDIT_TEST : msg.CREATE_NEW_TEST}
           </Typography>
+
           <Chip
             label={isCurrentPublished ? msg.PUBLISHED : msg.UNPUBLISHED}
             color={isCurrentPublished ? "success" : "default"}
@@ -409,7 +397,7 @@ function ClientSearchParamWrapper() {
               {sections.map((_, index) => (
                 <Tab
                   label={`${msg.SECTION_NUMBER} ${index + 1}`}
-                  key={index}
+                  key={sections[index].section.id}
                   draggable
                   onDragStart={() => setDraggedSectionIndex(index)}
                   onDragOver={(e) => e.preventDefault()}
@@ -444,7 +432,7 @@ function ClientSearchParamWrapper() {
               </Box>
             )}
             {sections.map((s, index) => (
-              <Box key={index} hidden={value !== index + 1}>
+              <Box key={s.section.id} hidden={value !== index + 1}>
                 <SectionPage
                   index={index}
                   section={s}
@@ -511,7 +499,7 @@ const MetaDataPage = ({
   };
 
   const ClassAssign = () => {
-  const msg = useMsg();
+    const msg = useMsg();
     return (
       <FormControl fullWidth>
         <InputLabel id={"ClassAssign"}>{msg.TARGET_CLASS}</InputLabel>
@@ -567,7 +555,7 @@ const MetaDataPage = ({
                 onChange={(e) => setTestSummary(e.target.value)}
               />
               <TextField
-                label={msg.MAX_RESUBMISSIONS || "再提出回数の上限"}
+                label={msg.MAX_RESUBMISSIONS}
                 variant="outlined"
                 type="number"
                 fullWidth
@@ -656,9 +644,9 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
   const handleQuestionChange = (item: Question, index: number) => {
     const newQ = section.questions.map((q: Question, i: number) => {
       if (i === index) {
-        return item;
+        return { ...item, number: i + 1 };
       } else {
-        return { ...q, number: i + 1 };
+        return q;
       }
     });
     setSection({ ...section, questions: newQ });
@@ -709,7 +697,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
 
   return (
     <Box sx={{ p: 4 }}>
-      <Card variant="outlined" sx={{  mb: 4 }}>
+      <Card variant="outlined" sx={{ mb: 4 }}>
         <CardHeader
           title={`${msg.SECTION_NUMBER} ${index + 1} ${msg.SECTION_SETTINGS}`}
           action={
@@ -725,7 +713,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
           }
         />
         <Divider />
-        <CardContent sx={{ borderRadius: 1}}>
+        <CardContent sx={{ borderRadius: 1 }}>
           <Grid container spacing={3} alignItems="stretch">
             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
               <TextField
@@ -737,7 +725,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 onChange={(e) => handleSectionSummaryChange(e.target.value)}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column'}}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
               <Paper
                 variant="outlined"
                 sx={{
@@ -750,7 +738,7 @@ const SectionPage = ({ index, section, setSection, deleteSection }: any) => {
                 <Typography variant="caption" color="text.secondary" gutterBottom>
                   {msg.PREVIEW}
                 </Typography>
-                <Box>
+                <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
                   <LaTeXViewer>{section.section.summary}</LaTeXViewer>
                 </Box>
               </Paper>
@@ -890,7 +878,7 @@ const QuestionPage = ({
             </IconButton>
           </Stack>
         }
-        sx={{  py: 1 }}
+        sx={{ py: 1 }}
       />
       <CardContent>
         <Grid container spacing={3} alignItems="stretch">
@@ -911,7 +899,7 @@ const QuestionPage = ({
               }}
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column'}}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
             <Paper
               variant="outlined"
               sx={{
@@ -924,9 +912,11 @@ const QuestionPage = ({
               <Typography variant="caption" color="text.secondary" gutterBottom>
                 {msg.QUESTION_PREVIEW}
               </Typography>
-              <Box sx={{ display: 'flex' }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
                 <Typography component="span" fontWeight="bold" mr={1}>({question.number})</Typography>
-                <LaTeXViewer>{question.question}</LaTeXViewer>
+                <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
+                  <LaTeXViewer>{question.question}</LaTeXViewer>
+                </Box>
               </Box>
             </Paper>
           </Grid>
@@ -960,7 +950,7 @@ const QuestionPage = ({
 
                   switch (question.insertType) {
                     case "None":
-                      return (<Box sx={{ p: 2, border: '1px dashed',borderColor: 'divider', borderRadius: 1, color: 'text.disabled', textAlign: 'center' }}>{msg.NO_ATTACHMENT}</Box>)
+                      return (<Box sx={{ p: 2, border: '1px dashed', borderColor: 'divider', borderRadius: 1, color: 'text.disabled', textAlign: 'center' }}>{msg.NO_ATTACHMENT}</Box>)
                     case "Image":
                       acceptFileType = "image/*";
                       icon = <ImageIcon />;
@@ -1061,7 +1051,7 @@ const QuestionPage = ({
               <Typography variant="caption" color="text.secondary" gutterBottom>
                 {msg.PREVIEW}
               </Typography>
-              <Box sx={{ display: 'flex' }}>
+              <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
                 <LaTeXViewer>{question.answer}</LaTeXViewer>
               </Box>
             </Paper>
