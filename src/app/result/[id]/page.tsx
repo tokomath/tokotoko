@@ -84,15 +84,7 @@ function Result({ id, userid }: { id: string, userid: string }) {
         let misaiten = false;
         res.test.sections.forEach((sec: any) => {
           sec.questions.forEach((q: any) => {
-            q["ans"] = res.answers[i];
-            const alloc = q.allocationPoint ?? 1;
-            mp += alloc;
-            if (res.answers[i].point >= 0) {
-              p += res.answers[i].point * alloc;
-            } else {
-              misaiten = true;
-            }
-            i += 1;
+            q["ans"] = res.answers.find((a: any) => a.questionId === q.id);
           });
         });
 
