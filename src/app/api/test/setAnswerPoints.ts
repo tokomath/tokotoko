@@ -21,7 +21,6 @@ export const setAnswerPoints = async(points: Point[]) => {
         }));
         return 0;
     } catch (error) {
-        console.log("Error setting points:", error);
         return -1;
     }
 };

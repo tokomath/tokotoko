@@ -199,18 +199,19 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
       submissionData.forEach((submission, dataIndex) => {
         const studentPoints = { ...newPoints[dataIndex] };
 
-        submission.answers.forEach((answer: Answer, qIndex: number) => {
-          const question = allQuestions[qIndex];
-          if (!question) return;
+        submission.answers.forEach((answer: Answer) => {
+          const question = allQuestions.find((q: any) => q.id === answer.questionId);
+          if (!question)
+            return;
 
           if (answer.text.trim() === "") {
-            studentPoints[qIndex] = 0;
+            studentPoints[answer.questionId] = 0;
           } else {
             const result = judge(question.answer, answer.text);
             if (result === 1 || result === 2) {
-              studentPoints[qIndex] = 1;
+              studentPoints[answer.questionId] = 1;
             } else {
-              studentPoints[qIndex] = -1;
+              studentPoints[answer.questionId] = -1;
             }
           }
         });
@@ -315,8 +316,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
             newSubmissionIndex[user_index] = dataIndex;
 
             const userPoints: Record<number, number> = {};
-            submission_res.answers.forEach((answer: Answer, answer_index: number) => {
-              userPoints[answer_index] = Number(answer.point);
+            submission_res.answers.forEach((answer: Answer) => {
+              userPoints[answer.questionId] = Number(answer.point);
             });
             newPoints[dataIndex] = userPoints;
           }
@@ -360,8 +361,8 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
 
     let send_data: Array<Point> = [];
     submissionData.forEach((submission, dataIndex) => {
-      submission.answers.forEach((answer: Answer, answerIndex: number) => {
-        const newPoint = points[dataIndex]?.[answerIndex] ?? answer.point;
+      submission.answers.forEach((answer: Answer) => {
+        const newPoint = points[dataIndex]?.[answer.questionId] ?? answer.point;
         send_data.push({ answerId: Number(answer.id), point: Number(newPoint) });
       });
     });
@@ -712,10 +713,9 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                             visibleQuestions.questions.map((question: Question, index: number) => {
                               const questionGlobalIndex = visibleQuestions.startIndex + index;
 
-                              if (data_index !== undefined && submissionData?.[data_index]?.answers?.[questionGlobalIndex]) {
-                                const answer = submissionData[data_index].answers[questionGlobalIndex];
-                                const currentPoint = points[data_index]?.[questionGlobalIndex] ?? Number(answer.point);
-
+                              const answer = submissionData?.[data_index]?.answers?.find((a: Answer) => a.questionId === question.id);
+                              if (data_index !== undefined && answer) {
+                                const currentPoint = points[data_index]?.[question.id] ?? Number(answer.point);
                                 return (
                                   <AnswerCell
                                     answer={(answer.text === "" ? " " : answer.text)}
@@ -724,7 +724,7 @@ export default function GradingPage({ params }: { params: Promise<{ testid: numb
                                     allocationPoint={question.allocationPoint ?? 1}
                                     key={`answer-${user.id}-${question.id}`}
                                     userIndex={data_index}
-                                    questionIndex={questionGlobalIndex}
+                                    questionIndex={question.id}
                                     cursorImage={cursorImage}
                                     onRightClick={handleOpenTexDialog}
                                   />
