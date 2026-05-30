@@ -264,6 +264,12 @@ function ClientSearchParamWrapper() {
       await updateTest(testFrame);
       alert(msg.SUCCESS_SAVE_TEST);
     }
+    else {
+      const newTestId = await createTest(testFrame);
+      setCurrentTestId(newTestId);
+      alert(msg.SUCCESS_CREATE_TEST);
+      router.push(`/teacher/createTest?testId=${newTestId}`);
+    }
   };
 
   const handleSaveClick = async () => {
