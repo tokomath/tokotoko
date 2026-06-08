@@ -149,7 +149,7 @@ function TestItem({ test, isTeacher, classStudents, userId }: { test: Test; isTe
               <Button variant="outlined" size="small" onClick={() => setDialogOpen(true)}>
                 {msg.SUBMISSION_STATUS} ({submittedStudents.length}/{classStudents.length})
               </Button>
-              <Button variant="contained" size="small" color="primary" onClick={() => router.push(`/teacher/grading/${test.id}?classId=${classId}`)}>
+              <Button variant="contained" size="small" color="primary" onClick={() => router.push(`/teacher/grading/${test.id}?classid=${classId}`)}>
                 {msg.GRADE}
               </Button>
               <Button variant="contained" size="small" color="primary" onClick={() => router.push(`/teacher/createTest?testId=${test.id}`)}>
