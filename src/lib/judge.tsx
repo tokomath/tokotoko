@@ -37,7 +37,6 @@ export default function judge(correct_answer_tex: string, your_answer_tex: strin
       }
     }
     if (allPartsMatch) {
-      console.log("構造（正規化済）と各パーツが一致");
       return JudgeResult.MabyCorrect;
     }
   }
@@ -95,7 +94,7 @@ function trimSpace(input: string): string {
 function zenkakuToHankaku(str: string): string {
   return str
     .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
-    .replace(/　/g, ' ')
+    .replace(/ /g, ' ')
     .replace(/[，、]/g, ',')
     .replace(/[．。]/g, '.')
     .replace(/（/g, '(')
@@ -135,7 +134,7 @@ function normalizeTeXCommand(input: string): string {
 }
 
 function removeRedundantBraces(str: string): string {
-  return str.replace(/(?<!\\[a-zA-Z]+)\{([a-zA-Z0-9]+)\}/g, '$1');
+  return str.replace(/(?<!\\[a-zA-Z]+|\})\{([a-zA-Z0-9]+)\}/g, '$1');
 }
 
 export function formatMixedTeX(input: string): string {
@@ -160,7 +159,7 @@ export function format(input: string): string {
       .replace(/\n/g, ' ')
       .replace(/\s*(?<!\\)(?=\\)/g, ' ')
       .replace(/([a-z])([0-9])/g, '$1 $2')
-      .replace(/([&|[\]{}])/g, ' $1 ')
+      .replace(/([&|[\]])/g, ' $1 ')
       .replace(/(\\\\)/g, ' $1 ')
       .replace(/\s\s+/g, ' ')
   );
