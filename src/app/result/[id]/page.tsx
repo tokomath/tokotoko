@@ -232,6 +232,8 @@ function Result({ id, userid }: { id: string, userid: string }) {
           value={partIndex}
           onChange={handleChange}
           aria-label="Tabs of each PART"
+          scrollButtons="auto"
+          variant="scrollable"
         >
           {data.test.sections.map((section: any, index: number) => (
             <Tab
