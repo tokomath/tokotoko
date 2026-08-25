@@ -462,6 +462,8 @@ function Solve(
           value={partIndex}
           onChange={handleChange}
           aria-label="Tabs of each PART"
+          variant="scrollable"
+          scrollButtons="auto"
         >
           {testData.sections.map((s, index) => (
             <Tab
